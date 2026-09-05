@@ -1,5 +1,7 @@
+from backend.app.api.inspection import router as inspection_router
 from backend.app.core.dependencies import (require_admin,
 require_quality_engineer)
+from backend.app.api.prediction import router as prediction_router
 from backend.app.models.user import User
 from fastapi import Depends
 from fastapi import FastAPI
@@ -30,6 +32,8 @@ app.add_middleware(
 
 # Authentication routes
 app.include_router(auth_router)
+app.include_router(inspection_router)
+app.include_router(prediction_router)
 
 
 @app.get("/")
