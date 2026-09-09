@@ -1,0 +1,120 @@
+{
+  "bottle": [
+    "good",
+    "broken_large",
+    "broken_small",
+    "contamination"
+  ],
+  "cable": [
+    "good",
+    "bent_wire",
+    "cable_swap",
+    "combined",
+    "cut_inner_insulation",
+    "cut_outer_insulation",
+    "missing_cable",
+    "missing_wire",
+    "poke_insulation"
+  ],
+  "capsule": [
+    "good",
+    "crack",
+    "faulty_imprint",
+    "poke",
+    "scratch",
+    "squeeze"
+  ],
+  "carpet": [
+    "good",
+    "color",
+    "cut",
+    "hole",
+    "metal_contamination",
+    "thread"
+  ],
+  "grid": [
+    "good",
+    "bent",
+    "broken",
+    "glue",
+    "metal_contamination",
+    "thread"
+  ],
+  "hazelnut": [
+    "good",
+    "crack",
+    "cut",
+    "hole",
+    "print"
+  ],
+  "leather": [
+    "good",
+    "color",
+    "cut",
+    "fold",
+    "glue",
+    "poke"
+  ],
+  "metal_nut": [
+    "good",
+    "bent",
+    "color",
+    "flip",
+    "scratch"
+  ],
+  "pill": [
+    "good",
+    "color",
+    "combined",
+    "contamination",
+    "crack",
+    "faulty_imprint",
+    "pill_type",
+    "scratch"
+  ],
+  "screw": [
+    "good",
+    "manipulated_front",
+    "scratch_head",
+    "scratch_neck",
+    "thread_side",
+    "thread_top"
+  ],
+  "tile": [
+    "good",
+    "crack",
+    "glue_strip",
+    "gray_stroke",
+    "oil",
+    "rough"
+  ],
+  "toothbrush": [
+    "good",
+    "defective"
+  ],
+  "transistor": [
+    "good",
+    "bent_lead",
+    "cut_lead",
+    "damaged_case",
+    "misplaced"
+  ],
+  "wood": [
+    "good",
+    "color",
+    "combined",
+    "hole",
+    "liquid",
+    "scratch"
+  ],
+  "zipper": [
+    "good",
+    "broken_teeth",
+    "combined",
+    "fabric_border",
+    "fabric_interior",
+    "rough",
+    "split_teeth",
+    "squeezed_teeth"
+  ]
+}

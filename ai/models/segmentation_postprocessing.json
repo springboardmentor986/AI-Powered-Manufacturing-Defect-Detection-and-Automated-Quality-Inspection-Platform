@@ -1,0 +1,12 @@
+{
+  "description": "U-Net segmentation post-processing configuration tuned on validation set to reduce false-positive regions without degrading defect localization.",
+  "morph_kernel_size": 3,
+  "min_component_area": 25,
+  "validation_metrics": {
+    "baseline_f1": 0.6117,
+    "baseline_iou": 0.4406,
+    "postprocessed_f1": 0.6129,
+    "postprocessed_iou": 0.4419,
+    "pixel_precision_improvement": "+5.41%"
+  }
+}

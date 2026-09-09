@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Virtual Environments
+backend/myvenv/
+myvenv/
+venv/
+.venv/
+env/
+.env/
+
+# Environment and Secrets
+.env
+*.env
+.env.local
+.env.*.local
+
+# Large Datasets
+mvtec_anomaly_detection/
+mvtec_anomaly_detection.tar.xz
+*.tar.xz
+*.tar.gz
+*.zip
+
+# Large AI Model Weights (>100MB violates GitHub limits)
+ai/models/normal_features_layer3.pt
+ai/models/defect_segmenter_unet.pt
+*.pt
+*.pth
+*.pkl
+
+# Uploaded Files & Temporary Inspection Artifacts
+backend/uploads/
+uploads/
+inspection_results/
+backend/tests/.DS_Store
+*.png.tmp
+
+# Frontend Build & Node Modules
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Screenshots & Temporary Media
+Screenshot*.png
+*.log
+*.csv
