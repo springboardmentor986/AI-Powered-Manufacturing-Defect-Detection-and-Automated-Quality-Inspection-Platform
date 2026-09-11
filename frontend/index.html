@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>VisionInspect AI</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 25px 40px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        header p {
+            margin-top: 8px;
+            color: #d1d5db;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            padding: 30px;
+        }
+
+        .welcome,
+        .upload-section,
+        .history-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            font-size: 28px;
+            margin: 10px 0;
+        }
+
+        .card p {
+            color: #6b7280;
+            margin: 0;
+        }
+
+        input[type="file"] {
+            margin: 15px 0;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f3f4f6;
+        }
+
+        .success {
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #991b1b;
+            font-weight: bold;
+        }
+
+        .normal {
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .defective {
+            color: #991b1b;
+            font-weight: bold;
+        }
+
+        .pass {
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .fail {
+            color: #991b1b;
+            font-weight: bold;
+        }
+
+        .review {
+            color: #92400e;
+            font-weight: bold;
+        }
+
+        .critical {
+            color: #7f1d1d;
+            font-weight: bold;
+        }
+
+        .high {
+            color: #991b1b;
+            font-weight: bold;
+        }
+
+        .medium {
+            color: #92400e;
+            font-weight: bold;
+        }
+
+        .low {
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .quality-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .quality-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .quality-card p {
+            margin: 5px 0;
+        }
+
+        .defect-summary {
+            margin-top: 20px;
+            padding: 18px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .defect-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .defect-card {
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .defect-card p {
+            margin: 5px 0;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            background: #f3f4f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            min-width: 1100px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f3f4f6;
+            white-space: nowrap;
+        }
+
+        td {
+            white-space: nowrap;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #6b7280;
+        }
+
+        .status-online {
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .status-offline {
+            color: #991b1b;
+            font-weight: bold;
+        }
+
+        .loading {
+            color: #92400e;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1000px) {
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quality-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .defect-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            header {
+                padding: 20px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <h1>VisionInspect AI</h1>
+
+    <p>
+        AI-Powered Manufacturing Defect Detection & Quality Inspection
+    </p>
+
+</header>
+
+
+<div class="container">
+
+
+    <!-- =====================================================
+         WELCOME
+    ====================================================== -->
+
+    <div class="welcome">
+
+        <h2>Inspection Dashboard</h2>
+
+        <p>
+            Automated AI-powered quality inspection platform
+            for manufacturing products.
+        </p>
+
+        <p>
+            Current User:
+            <strong>Quality Engineer</strong>
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         DASHBOARD CARDS
+    ====================================================== -->
+
+    <div class="cards">
+
+
+        <div class="card">
+
+            <p>Total Inspections</p>
+
+            <h2 id="uploaded">0</h2>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>Processed Images</p>
+
+            <h2 id="processed">0</h2>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>Normal</p>
+
+            <h2 id="normal">0</h2>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>Defective</p>
+
+            <h2 id="defective">0</h2>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>System Status</p>
+
+            <h2 id="status">
+                Checking...
+            </h2>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         IMAGE UPLOAD
+    ====================================================== -->
+
+    <div class="upload-section">
+
+        <h2>🔍 Product Image Inspection</h2>
+
+        <p>
+            Upload a JPG or PNG manufacturing product image for
+            AI-powered defect detection and quality analysis.
+        </p>
+
+
+        <input
+            type="file"
+            id="image"
+            accept=".jpg,.jpeg,.png"
+        >
+
+
+        <br>
+
+
+        <button
+            id="inspectButton"
+            onclick="uploadImage()"
+        >
+
+            Inspect Product Image
+
+        </button>
+
+
+        <div id="result">
+
+            <p>
+                No image inspected yet.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         INSPECTION HISTORY
+    ====================================================== -->
+
+    <div class="history-section">
+
+        <h2>📋 Inspection History</h2>
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Image</th>
+
+                        <th>Date & Time</th>
+
+                        <th>AI Result</th>
+
+                        <th>Anomaly Score</th>
+
+                        <th>Defect Type</th>
+
+                        <th>Severity</th>
+
+                        <th>Quality Score</th>
+
+                        <th>Decision</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="historyBody">
+
+                    <tr>
+
+                        <td colspan="9">
+
+                            Loading inspection history...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<footer>
+
+    VisionInspect AI |
+    AI-Powered Quality Inspection System
+
+</footer>
+
+
+<script>
+
+
+// ============================================================
+// API CONFIGURATION
+// ============================================================
+
+const API_URL = "http://127.0.0.1:8000";
+
+
+// ============================================================
+// LOAD DASHBOARD
+// ============================================================
+
+async function loadDashboard() {
+
+    const statusElement =
+        document.getElementById("status");
+
+
+    try {
+
+        statusElement.innerText =
+            "Checking...";
+
+        statusElement.className =
+            "loading";
+
+
+        const response =
+            await fetch(
+                API_URL + "/dashboard"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Dashboard API returned " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Dashboard data:",
+            data
+        );
+
+
+        // ----------------------------------------------------
+        // Backend response:
+        //
+        // total_inspections
+        // normal
+        // defective
+        // ----------------------------------------------------
+
+        const total =
+            Number(
+                data.total_inspections ?? 0
+            );
+
+
+        const normal =
+            Number(
+                data.normal ?? 0
+            );
+
+
+        const defective =
+            Number(
+                data.defective ?? 0
+            );
+
+
+        // ----------------------------------------------------
+        // Update cards
+        // ----------------------------------------------------
+
+        document.getElementById(
+            "uploaded"
+        ).innerText = total;
+
+
+        // Current backend processes every uploaded
+        // inspection, so processed = total inspections.
+
+        document.getElementById(
+            "processed"
+        ).innerText = total;
+
+
+        document.getElementById(
+            "normal"
+        ).innerText = normal;
+
+
+        document.getElementById(
+            "defective"
+        ).innerText = defective;
+
+
+        // ----------------------------------------------------
+        // System status
+        // ----------------------------------------------------
+
+        statusElement.innerText =
+            "Online";
+
+
+        statusElement.className =
+            "status-online";
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Dashboard error:",
+            error
+        );
+
+
+        document.getElementById(
+            "uploaded"
+        ).innerText = "0";
+
+
+        document.getElementById(
+            "processed"
+        ).innerText = "0";
+
+
+        document.getElementById(
+            "normal"
+        ).innerText = "0";
+
+
+        document.getElementById(
+            "defective"
+        ).innerText = "0";
+
+
+        statusElement.innerText =
+            "Offline";
+
+
+        statusElement.className =
+            "status-offline";
+
+    }
+
+}
+
+
+// ============================================================
+// UPLOAD AND INSPECT IMAGE
+// ============================================================
+
+async function uploadImage() {
+
+
+    const fileInput =
+        document.getElementById("image");
+
+
+    const button =
+        document.getElementById(
+            "inspectButton"
+        );
+
+
+    const file =
+        fileInput.files[0];
+
+
+    if (!file) {
+
+        alert(
+            "Please select a product image first."
+        );
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // Validate file type
+    // --------------------------------------------------------
+
+    const allowedTypes = [
+
+        "image/jpeg",
+
+        "image/png"
+
+    ];
+
+
+    if (!allowedTypes.includes(file.type)) {
+
+        alert(
+            "Please select a JPG or PNG image."
+        );
+
+        return;
+
+    }
+
+
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        "file",
+        file
+    );
+
+
+    // --------------------------------------------------------
+    // Loading state
+    // --------------------------------------------------------
+
+    button.disabled = true;
+
+    button.innerText =
+        "Analyzing...";
+
+
+    document.getElementById(
+        "result"
+    ).innerHTML = `
+
+        <p class="loading">
+
+            🔄 AI is analyzing the product image...
+
+        </p>
+
+    `;
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                API_URL + "/upload",
+                {
+
+                    method: "POST",
+
+                    body: formData
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Upload response:",
+            data
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                data.message ||
+                "Upload failed"
+            );
+
+        }
+
+
+        if (data.success) {
+
+
+            // ------------------------------------------------
+            // Result classes
+            // ------------------------------------------------
+
+            const resultClass =
+                data.ai_prediction === "NORMAL"
+                    ? "normal"
+                    : "defective";
+
+
+            const decision =
+                data.final_decision ||
+                data.decision ||
+                "UNKNOWN";
+
+
+            const decisionClass =
+                decision === "PASS" ||
+                decision === "NORMAL"
+                    ? "pass"
+                    : decision === "FAIL" ||
+                      decision === "DEFECTIVE"
+                    ? "fail"
+                    : "review";
+
+
+            const severityClass =
+                getSeverityClass(
+                    data.severity_level
+                );
+
+
+            // ------------------------------------------------
+            // Quality data
+            // ------------------------------------------------
+
+            const quality =
+                data.quality_analysis ||
+                data.image_quality ||
+                {};
+
+
+            // ------------------------------------------------
+            // Processing steps
+            // ------------------------------------------------
+
+            const processingSteps =
+                Array.isArray(data.processing)
+                    ? data.processing
+                    : [];
+
+
+            // ------------------------------------------------
+            // Display result
+            // ------------------------------------------------
+
+            document.getElementById(
+                "result"
+            ).innerHTML = `
+
+                <h2 class="${resultClass}">
+
+                    ${
+                        data.ai_prediction === "NORMAL"
+                            ? "✓"
+                            : "⚠"
+                    }
+
+                    AI RESULT:
+                    ${data.ai_prediction || "-"}
+
+                </h2>
+
+
+                <p>
+
+                    <strong>Inspection ID:</strong>
+
+                    ${data.inspection_id ?? "-"}
+
+                </p>
+
+
+                <p>
+
+                    <strong>File:</strong>
+
+                    ${data.filename || "-"}
+
+                </p>
+
+
+                <p>
+
+                    <strong>Original Size:</strong>
+
+                    ${
+                        quality.width ??
+                        data.original_width ??
+                        "-"
+                    }
+
+                    ×
+
+                    ${
+                        quality.height ??
+                        data.original_height ??
+                        "-"
+                    }
+
+                </p>
+
+
+                <p>
+
+                    <strong>Anomaly Score:</strong>
+
+                    ${formatNumber(
+                        data.anomaly_score,
+                        4
+                    )}
+
+                </p>
+
+
+                <p>
+
+                    <strong>Classifier Confidence:</strong>
+
+                    ${
+                        data.classifier_confidence !== null &&
+                        data.classifier_confidence !== undefined
+                            ? Number(
+                                data.classifier_confidence
+                              ).toFixed(1) + "%"
+                            : "-"
+                    }
+
+                </p>
+
+
+                <div class="defect-summary">
+
+                    <h3>
+                        🧠 AI Defect Analysis
+                    </h3>
+
+
+                    <div class="defect-grid">
+
+
+                        <div class="defect-card">
+
+                            <p>
+                                <strong>
+                                    Defect Type
+                                </strong>
+                            </p>
+
+                            <h3>
+
+                                ${
+                                    data.defect_type ||
+                                    "No Defect"
+                                }
+
+                            </h3>
+
+                        </div>
+
+
+                        <div class="defect-card">
+
+                            <p>
+                                <strong>
+                                    Defect Category
+                                </strong>
+                            </p>
+
+                            <h3>
+
+                                ${
+                                    data.defect_category ||
+                                    "-"
+                                }
+
+                            </h3>
+
+                        </div>
+
+
+                        <div class="defect-card">
+
+                            <p>
+                                <strong>
+                                    Severity
+                                </strong>
+                            </p>
+
+                            <h3>
+
+                                <span
+                                    class="severity-badge ${severityClass}"
+                                >
+
+                                    ${
+                                        data.severity_level ||
+                                        "Low"
+                                    }
+
+                                    ${
+                                        data.severity_score !== null &&
+                                        data.severity_score !== undefined
+                                            ? " (" +
+                                              data.severity_score +
+                                              ")"
+                                            : ""
+                                    }
+
+                                </span>
+
+                            </h3>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                <p>
+
+                    <strong>Final Decision:</strong>
+
+                    <span class="${decisionClass}">
+
+                        ${decision}
+
+                    </span>
+
+                </p>
+
+
+                <h3>
+                    📊 Image Quality Analysis
+                </h3>
+
+
+                <div class="quality-grid">
+
+
+                    <div class="quality-card">
+
+                        <p>
+
+                            <strong>
+                                Quality Score
+                            </strong>
+
+                        </p>
+
+                        <h3>
+
+                            ${
+                                quality.quality_score ??
+                                data.quality_score ??
+                                "-"
+                            }/100
+
+                        </h3>
+
+                        <p>
+
+                            ${
+                                quality.quality_status ||
+                                "-"
+                            }
+
+                        </p>
+
+                    </div>
+
+
+                    <div class="quality-card">
+
+                        <p>
+
+                            <strong>
+                                Resolution
+                            </strong>
+
+                        </p>
+
+                        <h3>
+
+                            ${
+                                quality.resolution ||
+                                "-"
+                            }
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="quality-card">
+
+                        <p>
+
+                            <strong>
+                                Brightness
+                            </strong>
+
+                        </p>
+
+                        <h3>
+
+                            ${
+                                quality.brightness ??
+                                "-"
+                            }
+
+                        </h3>
+
+                        <p>
+
+                            ${
+                                quality.brightness_status ||
+                                "-"
+                            }
+
+                        </p>
+
+                    </div>
+
+
+                    <div class="quality-card">
+
+                        <p>
+
+                            <strong>
+                                Contrast
+                            </strong>
+
+                        </p>
+
+                        <h3>
+
+                            ${
+                                quality.contrast ??
+                                "-"
+                            }
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="quality-card">
+
+                        <p>
+
+                            <strong>
+                                Blur Score
+                            </strong>
+
+                        </p>
+
+                        <h3>
+
+                            ${
+                                quality.blur_score ??
+                                "-"
+                            }
+
+                        </h3>
+
+                        <p>
+
+                            ${
+                                quality.blur_status ||
+                                "-"
+                            }
+
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+
+                ${
+                    processingSteps.length > 0
+                    ? `
+
+                        <h3>
+                            ⚙ AI Processing Pipeline
+                        </h3>
+
+                        <ol>
+
+                            ${
+                                processingSteps
+                                    .map(
+                                        step =>
+                                            `<li>✓ ${step}</li>`
+                                    )
+                                    .join("")
+                            }
+
+                        </ol>
+
+                    `
+                    : ""
+                }
+
+            `;
+
+
+            // ------------------------------------------------
+            // Refresh dashboard and history
+            // ------------------------------------------------
+
+            await loadDashboard();
+
+            await loadHistory();
+
+
+        }
+
+        else {
+
+            document.getElementById(
+                "result"
+            ).innerHTML = `
+
+                <p class="error">
+
+                    ✗ ${
+                        data.message ||
+                        "Image inspection failed."
+                    }
+
+                </p>
+
+            `;
+
+        }
+
+
+    }
+
+    catch (error) {
+
+
+        console.error(
+            "Upload error:",
+            error
+        );
+
+
+        document.getElementById(
+            "result"
+        ).innerHTML = `
+
+            <p class="error">
+
+                ✗ ${
+                    error.message ||
+                    "Unable to connect to backend."
+                }
+
+            </p>
+
+        `;
+
+    }
+
+
+    finally {
+
+        button.disabled = false;
+
+        button.innerText =
+            "Inspect Product Image";
+
+    }
+
+}
+
+
+// ============================================================
+// LOAD INSPECTION HISTORY
+// ============================================================
+
+async function loadHistory() {
+
+
+    try {
+
+
+        // IMPORTANT:
+        // Backend endpoint is /history
+        // NOT /inspection-history
+
+        const response =
+            await fetch(
+                API_URL + "/history"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "History API returned " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "History data:",
+            data
+        );
+
+
+        const historyBody =
+            document.getElementById(
+                "historyBody"
+            );
+
+
+        historyBody.innerHTML = "";
+
+
+        // ----------------------------------------------------
+        // Backend /history returns a DIRECT ARRAY
+        // ----------------------------------------------------
+
+        if (
+            !Array.isArray(data) ||
+            data.length === 0
+        ) {
+
+            historyBody.innerHTML = `
+
+                <tr>
+
+                    <td colspan="9">
+
+                        No inspections available.
+
+                    </td>
+
+                </tr>
+
+            `;
+
+            return;
+
+        }
+
+
+        data.forEach(
+            inspection => {
+
+
+                // ------------------------------------------------
+                // Backend uses "status", not "result"
+                // ------------------------------------------------
+
+                const result =
+                    inspection.status ||
+                    "UNKNOWN";
+
+
+                const resultClass =
+                    result === "NORMAL"
+                        ? "normal"
+                        : result === "DEFECTIVE"
+                        ? "defective"
+                        : "";
+
+
+                // ------------------------------------------------
+                // Decision
+                // ------------------------------------------------
+
+                const finalDecision =
+                    inspection.final_decision ||
+                    "-";
+
+
+                const decisionClass =
+                    finalDecision === "PASS" ||
+                    finalDecision === "NORMAL"
+                        ? "pass"
+                        : finalDecision === "FAIL" ||
+                          finalDecision === "DEFECTIVE"
+                        ? "fail"
+                        : finalDecision === "MANUAL REVIEW"
+                        ? "review"
+                        : "";
+
+
+                // ------------------------------------------------
+                // Severity
+                // ------------------------------------------------
+
+                const severityClass =
+                    getSeverityClass(
+                        inspection.severity_level
+                    );
+
+
+                // ------------------------------------------------
+                // Anomaly score
+                // ------------------------------------------------
+
+                const anomalyScore =
+                    inspection.anomaly_score !== null &&
+                    inspection.anomaly_score !== undefined
+                        ? Number(
+                            inspection.anomaly_score
+                          ).toFixed(4)
+                        : "-";
+
+
+                // ------------------------------------------------
+                // Quality score
+                // ------------------------------------------------
+
+                const qualityScore =
+                    inspection.quality_score !== null &&
+                    inspection.quality_score !== undefined
+                        ? inspection.quality_score +
+                          "/100"
+                        : "-";
+
+
+                // ------------------------------------------------
+                // Defect type
+                // ------------------------------------------------
+
+                const defectType =
+                    inspection.defect_type ||
+                    "-";
+
+
+                // ------------------------------------------------
+                // Severity display
+                // ------------------------------------------------
+
+                let severity = "-";
+
+
+                if (
+                    inspection.severity_level
+                ) {
+
+                    severity = `
+
+                        <span
+                            class="severity-badge ${severityClass}"
+                        >
+
+                            ${inspection.severity_level}
+
+                            ${
+                                inspection.severity_score !== null &&
+                                inspection.severity_score !== undefined
+                                    ? " (" +
+                                      inspection.severity_score +
+                                      ")"
+                                    : ""
+                            }
+
+                        </span>
+
+                    `;
+
+                }
+
+
+                // ------------------------------------------------
+                // Date
+                // ------------------------------------------------
+
+                const uploadTime =
+                    inspection.upload_time ||
+                    "-";
+
+
+                // ------------------------------------------------
+                // Create table row
+                // ------------------------------------------------
+
+                const row =
+                    document.createElement("tr");
+
+
+                row.innerHTML = `
+
+                    <td>
+
+                        ${inspection.inspection_id}
+
+                    </td>
+
+
+                    <td>
+
+                        ${inspection.image_name || "-"}
+
+                    </td>
+
+
+                    <td>
+
+                        ${uploadTime}
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="${resultClass}">
+
+                            ${result}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        ${anomalyScore}
+
+                    </td>
+
+
+                    <td>
+
+                        ${defectType}
+
+                    </td>
+
+
+                    <td>
+
+                        ${severity}
+
+                    </td>
+
+
+                    <td>
+
+                        ${qualityScore}
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="${decisionClass}">
+
+                            ${finalDecision}
+
+                        </span>
+
+                    </td>
+
+                `;
+
+
+                historyBody.appendChild(
+                    row
+                );
+
+
+            }
+        );
+
+
+    }
+
+    catch (error) {
+
+
+        console.error(
+            "Unable to load inspection history:",
+            error
+        );
+
+
+        document.getElementById(
+            "historyBody"
+        ).innerHTML = `
+
+            <tr>
+
+                <td colspan="9">
+
+                    <span class="error">
+
+                        Unable to load inspection history.
+
+                    </span>
+
+                </td>
+
+            </tr>
+
+        `;
+
+    }
+
+}
+
+
+// ============================================================
+// FORMAT NUMBER
+// ============================================================
+
+function formatNumber(
+    value,
+    decimals
+) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        Number.isNaN(Number(value))
+    ) {
+
+        return "-";
+
+    }
+
+
+    return Number(value)
+        .toFixed(decimals);
+
+}
+
+
+// ============================================================
+// SEVERITY CLASS
+// ============================================================
+
+function getSeverityClass(
+    severity
+) {
+
+    if (!severity) {
+
+        return "";
+
+    }
+
+
+    switch (
+        String(
+            severity
+        ).toUpperCase()
+    ) {
+
+        case "CRITICAL":
+
+            return "critical";
+
+
+        case "HIGH":
+
+            return "high";
+
+
+        case "MEDIUM":
+
+            return "medium";
+
+
+        case "LOW":
+
+            return "low";
+
+
+        default:
+
+            return "";
+
+    }
+
+}
+
+
+// ============================================================
+// INITIAL LOAD
+// ============================================================
+
+loadDashboard();
+
+loadHistory();
+
+
+</script>
+
+
+</body>
+
+</html>
