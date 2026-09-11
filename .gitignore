@@ -1,0 +1,14 @@
+.env
+*.env
+venv/
+.venv/
+.venv-1/
+backend/venv/
+frontend/node_modules/
+backend/processed/
+backend/results/
+backend/uploads/
+dataset/
+__pycache__/
+*.pyc
+.DS_Store
