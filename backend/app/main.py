@@ -1,3 +1,4 @@
+from backend.app.api.analytics import router as analytics_router
 from backend.app.api.inspection import router as inspection_router
 from backend.app.core.dependencies import (require_admin,
 require_quality_engineer)
@@ -8,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.auth import router as auth_router
+from backend.app.api.reports import router as reports_router
 
 
 app = FastAPI(
@@ -34,7 +36,8 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(inspection_router)
 app.include_router(prediction_router)
-
+app.include_router(analytics_router)
+app.include_router(reports_router)
 
 @app.get("/")
 def root():

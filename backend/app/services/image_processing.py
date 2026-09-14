@@ -60,8 +60,13 @@ def extract_features(image_path: str):
     small_gray = cv2.resize(gray, (32, 32))
     small_edges = cv2.resize(edges, (32, 32))
 
-    gray_features = small_gray.astype(np.float32).flatten() / 255.0
-    edge_features = small_edges.astype(np.float32).flatten() / 255.0
+    gray_features = (
+        small_gray.astype(np.float32).flatten() / 255.0
+    )
+
+    edge_features = (
+        small_edges.astype(np.float32).flatten() / 255.0
+    )
 
     features = np.concatenate(
         [gray_features, edge_features]
@@ -106,6 +111,10 @@ def calculate_image_quality(image_path: str):
 def train_anomaly_model(category_path: str, model_path: str):
     """
     Train an Isolation Forest using MVTec AD train/good images.
+
+    A validation-style threshold is calculated from the training
+    distribution so that the detector is less aggressive than
+    Isolation Forest's default contamination threshold.
     """
 
     train_dir = Path(category_path) / "train" / "good"
@@ -119,6 +128,9 @@ def train_anomaly_model(category_path: str, model_path: str):
 
     if not image_files:
         image_files = list(train_dir.glob("*.jpg"))
+
+    if not image_files:
+        image_files = list(train_dir.glob("*.jpeg"))
 
     if not image_files:
         raise ValueError(
@@ -135,31 +147,53 @@ def train_anomaly_model(category_path: str, model_path: str):
             continue
 
     if not features:
-        raise ValueError("Unable to extract training features")
+        raise ValueError(
+            "Unable to extract training features"
+        )
 
     X = np.array(features)
 
     model = IsolationForest(
-        n_estimators=100,
-        contamination=0.08,
+        n_estimators=200,
+        contamination="auto",
         random_state=42,
         n_jobs=-1
     )
 
     model.fit(X)
 
+    # Calculate decision scores for known-good training images.
+    training_scores = model.decision_function(X)
+
+    # Keep approximately 2% of the lowest-scoring good samples
+    # outside the accepted normal range.
+    threshold = float(
+        np.percentile(training_scores, 2)
+    )
+
+    import joblib
+
+    model_package = {
+        "model": model,
+        "threshold": threshold,
+        "training_images": len(features),
+        "threshold_percentile": 2
+    }
+
     Path(model_path).parent.mkdir(
         parents=True,
         exist_ok=True
     )
 
-    import joblib
-
-    joblib.dump(model, model_path)
+    joblib.dump(
+        model_package,
+        model_path
+    )
 
     return {
         "category": Path(category_path).name,
         "training_images": len(features),
+        "threshold": round(threshold, 6),
         "model_path": model_path,
     }
 
@@ -169,7 +203,8 @@ def detect_defect(
     model_path: str
 ):
     """
-    Predict whether an image is anomalous.
+    Predict whether an image is anomalous using
+    the calibrated category-specific threshold.
     """
 
     import joblib
@@ -179,25 +214,36 @@ def detect_defect(
             "Model not trained for this category"
         )
 
-    model = joblib.load(model_path)
+    model_package = joblib.load(model_path)
+
+    # Support the new calibrated model format.
+    if isinstance(model_package, dict):
+        model = model_package["model"]
+        threshold = float(model_package["threshold"])
+    else:
+        # Backward compatibility for old models.
+        model = model_package
+        threshold = 0.0
 
     features = extract_features(image_path)
 
-    prediction = model.predict(
-        features.reshape(1, -1)
-    )[0]
+    feature_vector = features.reshape(1, -1)
 
-    anomaly_score = model.decision_function(
-        features.reshape(1, -1)
-    )[0]
+    anomaly_score = float(
+        model.decision_function(feature_vector)[0]
+    )
 
-    is_defective = prediction == -1
+    # Lower decision scores indicate stronger anomalies.
+    is_defective = anomaly_score < threshold
+
+    # Distance from the calibrated threshold.
+    distance = abs(anomaly_score - threshold)
 
     confidence = min(
         99.0,
         max(
             50.0,
-            abs(float(anomaly_score)) * 200
+            50.0 + distance * 250.0
         )
     )
 
@@ -209,9 +255,15 @@ def detect_defect(
             else "No Defect"
         ),
         "anomaly_score": round(
-            float(anomaly_score), 4
+            anomaly_score,
+            4
         ),
         "confidence": round(
-            confidence, 2
+            confidence,
+            2
+        ),
+        "decision_threshold": round(
+            threshold,
+            4
         ),
     }
