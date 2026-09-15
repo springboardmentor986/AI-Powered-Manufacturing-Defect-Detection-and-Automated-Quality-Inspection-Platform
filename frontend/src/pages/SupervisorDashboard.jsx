@@ -7,6 +7,8 @@ import {
   CartesianGrid,
   Cell,
   Legend,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -21,8 +23,10 @@ import {
   getCurrentUser,
   getSupervisorReviewQueue,
   getAnalyticsSummary,
+  getAnalyticsTrends,
   getImageBlobUrl,
   reviewImage,
+  exportQualityReport,
   AuthError,
   ForbiddenError,
   ApiError,
@@ -41,6 +45,12 @@ function SupervisorDashboard() {
   const [reviewingId, setReviewingId] = useState(null);
 
   const [loading, setLoading] = useState(true);
+  const [exportingReport, setExportingReport] = useState(false);
+
+  const [trendRange, setTrendRange] = useState("30");
+  const [trends, setTrends] = useState([]);
+  const [trendsLoading, setTrendsLoading] = useState(false);
+  const [trendsError, setTrendsError] = useState(null);
 
   const [filter, setFilter] = useState("all");
 
@@ -106,7 +116,17 @@ function SupervisorDashboard() {
         setAnalytics(analyticsData);
 
 
-        // 4. Existing supervisor notes
+        // 4. Analytics trends
+        const trendsData = await getAnalyticsTrends("30");
+
+        if (!active) {
+          return;
+        }
+
+        setTrends(trendsData);
+
+
+        // 5. Existing supervisor notes
         const initialNotes = {};
 
         imageData.forEach((img) => {
@@ -118,7 +138,7 @@ function SupervisorDashboard() {
         setNotesByImage(initialNotes);
 
 
-        // 5. Load thumbnails
+        // 6. Load thumbnails
         imageData.slice(0, 15).forEach(async (img) => {
           try {
             const url = await getImageBlobUrl(img.id);
@@ -187,6 +207,29 @@ function SupervisorDashboard() {
     setActionMessage(null);
 
     setRefreshTrigger((prev) => prev + 1);
+  };
+
+
+  /*
+   * ---------------------------------------------------------
+   * Trend Time Range Handler
+   * ---------------------------------------------------------
+   */
+
+  const handleTrendRangeChange = async (newRange) => {
+    if (newRange === trendRange) return;
+    setTrendRange(newRange);
+    setTrendsLoading(true);
+    setTrendsError(null);
+
+    try {
+      const data = await getAnalyticsTrends(newRange);
+      setTrends(data);
+    } catch (err) {
+      setTrendsError(err.message || "Failed to load trend data.");
+    } finally {
+      setTrendsLoading(false);
+    }
   };
 
 
@@ -267,6 +310,41 @@ function SupervisorDashboard() {
 
     } finally {
       setReviewingId(null);
+    }
+  };
+
+
+  /*
+   * ---------------------------------------------------------
+   * Export Quality Report
+   * ---------------------------------------------------------
+   */
+
+  const handleExportReport = async () => {
+    setExportingReport(true);
+    setActionMessage(null);
+
+    try {
+      const result = await exportQualityReport("csv");
+      setActionMessage({
+        type: "success",
+        text: `Production Quality Report (${result.filename}) exported successfully.`,
+      });
+    } catch (err) {
+      if (err instanceof AuthError) {
+        setError(err.message);
+        setErrorType("auth");
+      } else if (err instanceof ForbiddenError) {
+        setError(err.message);
+        setErrorType("forbidden");
+      } else {
+        setActionMessage({
+          type: "error",
+          text: err.message || "Failed to export quality report.",
+        });
+      }
+    } finally {
+      setExportingReport(false);
     }
   };
 
@@ -607,6 +685,14 @@ function SupervisorDashboard() {
 
 
           <div className="page-actions">
+
+            <button
+              className="btn btn-primary"
+              onClick={handleExportReport}
+              disabled={exportingReport}
+            >
+              {exportingReport ? "Generating Report..." : "📥 Export Quality Report"}
+            </button>
 
             <button
               className="btn btn-secondary"
@@ -1309,6 +1395,351 @@ function SupervisorDashboard() {
 
           </div>
 
+        </div>
+
+
+        {/* =================================================
+            DEFECT & PRODUCTION TRENDS
+        ================================================= */}
+
+        <div
+          style={{
+            marginTop: "2rem",
+            marginBottom: "1rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.75rem",
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: 600,
+                color: "var(--text-primary)",
+              }}
+            >
+              Defect & Production Trends
+            </h2>
+            <p
+              style={{
+                marginTop: "0.25rem",
+                color: "var(--text-secondary)",
+                fontSize: "0.85rem",
+              }}
+            >
+              Time-series tracking of inspection volume, defect rate, severity score, and quality decisions.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "0.4rem",
+              alignItems: "center",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--text-secondary)",
+                marginRight: "0.25rem",
+              }}
+            >
+              Time Window:
+            </span>
+
+            <button
+              type="button"
+              className={`btn btn-sm ${trendRange === "7" ? "btn-primary" : "btn-secondary"}`}
+              onClick={() => handleTrendRangeChange("7")}
+              disabled={trendsLoading}
+            >
+              7 Days
+            </button>
+
+            <button
+              type="button"
+              className={`btn btn-sm ${trendRange === "30" ? "btn-primary" : "btn-secondary"}`}
+              onClick={() => handleTrendRangeChange("30")}
+              disabled={trendsLoading}
+            >
+              30 Days
+            </button>
+
+            <button
+              type="button"
+              className={`btn btn-sm ${trendRange === "all" ? "btn-primary" : "btn-secondary"}`}
+              onClick={() => handleTrendRangeChange("all")}
+              disabled={trendsLoading}
+            >
+              All Time
+            </button>
+          </div>
+        </div>
+
+        {trendsError && (
+          <div className="alert alert-error" style={{ marginBottom: "1rem" }}>
+            <span>{trendsError}</span>
+          </div>
+        )}
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          {/* A. Inspection Volume */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">Inspection Volume Trend</h2>
+            </div>
+            <div className="card-body" style={{ height: "300px" }}>
+              {trendsLoading ? (
+                <div className="state-container" style={{ height: "100%" }}>
+                  <div className="spinner" />
+                  <div className="state-desc" style={{ marginTop: "0.5rem" }}>
+                    Loading trend data...
+                  </div>
+                </div>
+              ) : trends.length === 0 ? (
+                <div className="state-container" style={{ height: "100%" }}>
+                  <div className="state-desc">No inspection volume data recorded.</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={trends}
+                    margin={{ top: 15, right: 20, left: -10, bottom: 10 }}
+                  >
+                    <CartesianGrid stroke={COLORS.grid} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: COLORS.text, fontSize: 11 }}
+                      tickFormatter={(d) => (d && d.length >= 10 ? d.slice(5) : d)}
+                    />
+                    <YAxis
+                      tick={{ fill: COLORS.text, fontSize: 11 }}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: COLORS.tooltipBackground,
+                        borderColor: COLORS.tooltipBorder,
+                        color: COLORS.text,
+                        borderRadius: "6px",
+                      }}
+                      formatter={(val) => [val, "Total Inspections"]}
+                      labelFormatter={(label) => `Date: ${label}`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="total_inspections"
+                      name="Total Inspections"
+                      stroke={COLORS.cyan}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: COLORS.cyan }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          {/* B. Defect Rate */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">Defect Rate Trend</h2>
+            </div>
+            <div className="card-body" style={{ height: "300px" }}>
+              {trendsLoading ? (
+                <div className="state-container" style={{ height: "100%" }}>
+                  <div className="spinner" />
+                  <div className="state-desc" style={{ marginTop: "0.5rem" }}>
+                    Loading trend data...
+                  </div>
+                </div>
+              ) : trends.length === 0 ? (
+                <div className="state-container" style={{ height: "100%" }}>
+                  <div className="state-desc">No defect rate data recorded.</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={trends}
+                    margin={{ top: 15, right: 20, left: -10, bottom: 10 }}
+                  >
+                    <CartesianGrid stroke={COLORS.grid} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: COLORS.text, fontSize: 11 }}
+                      tickFormatter={(d) => (d && d.length >= 10 ? d.slice(5) : d)}
+                    />
+                    <YAxis
+                      tick={{ fill: COLORS.text, fontSize: 11 }}
+                      unit="%"
+                      domain={[0, 100]}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: COLORS.tooltipBackground,
+                        borderColor: COLORS.tooltipBorder,
+                        color: COLORS.text,
+                        borderRadius: "6px",
+                      }}
+                      formatter={(val) => [`${val}%`, "Defect Rate"]}
+                      labelFormatter={(label) => `Date: ${label}`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="defect_rate"
+                      name="Defect Rate (%)"
+                      stroke={COLORS.red}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: COLORS.red }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          {/* C. Average Severity */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">Average Severity Trend</h2>
+            </div>
+            <div className="card-body" style={{ height: "300px" }}>
+              {trendsLoading ? (
+                <div className="state-container" style={{ height: "100%" }}>
+                  <div className="spinner" />
+                  <div className="state-desc" style={{ marginTop: "0.5rem" }}>
+                    Loading trend data...
+                  </div>
+                </div>
+              ) : trends.length === 0 ? (
+                <div className="state-container" style={{ height: "100%" }}>
+                  <div className="state-desc">No severity data recorded.</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={trends}
+                    margin={{ top: 15, right: 20, left: -10, bottom: 10 }}
+                  >
+                    <CartesianGrid stroke={COLORS.grid} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: COLORS.text, fontSize: 11 }}
+                      tickFormatter={(d) => (d && d.length >= 10 ? d.slice(5) : d)}
+                    />
+                    <YAxis
+                      tick={{ fill: COLORS.text, fontSize: 11 }}
+                      domain={[0, 100]}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: COLORS.tooltipBackground,
+                        borderColor: COLORS.tooltipBorder,
+                        color: COLORS.text,
+                        borderRadius: "6px",
+                      }}
+                      formatter={(val) => [val, "Avg Severity Score"]}
+                      labelFormatter={(label) => `Date: ${label}`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="avg_severity"
+                      name="Average Severity"
+                      stroke={COLORS.amber}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: COLORS.amber }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          {/* D. Accept vs Reject */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">Accept vs Reject Trend</h2>
+            </div>
+            <div className="card-body" style={{ height: "300px" }}>
+              {trendsLoading ? (
+                <div className="state-container" style={{ height: "100%" }}>
+                  <div className="spinner" />
+                  <div className="state-desc" style={{ marginTop: "0.5rem" }}>
+                    Loading trend data...
+                  </div>
+                </div>
+              ) : trends.length === 0 ? (
+                <div className="state-container" style={{ height: "100%" }}>
+                  <div className="state-desc">No disposition data recorded.</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={trends}
+                    margin={{ top: 15, right: 20, left: -10, bottom: 10 }}
+                  >
+                    <CartesianGrid stroke={COLORS.grid} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: COLORS.text, fontSize: 11 }}
+                      tickFormatter={(d) => (d && d.length >= 10 ? d.slice(5) : d)}
+                    />
+                    <YAxis
+                      tick={{ fill: COLORS.text, fontSize: 11 }}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: COLORS.tooltipBackground,
+                        borderColor: COLORS.tooltipBorder,
+                        color: COLORS.text,
+                        borderRadius: "6px",
+                      }}
+                      labelFormatter={(label) => `Date: ${label}`}
+                    />
+                    <Legend
+                      wrapperStyle={{
+                        color: COLORS.text,
+                        fontSize: "12px",
+                        paddingTop: "5px",
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="accepted"
+                      name="Accepted"
+                      stroke={COLORS.green}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: COLORS.green }}
+                      activeDot={{ r: 5 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="rejected"
+                      name="Rejected"
+                      stroke={COLORS.red}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: COLORS.red }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
         </div>
 
 

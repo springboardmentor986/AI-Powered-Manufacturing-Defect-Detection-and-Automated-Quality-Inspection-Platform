@@ -724,6 +724,100 @@ function ImageDetails() {
               </div>
             </div>
 
+            {/* Quality Recommendation */}
+            {hasInspection && image.recommendation && image.recommendation.action !== "PENDING" && (
+              <div className="card">
+                <div className="card-header">
+                  <h3 className="card-title">
+                    Quality Recommendation
+                  </h3>
+                  <span
+                    className={`badge ${
+                      image.recommendation.action === "PASS"
+                        ? "badge-approved"
+                        : image.recommendation.action === "REWORK"
+                        ? "badge-role"
+                        : image.recommendation.action === "CLEAN"
+                        ? "badge-pending"
+                        : "badge-rejected"
+                    }`}
+                    style={{ fontWeight: 600, letterSpacing: "0.05em" }}
+                  >
+                    {image.recommendation.action}
+                  </span>
+                </div>
+
+                <div className="card-body">
+                  <div
+                    style={{
+                      padding: "0.75rem 1rem",
+                      borderRadius: "6px",
+                      backgroundColor: "rgba(255, 255, 255, 0.03)",
+                      border: "1px solid var(--border-subtle)",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        color: "var(--text-muted)",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      Recommended Action
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: 600,
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      {image.recommendation.action_label}
+                    </div>
+                  </div>
+
+                  <table
+                    className="meta-table"
+                    style={{ marginBottom: "0.75rem" }}
+                  >
+                    <tbody>
+                      <tr>
+                        <th style={{ width: "120px" }}>Rationale</th>
+                        <td style={{ color: "var(--text-secondary)" }}>
+                          {image.recommendation.rationale}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Guidance</th>
+                        <td
+                          style={{
+                            color: "var(--text-primary)",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {image.recommendation.guidance}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <p
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "var(--text-muted)",
+                      margin: 0,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    ℹ️ Automated decision support recommendation based on optical inspection telemetry. Does not replace required engineering or supervisor disposition.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Supervisor Review */}
             <div className="card">
               <div className="card-header">

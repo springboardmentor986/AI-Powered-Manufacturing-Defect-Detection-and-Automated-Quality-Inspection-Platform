@@ -116,6 +116,7 @@ class ASGITestClient:
                     "body": body_bytes,
                     "more_body": False,
                 }
+            await asyncio.sleep(100)
             return {
                 "type": "http.request",
                 "body": b"",

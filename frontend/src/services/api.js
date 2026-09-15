@@ -317,6 +317,60 @@ export async function getAnalyticsSummary() {
   return data;
 }
 
+export async function getAnalyticsTrends(days = "30") {
+  const response = await apiFetch(
+    `/analytics/trends?days=${encodeURIComponent(days)}`
+  );
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(
+      formatErrorMessage(data, "Failed to load analytics trends."),
+      response.status
+    );
+  }
+
+  return data;
+}
+
+export async function exportQualityReport(format = "csv") {
+  const response = await apiFetch(
+    `/analytics/reports/export?format=${encodeURIComponent(format)}`
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new ApiError(
+      formatErrorMessage(errorData, "Failed to export quality report."),
+      response.status
+    );
+  }
+
+  let filename = `production_quality_report_${Date.now()}.${format}`;
+  const disposition = response.headers.get("Content-Disposition");
+  if (disposition) {
+    const match = disposition.match(/filename=["']?([^"';]+)["']?/i);
+    if (match && match[1]) {
+      filename = match[1].trim();
+    }
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.style.display = "none";
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }, 100);
+
+  return { filename };
+}
+
 export function getStoredUser() {
   const raw = localStorage.getItem("current_user");
   if (!raw) return null;

@@ -13,6 +13,7 @@ from app.models.user import User
 from app.schemas.image_schema import ImageReviewRequest
 from app.schemas.inspection_schema import InspectionRequest
 from app.security.authorization import require_any_role, require_role
+from app.services.recommendation_service import get_quality_recommendation
 from app.services.image_service import (
     BASE_DIR,
     create_image_record,
@@ -92,6 +93,13 @@ def serialize_image(db: Session, image) -> dict:
     reviewer = db.query(User).filter(User.id == image.reviewed_by).first() if image.reviewed_by else None
     overlay_path = INSPECTION_RESULTS_DIR / f"{image.id}_defect_overlay.png"
 
+    recommendation = get_quality_recommendation(
+        defect_type=image.defect_type,
+        quality_decision=image.quality_decision,
+        severity_level=image.severity_level,
+        severity_score=image.severity_score,
+    )
+
     return {
         "id": image.id,
         "original_filename": image.original_filename,
@@ -128,6 +136,7 @@ def serialize_image(db: Session, image) -> dict:
         "severity_score": image.severity_score,
         "severity_level": image.severity_level,
         "quality_decision": image.quality_decision,
+        "recommendation": recommendation,
         "inspection_overlay_available": overlay_path.exists(),
     }
 
@@ -227,6 +236,13 @@ def inspect_image(
         db.commit()
         db.refresh(image)
 
+        recommendation = get_quality_recommendation(
+            defect_type=result["defect_type"],
+            quality_decision=result["quality_decision"],
+            severity_level=result["severity_level"],
+            severity_score=result["severity_score"],
+        )
+
         return {
             "image_id": image.id,
             "original_filename": image.original_filename,
@@ -246,6 +262,7 @@ def inspect_image(
             "severity_score": result["severity_score"],
             "severity_level": result["severity_level"],
             "quality_decision": result["quality_decision"],
+            "recommendation": recommendation,
             "inspection_overlay_available": overlay_path.exists(),
         }
     except ValueError as e:
