@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Swap this for Postgres in production, e.g.:
+      # DATABASE_URL=postgresql://vision:vision@db:5432/visioninspect
+      - DATABASE_URL=sqlite:///./visioninspect.db
+      - JWT_SECRET_KEY=change-this-to-a-long-random-string-in-production
+      - CORS_ORIGINS=http://localhost:3000
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_db:/app
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  # Optional: switch DATABASE_URL above to use this instead of SQLite
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=vision
+      - POSTGRES_PASSWORD=vision
+      - POSTGRES_DB=visioninspect
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  backend_uploads:
+  backend_db:
+  pg_data:
