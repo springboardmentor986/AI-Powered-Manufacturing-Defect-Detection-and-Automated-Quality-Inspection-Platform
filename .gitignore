@@ -61,3 +61,7 @@ Thumbs.db
 Screenshot*.png
 *.log
 *.csv
+
+# Generated YOLO dataset and model outputs
+datasets/
+ai/weights/
