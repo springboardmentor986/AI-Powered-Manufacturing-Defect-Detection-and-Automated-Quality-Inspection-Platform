@@ -126,6 +126,8 @@ PDF export
 ReportLab
 
 ## Project Structure
+
+```text
 VisionInspectAI/
 │
 ├── backend/
@@ -153,6 +155,7 @@ VisionInspectAI/
 │   │   ├── components/
 │   │   ├── context/
 │   │   └── pages/
+│   │
 │   ├── public/
 │   ├── package.json
 │   └── vite.config.js
