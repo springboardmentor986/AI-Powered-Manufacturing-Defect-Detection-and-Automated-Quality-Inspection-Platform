@@ -1,1023 +1,1089 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const API_URL = "http://127.0.0.1:8000";
 
 function Inspection({ user }) {
-  const fileInputRef = useRef(null);
-
   const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
 
-  const [imageDimensions, setImageDimensions] = useState({
-    width: 1,
-    height: 1,
-  });
+  const imageRef = useRef(null);
+  const overlayRef = useRef(null);
 
-  const API_URL = "http://127.0.0.1:8000";
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-  // =====================================================
-  // ALLOWED IMAGE TYPES
-  // =====================================================
-
-  const allowedTypes = [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/bmp",
-    "image/tiff",
-    "image/webp",
-  ];
-
-  // =====================================================
-  // FORMAT FILE SIZE
-  // =====================================================
-
-  const formatFileSize = (bytes) => {
-    if (bytes < 1024) {
-      return `${bytes} B`;
-    }
-
-    if (bytes < 1024 * 1024) {
-      return `${(bytes / 1024).toFixed(1)} KB`;
-    }
-
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
-
-  // =====================================================
+  // ============================================================
   // SELECT IMAGE
-  // =====================================================
+  // ============================================================
 
-  const handleImageChange = (event) => {
+  const handleFileChange = (event) => {
     const file = event.target.files?.[0];
 
     if (!file) {
       return;
     }
 
-    setError("");
-    setResult(null);
-
-    // -------------------------------------------------
-    // Check image type
-    // -------------------------------------------------
-
-    if (!allowedTypes.includes(file.type)) {
-      setError(
-        "Unsupported image format. Please select JPG, JPEG, PNG, BMP, TIFF or WebP."
-      );
-
-      event.target.value = "";
-      return;
-    }
-
-    // -------------------------------------------------
-    // Reject MVTec ground-truth masks
-    // -------------------------------------------------
-
-    const lowerFileName = file.name.toLowerCase();
-
-    if (lowerFileName.includes("_mask")) {
-      setError(
-        "Ground-truth mask images are not allowed. Please upload the original product image."
-      );
-
-      event.target.value = "";
-      return;
-    }
-
-    // -------------------------------------------------
-    // Check file size
-    // -------------------------------------------------
-
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Image size must be less than 10 MB.");
-
-      event.target.value = "";
-      return;
-    }
-
-    // -------------------------------------------------
-    // Remove previous preview URL
-    // -------------------------------------------------
-
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
 
-    const imageUrl = URL.createObjectURL(file);
+    const newUrl = URL.createObjectURL(file);
 
     setSelectedFile(file);
-    setPreviewUrl(imageUrl);
+    setPreviewUrl(newUrl);
 
-    setImageDimensions({
-      width: 1,
-      height: 1,
-    });
-  };
-
-  // =====================================================
-  // RESULT IMAGE LOAD
-  // =====================================================
-
-  const handleResultImageLoad = (event) => {
-    setImageDimensions({
-      width: event.target.naturalWidth,
-      height: event.target.naturalHeight,
-    });
-  };
-
-  // =====================================================
-  // REMOVE IMAGE
-  // =====================================================
-
-  const handleRemoveImage = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
-    setSelectedFile(null);
-    setPreviewUrl("");
     setResult(null);
     setError("");
-
-    setImageDimensions({
-      width: 1,
-      height: 1,
-    });
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    setImageLoaded(false);
   };
 
-  // =====================================================
-  // RUN INSPECTION
-  // =====================================================
+  // ============================================================
+  // IMAGE LOADED
+  // ============================================================
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+
+    console.log(
+      "IMAGE NATURAL WIDTH:",
+      imageRef.current?.naturalWidth
+    );
+
+    console.log(
+      "IMAGE NATURAL HEIGHT:",
+      imageRef.current?.naturalHeight
+    );
+
+    console.log(
+      "IMAGE DISPLAY WIDTH:",
+      imageRef.current?.clientWidth
+    );
+
+    console.log(
+      "IMAGE DISPLAY HEIGHT:",
+      imageRef.current?.clientHeight
+    );
+  };
+
+  // ============================================================
+  // CLEAN URL
+  // ============================================================
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  // ============================================================
+  // SUBMIT INSPECTION
+  // ============================================================
 
   const handleInspection = async () => {
-    setError("");
-    setResult(null);
-
-    // -------------------------------------------------
-    // Image validation
-    // -------------------------------------------------
-
     if (!selectedFile) {
       setError("Please select an image first.");
       return;
     }
 
-    // -------------------------------------------------
-    // JWT validation
-    // -------------------------------------------------
-
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      setError("Your session has expired. Please login again.");
-      return;
-    }
-
     setLoading(true);
+    setError("");
+    setResult(null);
 
     try {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
       const formData = new FormData();
 
-      // FastAPI expects "file"
       formData.append("file", selectedFile);
-
-      // -------------------------------------------------
-      // Send request to FastAPI
-      // -------------------------------------------------
 
       const response = await fetch(
         `${API_URL}/inspection/predict`,
         {
           method: "POST",
-
           headers: {
             Authorization: `Bearer ${token}`,
           },
-
           body: formData,
         }
       );
 
-      let data = {};
+      const data = await response.json();
 
-      try {
-        data = await response.json();
-      } catch {
-        data = {};
-      }
+      // ========================================================
+      // DEBUG RESPONSE
+      // ========================================================
 
-      // =================================================
-      // ERROR HANDLING
-      // =================================================
+      console.log(
+        "===================================="
+      );
+
+      console.log(
+        "FULL INSPECTION RESPONSE:"
+      );
+
+      console.log(
+        JSON.stringify(data, null, 2)
+      );
+
+      console.log(
+        "===================================="
+      );
 
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error(
-            "Unauthorized. Please login again."
-          );
-        }
-
-        if (response.status === 403) {
-          throw new Error(
-            "You do not have permission to perform an inspection."
-          );
-        }
-
-        if (response.status === 404) {
-          throw new Error(
-            "Inspection endpoint not found."
-          );
-        }
-
-        if (response.status === 422) {
-          throw new Error(
-            data.detail
-              ? JSON.stringify(data.detail)
-              : "Invalid inspection request."
-          );
-        }
-
         throw new Error(
           data.detail || "Inspection failed."
         );
       }
 
-      // =================================================
-      // SUCCESS
-      // =================================================
-
-      console.log(
-        "YOLO inspection result:",
-        data
-      );
-
       setResult(data);
 
+      if (imageRef.current) {
+        console.log(
+          "IMAGE WIDTH:",
+          imageRef.current.naturalWidth
+        );
+
+        console.log(
+          "IMAGE HEIGHT:",
+          imageRef.current.naturalHeight
+        );
+      }
     } catch (err) {
       console.error(
-        "Inspection error:",
+        "INSPECTION ERROR:",
         err
       );
 
-      if (err instanceof TypeError) {
-        setError(
-          "Cannot connect to VisionInspect AI server. Make sure FastAPI is running on http://127.0.0.1:8000."
-        );
-      } else {
-        setError(
-          err.message ||
-            "Unable to complete inspection."
-        );
-      }
-
+      setError(
+        err.message ||
+          "Something went wrong during inspection."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // =====================================================
-  // RESULT STATUS
-  // =====================================================
+  // ============================================================
+  // REMOVE IMAGE
+  // ============================================================
 
-  const isNormal =
-    result?.prediction?.toLowerCase() === "pass";
+  const handleRemove = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
 
-  // =====================================================
-  // RENDER YOLO DETECTION BOXES
-  // =====================================================
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setResult(null);
+    setError("");
+    setImageLoaded(false);
+  };
 
-  const renderDetectionBoxes = () => {
-    if (!result?.detections?.length) {
-      return null;
+  // ============================================================
+  // GET DETECTIONS
+  // ============================================================
+
+  const detections = Array.isArray(
+    result?.detections
+  )
+    ? result.detections
+    : [];
+
+  // ============================================================
+  // GET BOUNDING BOX
+  // ============================================================
+
+  const getBoundingBox = (detection) => {
+    /*
+      Supported formats:
+
+      1. bbox: [x1, y1, x2, y2]
+
+      2. box: [x1, y1, x2, y2]
+
+      3. bounding_box: [x1, y1, x2, y2]
+
+      4. bbox:
+         {
+           x1,
+           y1,
+           x2,
+           y2
+         }
+
+      5.
+         {
+           x1,
+           y1,
+           x2,
+           y2
+         }
+    */
+
+    if (
+      Array.isArray(detection?.bbox) &&
+      detection.bbox.length >= 4
+    ) {
+      return detection.bbox
+        .slice(0, 4)
+        .map(Number);
     }
 
     if (
-      !imageDimensions.width ||
-      !imageDimensions.height
+      Array.isArray(detection?.box) &&
+      detection.box.length >= 4
+    ) {
+      return detection.box
+        .slice(0, 4)
+        .map(Number);
+    }
+
+    if (
+      Array.isArray(
+        detection?.bounding_box
+      ) &&
+      detection.bounding_box.length >= 4
+    ) {
+      return detection.bounding_box
+        .slice(0, 4)
+        .map(Number);
+    }
+
+    if (
+      detection?.bbox &&
+      typeof detection.bbox === "object"
+    ) {
+      const x1 = Number(
+        detection.bbox.x1
+      );
+
+      const y1 = Number(
+        detection.bbox.y1
+      );
+
+      const x2 = Number(
+        detection.bbox.x2
+      );
+
+      const y2 = Number(
+        detection.bbox.y2
+      );
+
+      if (
+        Number.isFinite(x1) &&
+        Number.isFinite(y1) &&
+        Number.isFinite(x2) &&
+        Number.isFinite(y2)
+      ) {
+        return [x1, y1, x2, y2];
+      }
+    }
+
+    if (
+      detection?.x1 !== undefined &&
+      detection?.y1 !== undefined &&
+      detection?.x2 !== undefined &&
+      detection?.y2 !== undefined
+    ) {
+      return [
+        Number(detection.x1),
+        Number(detection.y1),
+        Number(detection.x2),
+        Number(detection.y2),
+      ];
+    }
+
+    return null;
+  };
+
+  // ============================================================
+  // GET DETECTION LABEL
+  // ============================================================
+
+  const getDetectionLabel = (detection) => {
+    return (
+      detection?.defect_type ||
+      detection?.class_name ||
+      detection?.className ||
+      detection?.class ||
+      detection?.label ||
+      "Defect"
+    );
+  };
+
+  // ============================================================
+  // GET YOLO CONFIDENCE
+  // ============================================================
+
+  const getYoloConfidence = (detection) => {
+    let confidence =
+      detection?.yolo_confidence ??
+      detection?.yoloConfidence ??
+      detection?.confidence ??
+      detection?.conf ??
+      0;
+
+    confidence = Number(confidence);
+
+    if (!Number.isFinite(confidence)) {
+      return 0;
+    }
+
+    /*
+      If backend sends:
+
+      0.7977
+
+      convert to:
+
+      79.77
+    */
+
+    if (confidence <= 1) {
+      confidence *= 100;
+    }
+
+    return confidence;
+  };
+
+  // ============================================================
+  // FORMAT CONFIDENCE
+  // ============================================================
+
+  const formatConfidence = (confidence) => {
+    return `${Number(confidence).toFixed(2)}%`;
+  };
+
+  // ============================================================
+  // GET CLASSIFICATION CONFIDENCE
+  // ============================================================
+
+  const getClassificationConfidence = (
+    detection
+  ) => {
+    let confidence =
+      detection?.classification_confidence ??
+      detection?.classificationConfidence ??
+      null;
+
+    if (confidence === null) {
+      return null;
+    }
+
+    confidence = Number(confidence);
+
+    if (!Number.isFinite(confidence)) {
+      return null;
+    }
+
+    if (confidence <= 1) {
+      confidence *= 100;
+    }
+
+    return confidence;
+  };
+
+  // ============================================================
+  // GET BOUNDING BOX STYLE
+  // ============================================================
+
+  const getBoundingBoxStyle = (
+    detection
+  ) => {
+    const bbox =
+      getBoundingBox(detection);
+
+    const image =
+      imageRef.current;
+
+    if (!bbox || !image) {
+      return null;
+    }
+
+    const naturalWidth =
+      image.naturalWidth;
+
+    const naturalHeight =
+      image.naturalHeight;
+
+    const displayedWidth =
+      image.clientWidth;
+
+    const displayedHeight =
+      image.clientHeight;
+
+    if (
+      !naturalWidth ||
+      !naturalHeight ||
+      !displayedWidth ||
+      !displayedHeight
     ) {
       return null;
     }
 
-    return result.detections.map(
-      (detection, index) => {
-        const bbox = detection?.bbox;
+    const [
+      x1,
+      y1,
+      x2,
+      y2,
+    ] = bbox;
 
-        if (!bbox) {
-          return null;
-        }
+    // ========================================================
+    // SCALE ORIGINAL YOLO COORDINATES
+    // TO DISPLAYED IMAGE SIZE
+    // ========================================================
 
-        const {
-          x1,
-          y1,
-          x2,
-          y2,
-        } = bbox;
+    const scaleX =
+      displayedWidth /
+      naturalWidth;
 
-        // Convert original image coordinates
-        // to percentage positions.
+    const scaleY =
+      displayedHeight /
+      naturalHeight;
 
-        const left =
-          (x1 / imageDimensions.width) * 100;
+    const left =
+      x1 * scaleX;
 
-        const top =
-          (y1 / imageDimensions.height) * 100;
+    const top =
+      y1 * scaleY;
 
-        const width =
-          ((x2 - x1) /
-            imageDimensions.width) *
-          100;
+    const width =
+      (x2 - x1) * scaleX;
 
-        const height =
-          ((y2 - y1) /
-            imageDimensions.height) *
-          100;
+    const height =
+      (y2 - y1) * scaleY;
 
-        const confidence =
-          Number(
-            detection.confidence || 0
-          ) * 100;
-
-        return (
-          <div
-            key={index}
-            className="yolo-detection-box"
-            style={{
-              position: "absolute",
-              left: `${left}%`,
-              top: `${top}%`,
-              width: `${width}%`,
-              height: `${height}%`,
-              border: "3px solid red",
-              boxSizing: "border-box",
-              pointerEvents: "none",
-              zIndex: 5,
-            }}
-          >
-            {/* DEFECT LABEL */}
-
-            <div
-              className="yolo-detection-label"
-              style={{
-                position: "absolute",
-                left: "-3px",
-                top: "-32px",
-                background: "red",
-                color: "white",
-                padding: "5px 9px",
-                fontSize: "14px",
-                fontWeight: "700",
-                lineHeight: "1",
-                whiteSpace: "nowrap",
-                borderRadius: "3px",
-              }}
-            >
-              defect: {confidence.toFixed(1)}%
-            </div>
-          </div>
-        );
-      }
-    );
+    return {
+      left: `${left}px`,
+      top: `${top}px`,
+      width: `${width}px`,
+      height: `${height}px`,
+    };
   };
 
-  // =====================================================
-  // HIGHEST CONFIDENCE
-  // =====================================================
+  // ============================================================
+  // INSPECTION STATUS
+  // ============================================================
 
-  const highestConfidence =
-    result?.detections?.length > 0
-      ? Math.max(
-          ...result.detections.map(
-            (detection) =>
-              Number(
-                detection.confidence || 0
-              )
-          )
-        ) * 100
-      : null;
+  /*
+    IMPORTANT:
 
-  // =====================================================
-  // PAGE
-  // =====================================================
+    We determine the displayed product status from
+    the actual number of YOLO detections.
+
+    0 detections  -> GOOD
+    1+ detections -> DEFECT
+
+    This prevents a situation where the backend says
+    "DEFECT" but defect_count is actually 0.
+  */
+
+  const defectCount =
+    result?.defect_count ??
+    detections.length;
+
+  const isDefect =
+    Number(defectCount) > 0;
+
+  const status = isDefect
+    ? "DEFECT"
+    : "GOOD";
+
+  // ============================================================
+  // RENDER
+  // ============================================================
 
   return (
-    <div className="inspection-page">
+    <div className="grid grid-cols-1 gap-7 xl:grid-cols-2">
 
-      {/* =================================================
-          PAGE HEADER
-         ================================================= */}
+      {/* ======================================================
+          LEFT PANEL
+      ====================================================== */}
 
-      <div className="inspection-page-header">
+      <section className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
+
+        {/* ----------------------------------------------------
+            HEADER
+        ---------------------------------------------------- */}
 
         <div>
+          <h2 className="text-2xl font-bold text-slate-900">
+            Product Image
+          </h2>
 
-          <h1>
-            New Inspection
-          </h1>
-
-          <p>
-            Upload a product image and run
-            AI-powered quality inspection.
+          <p className="mt-2 text-sm text-slate-500">
+            Upload an image for quality inspection.
           </p>
-
         </div>
 
-      </div>
+        {/* ====================================================
+            UPLOAD AREA
+        ==================================================== */}
 
-      {/* =================================================
-          MAIN CONTENT
-         ================================================= */}
+        {!previewUrl && (
+          <label className="mt-8 flex min-h-[420px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 transition hover:border-blue-400 hover:bg-blue-50">
 
-      <div className="inspection-content">
+            <div className="text-center">
 
-        {/* =================================================
-            LEFT CARD
-           ================================================= */}
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-3xl text-blue-600">
+                +
+              </div>
 
-        <div className="upload-card">
+              <h3 className="mt-5 text-lg font-semibold text-slate-800">
+                Upload inspection image
+              </h3>
 
-          {/* CARD HEADER */}
-
-          <div className="inspection-card-header">
-
-            <div>
-
-              <h2>
-                Product Image
-              </h2>
-
-              <p>
-                Upload an image for quality
-                inspection.
+              <p className="mt-2 text-sm text-slate-500">
+                JPG, JPEG, PNG, BMP, TIFF or WEBP
               </p>
 
             </div>
 
-          </div>
+            <input
+              type="file"
+              accept=".jpg,.jpeg,.png,.bmp,.tif,.tiff,.webp"
+              onChange={handleFileChange}
+              className="hidden"
+            />
 
-          {/* =================================================
-              FILE INPUT
-             ================================================= */}
+          </label>
+        )}
 
-          <input
-            ref={fileInputRef}
-            id="product-image-upload"
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,image/bmp,image/tiff,image/webp"
-            onChange={handleImageChange}
-            disabled={loading}
-            style={{
-              position: "absolute",
-              width: "1px",
-              height: "1px",
-              opacity: 0,
-              overflow: "hidden",
-              pointerEvents: "none",
-            }}
-          />
+        {/* ====================================================
+            IMAGE
+        ==================================================== */}
 
-          {/* =================================================
-              UPLOAD AREA
-             ================================================= */}
+        {previewUrl && (
+          <div className="mt-8">
 
-          {!selectedFile ? (
+            <div className="flex min-h-[400px] items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-950 p-0">
 
-            <label
-              htmlFor="product-image-upload"
-              className="upload-area"
-              style={{
-                display: "block",
-                cursor: loading
-                  ? "not-allowed"
-                  : "pointer",
-              }}
-            >
+              {/* =================================================
+                  IMAGE + BOUNDING BOX WRAPPER
+              ================================================== */}
 
-              <div className="upload-icon">
-                📁
+              <div
+                ref={overlayRef}
+                className="relative inline-block max-h-[520px] max-w-full"
+              >
+
+                {/* ---------------------------------------------
+                    ACTUAL IMAGE
+                --------------------------------------------- */}
+
+                <img
+                  ref={imageRef}
+                  src={previewUrl}
+                  alt="Inspection"
+                  onLoad={handleImageLoad}
+                  className="block max-h-[520px] max-w-full object-contain"
+                />
+
+                {/* =============================================
+                    YOLO BOUNDING BOXES
+                ============================================= */}
+
+                {imageLoaded &&
+                  result &&
+                  detections.map(
+                    (detection, index) => {
+
+                      const boxStyle =
+                        getBoundingBoxStyle(
+                          detection
+                        );
+
+                      const label =
+                        getDetectionLabel(
+                          detection
+                        );
+
+                      const confidence =
+                        getYoloConfidence(
+                          detection
+                        );
+
+                      console.log(
+                        `Detection ${index}:`,
+                        {
+                          detection,
+                          bbox:
+                            getBoundingBox(
+                              detection
+                            ),
+                          boxStyle,
+                        }
+                      );
+
+                      if (!boxStyle) {
+                        return null;
+                      }
+
+                      return (
+                        <div
+                          key={index}
+                          className="pointer-events-none absolute border-[4px] border-cyan-400"
+                          style={boxStyle}
+                        >
+
+                          {/* -----------------------------------
+                              LABEL
+                          ----------------------------------- */}
+
+                          <div className="absolute left-[-4px] top-[-38px] whitespace-nowrap bg-cyan-400 px-2 py-1 text-lg font-medium leading-none text-black">
+
+                            {label}:{" "}
+                            {formatConfidence(
+                              confidence
+                            )}
+
+                          </div>
+
+                        </div>
+                      );
+                    }
+                  )}
+
               </div>
 
-              <h3>
-                Upload Product Image
-              </h3>
+            </div>
 
-              <p>
-                Click here to select an image
-              </p>
+            {/* =================================================
+                FILE INFORMATION
+            ================================================== */}
 
-              <span>
-                Supported formats:
-                JPG, JPEG, PNG,
-                BMP, TIFF, WebP
-              </span>
+            <div className="mt-5 flex items-center justify-between">
 
-            </label>
+              <div>
 
-          ) : (
+                <p className="font-semibold text-slate-900">
+                  {selectedFile?.name}
+                </p>
 
-            <div className="image-container">
+                <p className="mt-1 text-sm text-slate-500">
+                  {selectedFile
+                    ? (
+                        selectedFile.size /
+                        1024
+                      ).toFixed(1)
+                    : "0"}{" "}
+                  KB
+                </p>
 
-              <img
-                src={previewUrl}
-                alt="Selected product"
-                className="image-preview"
-              />
+              </div>
 
               <button
                 type="button"
-                className="remove-image-btn"
-                onClick={handleRemoveImage}
-                disabled={loading}
+                onClick={handleRemove}
+                className="text-sm font-medium text-red-500 transition hover:text-red-700"
               >
                 Remove
               </button>
 
             </div>
 
-          )}
+            {/* =================================================
+                SUBMIT BUTTON
+            ================================================== */}
 
-          {/* =================================================
-              SELECTED FILE
-             ================================================= */}
+            <button
+              type="button"
+              onClick={handleInspection}
+              disabled={loading}
+              className="mt-6 w-full rounded-xl bg-blue-600 px-5 py-4 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+            >
 
-          {selectedFile && (
+              {loading
+                ? "Analyzing..."
+                : "Submit for Inspection"}
 
-            <div className="selected-file">
+            </button>
 
-              <span className="file-icon">
-                📄
-              </span>
+          </div>
+        )}
 
-              <div className="selected-file-info">
+        {/* ====================================================
+            ERROR
+        ==================================================== */}
 
-                <p>
-                  {selectedFile.name}
+        {error && (
+          <div className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+      </section>
+
+      {/* ======================================================
+          RIGHT PANEL
+      ====================================================== */}
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
+
+        <div>
+
+          <h2 className="text-2xl font-bold text-slate-900">
+            Inspection Result
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-500">
+            AI analysis results will appear here.
+          </p>
+
+        </div>
+
+        {/* ====================================================
+            NO RESULT
+        ==================================================== */}
+
+        {!result && (
+          <div className="mt-10 flex min-h-[400px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50">
+
+            <p className="text-sm text-slate-400">
+              Submit an image to see inspection results.
+            </p>
+
+          </div>
+        )}
+
+        {/* ====================================================
+            RESULT
+        ==================================================== */}
+
+        {result && (
+          <div className="mt-8 space-y-6">
+
+            {/* ==================================================
+                INSPECTION RESULT
+            ================================================== */}
+
+            <div
+              className={`rounded-xl border p-7 ${
+                isDefect
+                  ? "border-red-200 bg-red-50"
+                  : "border-green-200 bg-green-50"
+              }`}
+            >
+
+              <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+                Inspection Result
+              </p>
+
+              <h3
+                className={`mt-2 text-3xl font-bold ${
+                  isDefect
+                    ? "text-red-600"
+                    : "text-green-600"
+                }`}
+              >
+                {isDefect
+                  ? "Defect Detected"
+                  : "No Defect Detected"}
+              </h3>
+
+              <p
+                className={`mt-2 text-sm ${
+                  isDefect
+                    ? "text-red-600"
+                    : "text-green-600"
+                }`}
+              >
+                {isDefect
+                  ? "Defect detected in the product."
+                  : "No defect detected. Product passed inspection."}
+              </p>
+
+            </div>
+
+            {/* ==================================================
+                SUMMARY
+            ================================================== */}
+
+            <div className="grid grid-cols-2 gap-5">
+
+              {/* ----------------------------------------------
+                  DEFECT COUNT
+              ----------------------------------------------- */}
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+
+                <p className="text-sm text-slate-500">
+                  Defects Detected
                 </p>
 
-                <small>
-                  {formatFileSize(
-                    selectedFile.size
-                  )}
-                </small>
+                <p className="mt-3 text-3xl font-bold text-slate-900">
+                  {defectCount}
+                </p>
+
+              </div>
+
+              {/* ----------------------------------------------
+                  PRODUCT STATUS
+              ----------------------------------------------- */}
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+
+                <p className="text-sm text-slate-500">
+                  Product Status
+                </p>
+
+                <p
+                  className={`mt-3 text-lg font-bold ${
+                    isDefect
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  {isDefect
+                    ? "DEFECT"
+                    : "GOOD"}
+                </p>
 
               </div>
 
             </div>
 
-          )}
+            {/* ==================================================
+                DETECTION DETAILS
+            ================================================== */}
 
-          {/* =================================================
-              ERROR
-             ================================================= */}
+            <div className="rounded-xl border border-slate-200 bg-white p-6">
 
-          {error && (
+              <h3 className="text-lg font-bold text-slate-900">
+                Detection Details
+              </h3>
 
-            <div className="inspection-error">
-              ⚠ {error}
-            </div>
+              {/* ------------------------------------------------
+                  NO DETECTIONS
+              ------------------------------------------------- */}
 
-          )}
+              {detections.length === 0 && (
+                <div className="mt-5 rounded-lg bg-green-50 p-4 text-sm text-green-700">
+                  No defects detected. Product passed inspection.
+                </div>
+              )}
 
-          {/* =================================================
-              SUBMIT BUTTON
-             ================================================= */}
+              {/* ------------------------------------------------
+                  DETECTIONS
+              ------------------------------------------------- */}
 
-          <button
-            type="button"
-            className="inspect-btn"
-            onClick={handleInspection}
-            disabled={
-              loading ||
-              !selectedFile
-            }
-          >
+              {detections.map(
+                (detection, index) => {
 
-            {loading
-              ? "Analyzing Image..."
-              : "Submit for Inspection"}
+                  const label =
+                    getDetectionLabel(
+                      detection
+                    );
 
-          </button>
+                  const yoloConfidence =
+                    getYoloConfidence(
+                      detection
+                    );
 
-        </div>
+                  const classificationConfidence =
+                    getClassificationConfidence(
+                      detection
+                    );
 
-        {/* =================================================
-            RIGHT RESULT CARD
-           ================================================= */}
+                  return (
+                    <div
+                      key={index}
+                      className="mt-5"
+                    >
 
-        <div className="result-card-inspection">
+                      {/* ----------------------------------------
+                          DEFECT TYPE
+                      ----------------------------------------- */}
 
-          {/* CARD HEADER */}
+                      <div className="flex items-center justify-between border-b border-slate-100 py-4">
 
-          <div className="inspection-card-header">
+                        <span className="text-sm text-slate-500">
+                          Defect Type
+                        </span>
 
-            <div>
+                        <span className="font-semibold text-slate-900">
+                          {label}
+                        </span>
 
-              <h2>
-                Inspection Result
-              </h2>
+                      </div>
 
-              <p>
-                AI analysis results will
-                appear here.
-              </p>
+                      {/* ----------------------------------------
+                          YOLO CONFIDENCE
+                      ----------------------------------------- */}
+
+                      <div className="flex items-center justify-between border-b border-slate-100 py-4">
+
+                        <span className="text-sm text-slate-500">
+                          YOLO Confidence
+                        </span>
+
+                        <span className="font-semibold text-slate-900">
+                          {formatConfidence(
+                            yoloConfidence
+                          )}
+                        </span>
+
+                      </div>
+
+                      {/* ----------------------------------------
+                          CLASSIFICATION CONFIDENCE
+                      ----------------------------------------- */}
+
+                      {classificationConfidence !==
+                        null && (
+                        <div className="flex items-center justify-between border-b border-slate-100 py-4">
+
+                          <span className="text-sm text-slate-500">
+                            Classification Confidence
+                          </span>
+
+                          <span className="font-semibold text-slate-900">
+                            {formatConfidence(
+                              classificationConfidence
+                            )}
+                          </span>
+
+                        </div>
+                      )}
+
+                      {/* ----------------------------------------
+                          SEVERITY SCORE
+                      ----------------------------------------- */}
+
+                      {detection.severity_score !==
+                        undefined &&
+                        detection.severity_score !==
+                          null && (
+                          <div className="flex items-center justify-between border-b border-slate-100 py-4">
+
+                            <span className="text-sm text-slate-500">
+                              Severity Score
+                            </span>
+
+                            <span className="font-semibold text-slate-900">
+                              {Number(
+                                detection.severity_score
+                              ).toFixed(2)}
+                            </span>
+
+                          </div>
+                        )}
+
+                      {/* ----------------------------------------
+                          SEVERITY LEVEL
+                      ----------------------------------------- */}
+
+                      {detection.severity_level && (
+                        <div className="flex items-center justify-between py-4">
+
+                          <span className="text-sm text-slate-500">
+                            Severity Level
+                          </span>
+
+                          <span
+                            className={`rounded-full px-4 py-1 text-sm font-semibold ${
+                              detection.severity_level ===
+                              "Critical"
+                                ? "bg-red-100 text-red-700"
+                                : detection.severity_level ===
+                                  "High"
+                                ? "bg-orange-100 text-orange-700"
+                                : detection.severity_level ===
+                                  "Medium"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {
+                              detection.severity_level
+                            }
+                          </span>
+
+                        </div>
+                      )}
+
+                      {/* ----------------------------------------
+                          RECOMMENDED ACTION
+                      ----------------------------------------- */}
+
+                      {detection.recommended_action && (
+                        <div className="flex items-center justify-between border-t border-slate-100 py-4">
+
+                          <span className="text-sm text-slate-500">
+                            Recommended Action
+                          </span>
+
+                          <span
+                            className={`font-semibold ${
+                              detection.recommended_action ===
+                              "Reject"
+                                ? "text-red-600"
+                                : detection.recommended_action ===
+                                  "Rework"
+                                ? "text-orange-600"
+                                : detection.recommended_action ===
+                                  "Review"
+                                ? "text-yellow-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {
+                              detection.recommended_action
+                            }
+                          </span>
+
+                        </div>
+                      )}
+
+                      {/* ----------------------------------------
+                          MANUAL REVIEW
+                      ----------------------------------------- */}
+
+                      {detection.manual_review !==
+                        undefined && (
+                        <div className="flex items-center justify-between border-t border-slate-100 py-4">
+
+                          <span className="text-sm text-slate-500">
+                            Manual Review
+                          </span>
+
+                          <span
+                            className={`font-semibold ${
+                              detection.manual_review
+                                ? "text-red-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {detection.manual_review
+                              ? "Required"
+                              : "Not Required"}
+                          </span>
+
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                }
+              )}
 
             </div>
 
           </div>
+        )}
 
-          {/* =================================================
-              LOADING
-             ================================================= */}
-
-          {loading && (
-
-            <div className="empty-result">
-
-              <div className="loading-icon">
-                ⚙
-              </div>
-
-              <h3>
-                Analyzing Image...
-              </h3>
-
-              <p>
-                VisionInspect AI is analyzing
-                the uploaded image.
-              </p>
-
-              <div className="loading-bar">
-
-                <div className="loading-progress"></div>
-
-              </div>
-
-            </div>
-
-          )}
-
-          {/* =================================================
-              NO RESULT
-             ================================================= */}
-
-          {!loading && !result && (
-
-            <div className="empty-result">
-
-              <div className="result-icon">
-                ◎
-              </div>
-
-              <h3>
-                No Inspection Result
-              </h3>
-
-              <p>
-                Upload a product image to
-                begin the inspection.
-              </p>
-
-            </div>
-
-          )}
-
-          {/* =================================================
-              RESULT
-             ================================================= */}
-
-          {!loading && result && (
-
-            <div className="inspection-result">
-
-              {/* =================================================
-                  YOLO DETECTION IMAGE
-                 ================================================= */}
-
-              <div
-                className="yolo-result-image"
-                style={{
-                  width: "100%",
-                  marginBottom: "25px",
-                }}
-              >
-
-                <div
-                  className="yolo-image-wrapper"
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    overflow: "visible",
-                    borderRadius: "8px",
-                  }}
-                >
-
-                  <img
-                    src={previewUrl}
-                    alt="YOLO inspection result"
-                    onLoad={handleResultImageLoad}
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      display: "block",
-                      borderRadius: "8px",
-                    }}
-                  />
-
-                  {/* YOLO BOXES */}
-
-                  {renderDetectionBoxes()}
-
-                </div>
-
-              </div>
-
-              {/* =================================================
-                  STATUS
-                 ================================================= */}
-
-              <div
-                className={
-                  isNormal
-                    ? "result-status pass-result"
-                    : "result-status defect-result"
-                }
-              >
-
-                <div className="result-status-icon">
-
-                  {isNormal
-                    ? "✓"
-                    : "⚠"}
-
-                </div>
-
-                <h3>
-                  {result.prediction?.toUpperCase()}
-                </h3>
-
-              </div>
-
-              {/* =================================================
-                  PREDICTION
-                 ================================================= */}
-
-              <div className="result-detail">
-
-                <span>
-                  Prediction
-                </span>
-
-                <strong>
-                  {result.prediction || "-"}
-                </strong>
-
-              </div>
-
-              {/* =================================================
-                  DEFECT COUNT
-                 ================================================= */}
-
-              <div className="result-detail">
-
-                <span>
-                  Defect Count
-                </span>
-
-                <strong>
-                  {result.defect_count ?? 0}
-                </strong>
-
-              </div>
-
-              {/* =================================================
-                  HIGHEST CONFIDENCE
-                 ================================================= */}
-
-              <div className="result-detail">
-
-                <span>
-                  Highest Confidence
-                </span>
-
-                <strong>
-
-                  {highestConfidence !== null
-                    ? `${highestConfidence.toFixed(
-                        2
-                      )}%`
-                    : "-"}
-
-                </strong>
-
-              </div>
-
-              {/* =================================================
-                  DETECTED DEFECTS
-                 ================================================= */}
-
-              {result.detections?.length > 0 && (
-
-                <div
-                  className="result-detections"
-                  style={{
-                    marginTop: "20px",
-                  }}
-                >
-
-                  <h3>
-                    Detected Defects
-                  </h3>
-
-                  {result.detections.map(
-                    (detection, index) => {
-
-                      const confidence =
-                        Number(
-                          detection.confidence ||
-                            0
-                        ) * 100;
-
-                      const bbox =
-                        detection.bbox;
-
-                      return (
-
-                        <div
-                          className="detection-item"
-                          key={index}
-                          style={{
-                            padding: "12px",
-                            marginBottom: "10px",
-                            border:
-                              "1px solid #ddd",
-                            borderRadius: "6px",
-                          }}
-                        >
-
-                          {/* DEFECT */}
-
-                          <div className="result-detail">
-
-                            <span>
-                              Defect {index + 1}
-                            </span>
-
-                            <strong>
-                              {confidence.toFixed(
-                                2
-                              )}%
-                            </strong>
-
-                          </div>
-
-                          {/* CLASS */}
-
-                          <div className="result-detail">
-
-                            <span>
-                              Class
-                            </span>
-
-                            <strong>
-                              {detection.class_name ||
-                                "defect"}
-                            </strong>
-
-                          </div>
-
-                          {/* BOUNDING BOX */}
-
-                          {bbox && (
-
-                            <div className="result-detail">
-
-                              <span>
-                                Bounding Box
-                              </span>
-
-                              <strong>
-                                (
-                                {Number(
-                                  bbox.x1
-                                ).toFixed(1)}
-                                ,{" "}
-                                {Number(
-                                  bbox.y1
-                                ).toFixed(1)}
-                                ) → (
-                                {Number(
-                                  bbox.x2
-                                ).toFixed(1)}
-                                ,{" "}
-                                {Number(
-                                  bbox.y2
-                                ).toFixed(1)}
-                                )
-                              </strong>
-
-                            </div>
-
-                          )}
-
-                        </div>
-
-                      );
-
-                    }
-                  )}
-
-                </div>
-
-              )}
-
-              {/* =================================================
-                  INSPECTED BY
-                 ================================================= */}
-
-              <div className="result-detail">
-
-                <span>
-                  Inspected By
-                </span>
-
-                <strong>
-                  {result.inspected_by || "-"}
-                </strong>
-
-              </div>
-
-              {/* =================================================
-                  ROLE
-                 ================================================= */}
-
-              <div className="result-detail">
-
-                <span>
-                  Role
-                </span>
-
-                <strong>
-
-                  {result.inspected_by_role
-                    ?.replace("_", " ")
-                    ?.toUpperCase() || "-"}
-
-                </strong>
-
-              </div>
-
-              {/* =================================================
-                  MESSAGE
-                 ================================================= */}
-
-              <div className="result-message">
-
-                {isNormal ? (
-
-                  <p>
-                    ✓ The inspected product
-                    appears to meet the
-                    required quality standards.
-                  </p>
-
-                ) : (
-
-                  <p>
-                    ⚠ A potential
-                    manufacturing defect
-                    was detected. Further
-                    inspection may be required.
-                  </p>
-
-                )}
-
-              </div>
-
-              {/* =================================================
-                  NEW INSPECTION
-                 ================================================= */}
-
-              <button
-                type="button"
-                className="new-inspection-button"
-                onClick={handleRemoveImage}
-              >
-                Start New Inspection
-              </button>
-
-            </div>
-
-          )}
-
-        </div>
-
-      </div>
+      </section>
 
     </div>
   );

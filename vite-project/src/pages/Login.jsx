@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -25,7 +24,7 @@ function Login() {
 
       await login(email, password);
 
-      // App.jsx will automatically show the dashboard
+      // App.jsx automatically shows the dashboard
       // after AuthContext updates the user.
     } catch (err) {
       setError(err.message || "Login failed");
@@ -35,26 +34,46 @@ function Login() {
   };
 
   return (
-    <div className="login-page">
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
 
-      <div className="login-card">
+      {/* LOGIN CARD */}
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
 
-        <h1>VisionInspect AI</h1>
+        {/* LOGO / TITLE */}
+        <div className="mb-8 text-center">
 
-        <p className="login-subtitle">
-          Sign in to your account
-        </p>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 text-2xl font-bold text-white shadow-sm">
+            ◈
+          </div>
 
+          <h1 className="text-2xl font-bold text-slate-900">
+            VisionInspect AI
+          </h1>
+
+          <p className="mt-2 text-sm text-slate-500">
+            Sign in to your account
+          </p>
+
+        </div>
+
+
+        {/* ERROR */}
         {error && (
-          <div className="login-error">
+          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
 
-          <div className="form-group">
-            <label htmlFor="email">
+        {/* FORM */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* EMAIL */}
+          <div>
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Email
             </label>
 
@@ -65,11 +84,17 @@ function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">
+
+          {/* PASSWORD */}
+          <div>
+            <label
+              htmlFor="password"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Password
             </label>
 
@@ -80,17 +105,37 @@ function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
+
+          {/* LOGIN BUTTON */}
           <button
             type="submit"
             disabled={loading}
+            className="w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
-            {loading ? "Signing in..." : "Login"}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+
+                Signing in...
+
+              </span>
+            ) : (
+              "Login"
+            )}
           </button>
 
         </form>
+
+
+        {/* FOOTER */}
+        <p className="mt-6 text-center text-xs text-slate-400">
+          AI-powered manufacturing quality inspection
+        </p>
 
       </div>
 
@@ -99,4 +144,3 @@ function Login() {
 }
 
 export default Login;
-

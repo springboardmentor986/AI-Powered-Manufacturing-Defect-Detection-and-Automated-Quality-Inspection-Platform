@@ -2,9 +2,6 @@ from pathlib import Path
 from ultralytics import YOLO
 
 
-# --------------------------------------------------
-# 1. Load trained YOLO model
-# --------------------------------------------------
 
 MODEL_PATH = (
     Path(__file__).resolve().parent.parent
@@ -15,9 +12,7 @@ MODEL_PATH = (
 model = YOLO(str(MODEL_PATH))
 
 
-# --------------------------------------------------
-# 2. Test image folder
-# --------------------------------------------------
+
 
 TEST_DIR = (
     Path(__file__).resolve().parent.parent
@@ -27,9 +22,7 @@ TEST_DIR = (
 )
 
 
-# --------------------------------------------------
-# 3. Output folder
-# --------------------------------------------------
+
 
 OUTPUT_DIR = (
     Path(__file__).resolve().parent.parent
@@ -39,9 +32,7 @@ OUTPUT_DIR = (
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 
-# --------------------------------------------------
-# 4. Find all images
-# --------------------------------------------------
+
 
 image_extensions = {
     ".jpg",
@@ -61,9 +52,7 @@ images = [
 print("Total images found:", len(images))
 
 
-# --------------------------------------------------
-# 5. Predict every image
-# --------------------------------------------------
+
 
 defect_images = 0
 pass_images = 0
@@ -84,10 +73,7 @@ for index, image_path in enumerate(images, start=1):
 
     result = results[0]
 
-    # --------------------------------------------------
-    # Check prediction
-    # --------------------------------------------------
-
+    
     if len(result.boxes) > 0:
 
         defect_images += 1
@@ -120,10 +106,7 @@ for index, image_path in enumerate(images, start=1):
         print("RESULT: PASS")
 
 
-    # --------------------------------------------------
-    # Save annotated image
-    # --------------------------------------------------
-
+    
     annotated = result.plot()
 
     output_path = (
@@ -137,9 +120,7 @@ for index, image_path in enumerate(images, start=1):
     )
 
 
-# --------------------------------------------------
-# 6. Final summary
-# --------------------------------------------------
+
 
 print("\n" + "=" * 50)
 print("PREDICTION COMPLETED")

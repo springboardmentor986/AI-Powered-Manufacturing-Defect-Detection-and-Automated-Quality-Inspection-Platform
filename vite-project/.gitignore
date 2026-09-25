@@ -1,24 +1,89 @@
+# =========================
+# Python
+# =========================
+
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# Environment / Secrets
+# =========================
+
+.env
+*.env
+
+# =========================
+# Node / React
+# =========================
+
+node_modules/
+dist/
+
+# =========================
+# Datasets
+# =========================
+
+dataset1/
+dataset_preprocessed/
+processed_dataset/
+yolo_dataset/
+yolo_dataset_/
+yolo_dataset_final/
+
+# =========================
+# Generated Files
+# =========================
+
+uploads/
+augmentation_results/
+image_analysis/
+prediction_results/
+
+# =========================
+# ML Models
+# =========================
+
+*.pt
+*.pth
+*.onnx
+
+patchcore_models/
+
+# =========================
+# Training Outputs
+# =========================
+
+runs/
+
+# =========================
+# Large Archives
+# =========================
+
+*.zip
+*.tar
+*.tar.xz
+*.crswap
+
+# =========================
+# IDE
+# =========================
+
+.vscode/
+.idea/
+
+# =========================
 # Logs
-logs
+# =========================
+
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# =========================
+# OS
+# =========================
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db

@@ -16,9 +16,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
 
-  // =====================================================
-  // CHECK EXISTING LOGIN
-  // =====================================================
+  
 
   useEffect(() => {
 
@@ -91,9 +89,6 @@ export function AuthProvider({ children }) {
   }, []);
 
 
-  // =====================================================
-  // LOGIN
-  // =====================================================
 
   const login = async (
     email,
@@ -120,9 +115,7 @@ export function AuthProvider({ children }) {
       );
 
 
-      // -------------------------------------------------
-      // Handle HTTP error
-      // -------------------------------------------------
+      
 
       if (!response.ok) {
 
@@ -149,9 +142,7 @@ export function AuthProvider({ children }) {
       }
 
 
-      // -------------------------------------------------
-      // Read successful response
-      // -------------------------------------------------
+      
 
       const data =
         await response.json();
@@ -163,9 +154,7 @@ export function AuthProvider({ children }) {
       );
 
 
-      // -------------------------------------------------
-      // Make sure token exists
-      // -------------------------------------------------
+      
 
       if (!data.access_token) {
 
@@ -175,9 +164,7 @@ export function AuthProvider({ children }) {
       }
 
 
-      // -------------------------------------------------
-      // Save JWT
-      // -------------------------------------------------
+      
 
       localStorage.setItem(
         "access_token",
@@ -185,9 +172,7 @@ export function AuthProvider({ children }) {
       );
 
 
-      // -------------------------------------------------
-      // Login response already contains user
-      // -------------------------------------------------
+      
 
       if (data.user) {
 
@@ -197,10 +182,7 @@ export function AuthProvider({ children }) {
       }
 
 
-      // -------------------------------------------------
-      // Fallback: fetch /auth/me
-      // -------------------------------------------------
-
+      
       const userResponse =
         await fetch(
           `${API_URL}/auth/me`,
@@ -241,9 +223,7 @@ export function AuthProvider({ children }) {
       );
 
 
-      // -------------------------------------------------
-      // Browser/network error
-      // -------------------------------------------------
+      
 
       if (
         error instanceof TypeError &&
@@ -261,10 +241,7 @@ export function AuthProvider({ children }) {
   };
 
 
-  // =====================================================
-  // LOGOUT
-  // =====================================================
-
+  
   const logout = () => {
 
     localStorage.removeItem(
@@ -275,10 +252,7 @@ export function AuthProvider({ children }) {
   };
 
 
-  // =====================================================
-  // CONTEXT
-  // =====================================================
-
+  
   return (
     <AuthContext.Provider
       value={{
@@ -294,9 +268,7 @@ export function AuthProvider({ children }) {
 }
 
 
-// =======================================================
-// useAuth
-// =======================================================
+
 
 export function useAuth() {
 

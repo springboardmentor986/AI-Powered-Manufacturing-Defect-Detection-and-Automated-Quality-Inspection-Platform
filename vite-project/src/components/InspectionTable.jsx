@@ -1,101 +1,130 @@
-
 function InspectionTable() {
-
   const inspections = [
     {
       id: "INS001",
       product: "Bottle",
       date: "23 Aug 2026",
       result: "PASS",
-      confidence: "98.2%"
+      confidence: "98.2%",
     },
     {
       id: "INS002",
       product: "Cable",
       date: "23 Aug 2026",
       result: "DEFECT",
-      confidence: "91.7%"
+      confidence: "91.7%",
     },
     {
       id: "INS003",
       product: "Screw",
       date: "22 Aug 2026",
       result: "PASS",
-      confidence: "96.4%"
+      confidence: "96.4%",
     },
     {
       id: "INS004",
       product: "Metal Part",
       date: "22 Aug 2026",
       result: "DEFECT",
-      confidence: "89.3%"
+      confidence: "89.3%",
     },
     {
       id: "INS005",
       product: "Bottle",
       date: "21 Aug 2026",
       result: "PASS",
-      confidence: "97.1%"
-    }
+      confidence: "97.1%",
+    },
   ];
 
-
   return (
-    <div className="inspection-table-container">
+    <div className="w-full">
 
-      {/* Table Header */}
-      <div className="inspection-table-header">
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-5">
 
         <div>
-          <h2>Recent Inspections</h2>
-          <p>Latest quality inspection results</p>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Recent Inspections
+          </h2>
+
+          <p className="text-sm text-slate-500 mt-1">
+            Latest quality inspection results
+          </p>
         </div>
 
-        <button className="view-all-btn">
+        <button
+          type="button"
+          className="text-sm font-medium text-blue-600 hover:text-blue-700"
+        >
           View All
         </button>
 
       </div>
 
+      {/* TABLE */}
+      <div className="overflow-x-auto rounded-lg border border-slate-200">
 
-      {/* Table */}
-      <div className="table-wrapper">
+        <table className="w-full text-sm">
 
-        <table className="inspection-table">
-
-          <thead>
+          <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
-              <th>Inspection ID</th>
-              <th>Product</th>
-              <th>Date</th>
-              <th>Result</th>
-              <th>Confidence</th>
-              <th>Action</th>
+
+              <th className="px-5 py-3 text-left font-semibold text-slate-600">
+                Inspection ID
+              </th>
+
+              <th className="px-5 py-3 text-left font-semibold text-slate-600">
+                Product
+              </th>
+
+              <th className="px-5 py-3 text-left font-semibold text-slate-600">
+                Date
+              </th>
+
+              <th className="px-5 py-3 text-left font-semibold text-slate-600">
+                Result
+              </th>
+
+              <th className="px-5 py-3 text-left font-semibold text-slate-600">
+                Confidence
+              </th>
+
+              <th className="px-5 py-3 text-left font-semibold text-slate-600">
+                Action
+              </th>
+
             </tr>
           </thead>
 
-
-          <tbody>
+          <tbody className="divide-y divide-slate-100">
 
             {inspections.map((inspection) => (
 
-              <tr key={inspection.id}>
+              <tr
+                key={inspection.id}
+                className="hover:bg-slate-50 transition"
+              >
 
-                <td>
-                  <strong>{inspection.id}</strong>
+                <td className="px-5 py-4 font-semibold text-slate-800">
+                  {inspection.id}
                 </td>
 
-                <td>{inspection.product}</td>
+                <td className="px-5 py-4 text-slate-600">
+                  {inspection.product}
+                </td>
 
-                <td>{inspection.date}</td>
+                <td className="px-5 py-4 text-slate-500">
+                  {inspection.date}
+                </td>
 
-                <td>
+                <td className="px-5 py-4">
 
                   <span
                     className={
                       inspection.result === "PASS"
-                        ? "status pass"
-                        : "status defect"
+                        ? "inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700"
+                        : "inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700"
                     }
                   >
                     {inspection.result}
@@ -103,12 +132,19 @@ function InspectionTable() {
 
                 </td>
 
-                <td>{inspection.confidence}</td>
+                <td className="px-5 py-4 font-medium text-slate-700">
+                  {inspection.confidence}
+                </td>
 
-                <td>
-                  <button className="view-btn">
+                <td className="px-5 py-4">
+
+                  <button
+                    type="button"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                  >
                     View
                   </button>
+
                 </td>
 
               </tr>

@@ -3,164 +3,136 @@ import { useAuth } from "../context/AuthContext";
 function Sidebar({ page, setPage }) {
   const { user } = useAuth();
 
-  const role = user?.role;
+  const isQualityEngineer =
+    user?.role === "quality_engineer";
 
-  const isQualityEngineer = role === "quality_engineer";
-  const isSupervisor = role === "factory_supervisor";
+  const isSupervisor =
+    user?.role === "factory_supervisor";
 
-  const navigate = (target) => {
-    console.log("SIDEBAR CLICK:", target);
-    setPage(target);
-  };
+  const getButtonClass = (pageName) =>
+    `w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition ${
+      page === pageName
+        ? "bg-blue-600 text-white"
+        : "text-slate-300 hover:bg-slate-800 hover:text-white"
+    }`;
 
   return (
-    <aside className="w-64 min-h-screen bg-slate-900 text-white flex flex-col">
+    <aside
+      className="
+        w-[240px]
+        min-w-[240px]
+        max-w-[240px]
+        shrink-0
+        bg-slate-900
+        text-white
+      "
+    >
+      <div className="sticky top-0 flex h-screen flex-col">
 
-      {/* LOGO */}
-      <div className="px-6 py-6 border-b border-slate-700">
-        <h1 className="text-xl font-bold">
-          VisionInspect AI
-        </h1>
+        {/* Header */}
+        <div className="border-b border-slate-800 px-5 py-5">
+          <h2 className="text-lg font-bold">
+            VisionInspect AI
+          </h2>
 
-        <p className="text-xs text-slate-400 mt-1">
-          Quality Inspection System
-        </p>
-      </div>
+          <p className="mt-1 text-xs text-slate-400">
+            Quality Inspection System
+          </p>
+        </div>
 
-      {/* USER */}
-      <div className="px-6 py-4 border-b border-slate-700">
-        <p className="text-xs text-slate-400">
-          Logged in as
-        </p>
+        {/* User */}
+        <div className="border-b border-slate-800 px-5 py-4">
+          <p className="text-xs text-slate-400">
+            Logged in as
+          </p>
 
-        <p className="text-sm font-semibold mt-1">
-          {user?.name}
-        </p>
+          <p className="mt-1 text-sm font-semibold text-white">
+            {user?.name}
+          </p>
 
-        <p className="text-xs text-blue-400 mt-1">
-          {role?.replace("_", " ").toUpperCase()}
-        </p>
-      </div>
+          <p className="mt-1 text-xs text-blue-400">
+            {isQualityEngineer
+              ? "Quality Engineer"
+              : isSupervisor
+                ? "Factory Supervisor"
+                : user?.role}
+          </p>
+        </div>
 
-      {/* NAVIGATION */}
-      <nav className="flex-1 px-4 py-6">
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 px-3 py-4">
 
-        <div className="space-y-2">
-
-          {/* DASHBOARD */}
+          {/* Dashboard */}
           <button
             type="button"
-            onClick={() => navigate("dashboard")}
-            className={`w-full text-left px-4 py-3 rounded-lg transition cursor-pointer ${
-              page === "dashboard"
-                ? "bg-blue-600 text-white"
-                : "text-slate-300 hover:bg-slate-800"
-            }`}
+            onClick={() => setPage("dashboard")}
+            className={getButtonClass("dashboard")}
           >
             Dashboard
           </button>
 
-          {/* QUALITY ENGINEER */}
+          {/* New Inspection */}
           {isQualityEngineer && (
             <button
               type="button"
-              onClick={() => navigate("inspection")}
-              className={`w-full text-left px-4 py-3 rounded-lg transition cursor-pointer ${
-                page === "inspection"
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-300 hover:bg-slate-800"
-              }`}
+              onClick={() => setPage("inspection")}
+              className={getButtonClass("inspection")}
             >
               New Inspection
             </button>
           )}
 
-          {/* INSPECTIONS */}
-          <button
-            type="button"
-            onClick={() => navigate("inspections")}
-            className={`w-full text-left px-4 py-3 rounded-lg transition cursor-pointer ${
-              page === "inspections"
-                ? "bg-blue-600 text-white"
-                : "text-slate-300 hover:bg-slate-800"
-            }`}
-          >
-            Inspections
-          </button>
-
-          {/* REPORTS */}
-          <button
-            type="button"
-            onClick={() => navigate("reports")}
-            className={`w-full text-left px-4 py-3 rounded-lg transition cursor-pointer ${
-              page === "reports"
-                ? "bg-blue-600 text-white"
-                : "text-slate-300 hover:bg-slate-800"
-            }`}
-          >
-            Reports
-          </button>
-
-          {/* ANALYTICS */}
-          <button
-            type="button"
-            onClick={() => navigate("analytics")}
-            className={`w-full text-left px-4 py-3 rounded-lg transition cursor-pointer ${
-              page === "analytics"
-                ? "bg-blue-600 text-white"
-                : "text-slate-300 hover:bg-slate-800"
-            }`}
-          >
-            Analytics
-          </button>
-
-          {/* SUPERVISOR */}
-          {isSupervisor && (
+          {/* Inspections */}
+          {(isQualityEngineer || isSupervisor) && (
             <button
               type="button"
-              onClick={() => navigate("users")}
-              className={`w-full text-left px-4 py-3 rounded-lg transition cursor-pointer ${
-                page === "users"
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-300 hover:bg-slate-800"
-              }`}
+              onClick={() => setPage("inspections")}
+              className={getButtonClass("inspections")}
             >
-              Users
+              Inspections
             </button>
           )}
 
-          {/* SETTINGS */}
+          {/* Supervisor Pages */}
+          {isSupervisor && (
+            <>
+              <button
+                type="button"
+                onClick={() => setPage("reports")}
+                className={getButtonClass("reports")}
+              >
+                Reports
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPage("analytics")}
+                className={getButtonClass("analytics")}
+              >
+                Analytics
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPage("users")}
+                className={getButtonClass("users")}
+              >
+                Users
+              </button>
+            </>
+          )}
+
+          {/* Settings */}
           <button
             type="button"
-            onClick={() => navigate("settings")}
-            className={`w-full text-left px-4 py-3 rounded-lg transition cursor-pointer ${
-              page === "settings"
-                ? "bg-blue-600 text-white"
-                : "text-slate-300 hover:bg-slate-800"
-            }`}
+            onClick={() => setPage("settings")}
+            className={getButtonClass("settings")}
           >
             Settings
           </button>
 
-        </div>
-
-      </nav>
-
-      {/* LOGOUT */}
-      {/* <div className="px-4 py-5 border-t border-slate-700"> */}
-{/* 
-        <button
-          type="button"
-          onClick={() => {
-            console.log("LOGOUT CLICK");
-          }}
-          className="w-full px-4 py-3 rounded-lg text-left text-slate-300 hover:bg-red-600 hover:text-white transition cursor-pointer"
-        >
-          Logout
-        </button>
-
-      </div> */}
-
+        </nav>
+      </div>
     </aside>
   );
 }
