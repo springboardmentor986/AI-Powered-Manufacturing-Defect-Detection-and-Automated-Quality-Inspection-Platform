@@ -1,9 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-import os
-import shutil
-import uuid
-import cv2
-from datetime import datetime
+from fastapi.responses import StreamingResponse
+import os, shutil, uuid, cv2, io, csv
+from datetime import datetime, timedelta
 from app.database import inspections_collection, products_collection
 from app.preprocessing import advanced_preprocess_image
 from app.quality_analysis import analyze_image_quality
@@ -22,15 +20,27 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"}
 
 
+def get_final_decision(severity_level: str, defect_detected: bool):
+    if not defect_detected:
+        return "PASS", "Product meets quality standards."
+    decisions = {
+        "Critical": ("REJECT", "Reject product immediately. Trigger quality inspection."),
+        "High": ("REWORK", "Repair/Rework the product. Re-inspect after rework."),
+        "Medium": ("REWORK", "Manual inspection required. Consider rework."),
+        "Low": ("PASS", "Minor defect. Product acceptable with monitoring.")
+    }
+    return decisions.get(severity_level, ("REWORK", "Manual inspection required."))
+
+
 def validate_image(file_path: str):
     try:
         img = cv2.imread(file_path)
         if img is None:
             return False, "Could not read image file"
-        height, width = img.shape[:2]
-        if height < 10 or width < 10:
+        h, w = img.shape[:2]
+        if h < 10 or w < 10:
             return False, "Image dimensions too small"
-        if height > 10000 or width > 10000:
+        if h > 10000 or w > 10000:
             return False, "Image dimensions too large"
         return True, "Image valid"
     except Exception as e:
@@ -53,19 +63,15 @@ async def upload_and_inspect(
                 product = products_collection.find_one({"_id": ObjectId(product_id)})
         except:
             pass
-        
         if not product:
             product = products_collection.find_one({"product_code": product_id})
-        
         if not product:
             product = products_collection.find_one({})
-        
         if not product:
             raise HTTPException(404, "No products found")
         
         unique_filename = f"{uuid.uuid4()}_{image.filename}"
         file_path = os.path.join(UPLOAD_DIR, unique_filename)
-        
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
         
@@ -87,14 +93,14 @@ async def upload_and_inspect(
                 "confidence": detection_result["confidence"],
                 "location": detection_result["location"]
             }
-            draw_defect_result(
-                file_path, 
-                primary_defect, 
-                result_image_path,
-                detection_result["severity_level"]
-            )
+            draw_defect_result(file_path, primary_defect, result_image_path, detection_result["severity_level"])
         else:
             shutil.copy(file_path, result_image_path)
+        
+        decision, recommendation = get_final_decision(
+            detection_result.get("severity_level", "None"),
+            detection_result.get("defect_detected", False)
+        )
         
         inspection_data = {
             "product_id": str(product["_id"]),
@@ -117,8 +123,8 @@ async def upload_and_inspect(
             "all_defects": detection_result.get("all_defects", []),
             "severity_score": detection_result.get("severity_score", 0),
             "severity_level": detection_result.get("severity_level", "None"),
-            "decision": detection_result.get("decision", "PASSED"),
-            "recommendation": detection_result.get("recommendation", ""),
+            "decision": decision,
+            "recommendation": recommendation,
             "timing": detection_result.get("timing", {}),
             "model_info": detection_result.get("model_info", MODEL_INFO),
             "created_at": datetime.utcnow(),
@@ -153,15 +159,14 @@ async def upload_and_inspect(
                 "all_defects": detection_result.get("all_defects", []),
                 "severity_score": detection_result.get("severity_score"),
                 "severity_level": detection_result.get("severity_level"),
-                "decision": detection_result.get("decision"),
-                "recommendation": detection_result.get("recommendation"),
+                "decision": decision,
+                "recommendation": recommendation,
                 "timing": detection_result.get("timing", {}),
                 "model_info": detection_result.get("model_info", {})
             },
             "result_image_url": f"http://127.0.0.1:8000/results/{result_image_filename}",
             "processed_image_url": f"http://127.0.0.1:8000/processed/{os.path.basename(processed_info['processed_path'])}"
         }
-        
     except HTTPException:
         raise
     except Exception as e:
@@ -183,12 +188,9 @@ def get_inspections():
 def get_stats():
     total = inspections_collection.count_documents({})
     defective = inspections_collection.count_documents({"defect_detected": True})
-    passed = inspections_collection.count_documents({"decision": "PASSED"})
-    failed = inspections_collection.count_documents({"decision": "FAILED"})
-    critical = inspections_collection.count_documents({"severity_level": "Critical"})
-    high = inspections_collection.count_documents({"severity_level": "High"})
-    medium = inspections_collection.count_documents({"severity_level": "Medium"})
-    low = inspections_collection.count_documents({"severity_level": "Low"})
+    passed = inspections_collection.count_documents({"decision": "PASS"})
+    reworked = inspections_collection.count_documents({"decision": "REWORK"})
+    rejected = inspections_collection.count_documents({"decision": "REJECT"})
     
     defect_rate = (defective / total * 100) if total > 0 else 0
     pass_rate = (passed / total * 100) if total > 0 else 0
@@ -197,16 +199,199 @@ def get_stats():
         "total": total,
         "defective": defective,
         "passed": passed,
-        "failed": failed,
+        "reworked": reworked,
+        "rejected": rejected,
         "defect_rate": round(defect_rate, 2),
         "pass_rate": round(pass_rate, 2),
         "by_severity": {
-            "Critical": critical,
-            "High": high,
-            "Medium": medium,
-            "Low": low
+            "Critical": inspections_collection.count_documents({"severity_level": "Critical"}),
+            "High": inspections_collection.count_documents({"severity_level": "High"}),
+            "Medium": inspections_collection.count_documents({"severity_level": "Medium"}),
+            "Low": inspections_collection.count_documents({"severity_level": "Low"})
         }
     }
+
+
+@router.get("/analytics/summary")
+def get_analytics_summary():
+    total = inspections_collection.count_documents({})
+    defective = inspections_collection.count_documents({"defect_detected": True})
+    passed = inspections_collection.count_documents({"decision": "PASS"})
+    reworked = inspections_collection.count_documents({"decision": "REWORK"})
+    rejected = inspections_collection.count_documents({"decision": "REJECT"})
+    
+    defect_types = ["Crack", "Dent", "Contamination", "Scratch", "Surface Defect"]
+    defect_distribution = {dt: inspections_collection.count_documents({"defect_type": dt}) for dt in defect_types}
+    
+    severity_distribution = {
+        "Critical": inspections_collection.count_documents({"severity_level": "Critical"}),
+        "High": inspections_collection.count_documents({"severity_level": "High"}),
+        "Medium": inspections_collection.count_documents({"severity_level": "Medium"}),
+        "Low": inspections_collection.count_documents({"severity_level": "Low"})
+    }
+    
+    defect_rate = (defective / total * 100) if total > 0 else 0
+    pass_rate = (passed / total * 100) if total > 0 else 0
+    
+    avg_sev = list(inspections_collection.aggregate([
+        {"$match": {"defect_detected": True}},
+        {"$group": {"_id": None, "v": {"$avg": "$severity_score"}}}
+    ]))
+    avg_severity = round(avg_sev[0]["v"], 2) if avg_sev else 0
+    
+    avg_conf = list(inspections_collection.aggregate([
+        {"$match": {"defect_detected": True}},
+        {"$group": {"_id": None, "v": {"$avg": "$confidence"}}}
+    ]))
+    avg_confidence = round(avg_conf[0]["v"] * 100, 2) if avg_conf else 0
+    
+    # 7-day trend
+    daily_trend = []
+    today = datetime.utcnow()
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        s = day.replace(hour=0, minute=0, second=0, microsecond=0)
+        e = day.replace(hour=23, minute=59, second=59, microsecond=999999)
+        daily_trend.append({
+            "date": day.strftime("%b %d"),
+            "total": inspections_collection.count_documents({"created_at": {"$gte": s, "$lte": e}}),
+            "defective": inspections_collection.count_documents({"created_at": {"$gte": s, "$lte": e}, "defect_detected": True})
+        })
+    
+    # Product stats
+    product_stats = []
+    for item in inspections_collection.aggregate([
+        {"$group": {
+            "_id": "$product_name",
+            "total": {"$sum": 1},
+            "defective": {"$sum": {"$cond": ["$defect_detected", 1, 0]}}
+        }},
+        {"$sort": {"total": -1}},
+        {"$limit": 10}
+    ]):
+        if item["_id"]:
+            pr = ((item["total"] - item["defective"]) / item["total"] * 100) if item["total"] > 0 else 0
+            product_stats.append({
+                "product": item["_id"],
+                "total": item["total"],
+                "defective": item["defective"],
+                "pass_rate": round(pr, 2)
+            })
+    
+    return {
+        "total": total,
+        "defective": defective,
+        "passed": passed,
+        "reworked": reworked,
+        "rejected": rejected,
+        "defect_rate": round(defect_rate, 2),
+        "pass_rate": round(pass_rate, 2),
+        "avg_severity": avg_severity,
+        "avg_confidence": avg_confidence,
+        "defect_distribution": defect_distribution,
+        "severity_distribution": severity_distribution,
+        "daily_trend": daily_trend,
+        "product_stats": product_stats
+    }
+
+
+@router.get("/model-performance")
+def get_model_performance():
+    """Compute model metrics from stored inspections using image_path"""
+    tp = tn = fp = fn = 0
+    total_classified = 0
+    
+    for insp in inspections_collection.find({}):
+        img_path = (insp.get("image_path") or insp.get("image_filename") or "").lower()
+        is_defect = insp.get("defect_detected", False)
+        
+        # Determine ground truth from folder path or filename
+        # "good" folder → should be PASS
+        # anything with broken/contamination/crack/etc → should be REJECT
+        is_actual_defect = any(k in img_path for k in [
+            "broken", "contamination", "crack", "scratch", 
+            "dent", "hole", "damaged", "faulty", "defect",
+            "bent", "cut", "missing", "glue", "poke"
+        ])
+        is_actual_good = "good" in img_path
+        
+        if not is_actual_defect and not is_actual_good:
+            # Can't determine ground truth, skip
+            continue
+        
+        total_classified += 1
+        
+        if is_actual_defect:
+            if is_defect:
+                tp += 1
+            else:
+                fn += 1
+        elif is_actual_good:
+            if is_defect:
+                fp += 1
+            else:
+                tn += 1
+    
+    total = tp + tn + fp + fn
+    accuracy = ((tp + tn) / total * 100) if total > 0 else 0
+    precision = (tp / (tp + fp) * 100) if (tp + fp) > 0 else 0
+    recall = (tp / (tp + fn) * 100) if (tp + fn) > 0 else 0
+    f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0
+    
+    total_inspections = inspections_collection.count_documents({})
+    defective_found = inspections_collection.count_documents({"defect_detected": True})
+    passed = inspections_collection.count_documents({"decision": "PASS"})
+    
+    return {
+        "total_tested": total_classified,
+        "true_positives": tp,
+        "true_negatives": tn,
+        "false_positives": fp,
+        "false_negatives": fn,
+        "accuracy": round(accuracy, 2),
+        "precision": round(precision, 2),
+        "recall": round(recall, 2),
+        "f1_score": round(f1, 2),
+        "total_inspections": total_inspections,
+        "defective_found": defective_found,
+        "passed": passed
+    }
+
+
+@router.get("/export/csv")
+def export_csv():
+    """Export all inspections as CSV"""
+    def generate():
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["ID", "Product", "Image", "Defect Type", "Confidence", "Severity Score", "Severity Level", "Decision", "Date"])
+        output.seek(0)
+        yield output.read()
+        output.seek(0)
+        output.truncate(0)
+        
+        for insp in inspections_collection.find({}).sort("created_at", -1):
+            writer.writerow([
+                str(insp["_id"])[-4:],
+                insp.get("product_name", ""),
+                insp.get("image_filename", ""),
+                insp.get("defect_type", "None") or "None",
+                f"{int((insp.get('confidence') or 0) * 100)}%",
+                insp.get("severity_score", 0),
+                insp.get("severity_level", "None"),
+                insp.get("decision", ""),
+                insp.get("created_at", "").strftime("%Y-%m-%d %H:%M") if insp.get("created_at") else ""
+            ])
+            output.seek(0)
+            yield output.read()
+            output.seek(0)
+            output.truncate(0)
+    
+    return StreamingResponse(
+        generate(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=inspections.csv"}
+    )
 
 
 @router.get("/{inspection_id}")
@@ -215,10 +400,8 @@ def get_inspection(inspection_id: str):
         inspection = inspections_collection.find_one({"_id": ObjectId(inspection_id)})
     except:
         inspection = inspections_collection.find_one({"_id": inspection_id})
-    
     if not inspection:
         raise HTTPException(404, "Inspection not found")
-    
     inspection["id"] = str(inspection["_id"])
     inspection.pop("_id", None)
     return inspection
