@@ -1,0 +1,30 @@
+VisionInspect AI — Defect Detection Accuracy Report
+====================================================================
+Category      Method                  N    Acc   Prec  Recall     F1
+--------------------------------------------------------------------
+bottle        trained autoencoder    83  75.9%  75.9%  100.0%  86.3%
+cable         trained autoencoder   142  64.8%  64.8%  100.0%  78.6%
+capsule       trained autoencoder   132  45.5%  82.5%   43.1%  56.6%
+carpet        trained autoencoder   117  70.9%  80.2%   82.0%  81.1%
+grid          trained autoencoder    78  71.8%  72.7%   98.2%  83.6%
+hazelnut      trained autoencoder   110  80.0%  91.4%   75.7%  82.8%
+leather       trained autoencoder   124  62.1% 100.0%   48.9%  65.7%
+metal_nut     trained autoencoder   115  80.9%  80.9%  100.0%  89.4%
+pill          trained autoencoder   167  67.1%  85.2%   73.8%  79.1%
+screw         trained autoencoder   160  71.2%  75.9%   89.9%  82.3%
+tile          trained autoencoder   117  71.8%  71.8%  100.0%  83.6%
+toothbrush    trained autoencoder    42  71.4%  71.4%  100.0%  83.3%
+transistor    trained autoencoder    90  46.7%  45.1%   92.5%  60.7%
+wood          trained autoencoder    79  69.6% 100.0%   60.0%  75.0%
+zipper        trained autoencoder   151  72.2%  84.7%   79.0%  81.7%
+--------------------------------------------------------------------
+OVERALL                            1707  67.8%  76.9%   80.6%  78.7%
+
+Confusion matrix (overall):
+  True Positive  (correctly flagged defective): 1014
+  True Negative  (correctly passed normal):     144
+  False Positive (normal wrongly flagged):      305
+  False Negative (defect missed):               244
+
+Detection method(s) used in this run: trained autoencoder
+Note: defect TYPE labels for dataset images come directly from the dataset's folder structure, not from a trained classifier, so type classification accuracy is not reported here — only detection accuracy (normal vs defective).
