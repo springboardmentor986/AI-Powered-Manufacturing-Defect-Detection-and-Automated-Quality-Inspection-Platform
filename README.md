@@ -1,149 +1,130 @@
 # VisionInspect-AI
 
-## AI-Powered Manufacturing Defect Detection & Quality Inspection System
+## AI-Powered Manufacturing Defect Detection & Automated Quality Inspection Platform
 
-VisionInspect-AI is an AI-powered manufacturing quality inspection platform that analyzes product images to detect visual defects and anomalies. The system performs image quality analysis, AI-based inspection, severity assessment, and quality-risk evaluation through a web-based dashboard.
+VisionInspect-AI is an AI-powered manufacturing quality inspection platform designed to automate visual inspection of manufactured products. The system analyzes product images, detects visual anomalies, classifies inspection results, evaluates defect severity, and provides quality-risk information through an interactive web dashboard.
 
----
-
-## 🚀 Features
-
-- 🔐 JWT-based authentication and role-based access
-- 📷 Product image upload and validation
-- 🖼️ Image quality analysis
-- 🔍 AI-based anomaly detection using PatchCore-style approach
-- 🧠 Multi-scale ResNet18 feature extraction
-- 📊 Anomaly score and category-specific threshold comparison
-- 🏷️ Normal / Defect classification
-- ⚠️ Severity assessment and quality-risk evaluation
-- 📋 Inspection history and result management
-- 📈 Inspection analytics dashboard
-- 💾 MongoDB-based data persistence
-- ⚛️ React + Vite frontend
-- 🌐 FastAPI backend
-- 🧪 MVTec AD dataset integration
+The platform combines computer vision, deep learning, anomaly detection, image processing, authentication, database management, and analytics into an end-to-end quality inspection workflow.
 
 ---
 
-## 📁 Project Structure
+## 🚀 Project Overview
+
+In traditional manufacturing environments, quality inspection is often performed manually, which can be time-consuming and may lead to inconsistent inspection results.
+
+VisionInspect-AI provides an automated image-based inspection system that helps quality engineers analyze product images and identify possible defects.
+
+The system follows this workflow:
+
+**Image Upload → Image Quality Analysis → Preprocessing → Feature Extraction → Anomaly Detection → Defect Classification → Severity Assessment → Quality Assessment → Database Storage → Analytics Dashboard**
+
+---
+
+## 🎯 Objectives
+
+- Automate visual quality inspection using Artificial Intelligence.
+- Detect manufacturing defects and visual anomalies from product images.
+- Reduce manual inspection effort.
+- Provide consistent AI-assisted inspection results.
+- Analyze defect severity and quality risk.
+- Maintain inspection history for future analysis.
+- Provide an analytics dashboard for quality monitoring.
+- Build a scalable foundation for future deployment.
+
+---
+
+## ✨ Key Features
+
+### 🔐 Authentication & Authorization
+
+- User registration and login
+- JWT-based authentication
+- Secure password hashing
+- Protected APIs
+- Role-based access
+- Quality Engineer role
+- Factory Supervisor role
+
+### 📷 Image Inspection
+
+- Product image upload
+- Image format validation
+- Image quality analysis
+- Image preprocessing
+- AI-based visual inspection
+- Inspection status tracking
+
+### 🤖 AI-Based Defect Detection
+
+- Pretrained ResNet18 feature extractor
+- Multi-scale feature extraction
+- PatchCore-style anomaly detection
+- Feature memory bank
+- Anomaly score calculation
+- Category-specific threshold calibration
+- Normal / Defect classification
+
+### ⚠️ Quality Assessment
+
+- Severity score
+- Severity level
+- Defect type
+- Quality-risk assessment
+- Recommended action
+- Inspection processing details
+
+### 📊 Analytics
+
+- Total inspections
+- Normal inspections
+- Defective inspections
+- Inspection history
+- Category-wise inspection information
+- AI inspection results
+- Analytics dashboard
+
+### 💾 Data Management
+
+- MongoDB database
+- User records
+- Inspection records
+- Inspection timestamps
+- AI results and scores
+- Persistent inspection history
+
+---
+
+# 🧠 AI Model
+
+VisionInspect-AI uses a **PatchCore-style anomaly detection approach** with a pretrained **ResNet18** model as the feature extractor.
+
+Instead of directly comparing raw image pixels, the system extracts meaningful visual representations from the image.
+
+### Feature Extraction
+
+The system extracts intermediate representations from ResNet18:
+
+- Layer 2 → 128 channels
+- Layer 3 → 256 channels
+
+The representations are combined to create a multi-scale feature representation.
 
 ```text
-VisionInspect-AI/
-│
-├── backend/
-│   ├── app/
-│   │   ├── ai/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── models/
-│   │   ├── schemas/
-│   │   ├── database.py
-│   │   └── main.py
-│   │
-│   ├── calibrate_thresholds.py
-│   └── requirements.txt
-│
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── Dashboard.jsx
-│   │   ├── UploadInspection.jsx
-│   │   ├── Analytics.jsx
-│   │   └── *.css
-│   └── package.json
-│
-├── models/
-├── dataset/
-├── uploads/
-├── .gitignore
-└── README.md
-⚙️ Tech Stack
-Backend
-Python
-FastAPI
-MongoDB
-PyMongo
-JWT Authentication
-bcrypt
-AI / Computer Vision
-PyTorch
-Torchvision
+Input Image
+     ↓
 ResNet18
-PatchCore-style Anomaly Detection
-OpenCV
-NumPy
-Scikit-learn
-MVTec AD Dataset
-Frontend
-React
-Vite
-JavaScript
-CSS
-🧠 AI Inspection Workflow
-Product Image
-      ↓
-Image Quality Analysis
-      ↓
-Image Preprocessing
-      ↓
-ResNet18 Feature Extraction
-      ↓
-Multi-Scale Feature Representation
-      ↓
-PatchCore-Style Anomaly Detection
-      ↓
-Anomaly Score
-      ↓
-Category-Specific Threshold
-      ↓
-Normal / Defect
-      ↓
-Severity & Quality Assessment
-      ↓
-MongoDB
-      ↓
-Analytics Dashboard
-🔬 AI Model
+     ↓
+Layer 2 Features ──┐
+                   ├──→ Multi-Scale Features
+Layer 3 Features ──┘
+     ↓
+384-Dimensional Feature Representation
+     ↓
+14 × 14 Feature Map
+     ↓
+196 Local Feature Patches
+🔍 PatchCore-Style Anomaly Detection
 
-The system uses a pretrained ResNet18 as the feature extractor.
+The extracted normal-product features are stored in a feature memory bank.
 
-Features are extracted from intermediate ResNet18 layers and combined to create a multi-scale representation.
-
-The extracted features are compared with normal reference features using a PatchCore-style feature memory bank.
-
-The system then calculates an anomaly score and compares it with the category-specific threshold to determine whether the image is Normal or Defective.
-📊 Quality Assessment
-
-The system provides:
-
-Anomaly score
-Severity score
-Severity level
-Defect type
-Quality-risk information
-Recommended action
-Inspection processing details
-
-Severity levels include:
- 
-Low
-Medium
-High
-Critical
-🗄️ Database
-
-MongoDB is used for persistent storage.
-
-Collections include:
-users
-inspections
-Inspection records contain information such as:
-
-Product category
-Inspection result
-Anomaly score
-Threshold
-Severity information
-Processing time
-Inspection status
-Timestamp
+During inspection, the features of a new image are compared against the normal reference features.
