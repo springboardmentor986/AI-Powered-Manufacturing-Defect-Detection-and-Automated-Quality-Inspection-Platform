@@ -219,7 +219,7 @@ Both $90.15$ and the illustrative $88$ fall into the **Critical** band ($80\text
 ### 7.1 Automated Pass/Fail Decisioning
 The automated quality decision is rendered by `SeverityScorer.get_quality_decision()`:
 - **`Reject`**: Assigned when a specimen is classified as `DEFECTIVE` and its computed `Severity Score` $\ge 60.00$ (High or Critical severity tier).
-- **`Accept`**: Assigned when a specimen is confirmed `NORMAL` (Decision Fusion Quadrants A or D) or when minor cosmetic flaws produce a `Severity Score` $< 60.00$ (Low or Medium severity tier within manufacturing tolerance).
+- **`Accept`**: Assigned when a specimen is confirmed `NORMAL` (Decision Fusion Quadrants A or D) or when minor cosmetic flaws produce a `Severity Score` $< 40.00$ (Low severity tier within manufacturing tolerance).
 
 ### 7.2 Strict Invariant for Normal Specimens
 When Decision Fusion resolves a sample as `NORMAL`:

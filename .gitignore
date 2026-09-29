@@ -65,3 +65,6 @@ Screenshot*.png
 # Generated YOLO dataset and model outputs
 datasets/
 ai/weights/
+# Track runtime calibration files
+!ai/models/anomaly_thresholds.csv
+!ai/models/size_score_boundaries.csv
