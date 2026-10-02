@@ -1,136 +1,84 @@
-import {
-  LayoutDashboard,
-  Camera,
-  History,
-  BarChart3,
-  FileText,
-  UserCircle,
-  Settings,
-  LogOut,
-  Factory
-} from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-function Sidebar({
-  activePage,
-  setActivePage,
-  role,
-  onLogout
-}) {
-  const engineerItems = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: LayoutDashboard
-    },
-    {
-      id: "inspection",
-      label: "New Inspection",
-      icon: Camera
-    },
-    {
-      id: "history",
-      label: "Inspection History",
-      icon: History
-    },
-    {
-      id: "analytics",
-      label: "Analytics",
-      icon: BarChart3
-    },
-    {
-      id: "reports",
-      label: "Reports",
-      icon: FileText
-    }
-  ];
+const NAV_ITEMS = [
+  ["⌂", "Dashboard", "/dashboard"],
+  ["▣", "New Inspection", "/inspection", "quality_engineer"],
+  ["◉", "Camera & Batch", "/camera-batch", "quality_engineer"],
+  ["☷", "Inspection History", "/history"],
+  ["⌁", "Analytics", "/analytics"],
+  ["▤", "Reports", "/reports"],
+  ["⚙", "Settings", "/settings"],
+];
 
-  const supervisorItems = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: LayoutDashboard
-    },
-    {
-      id: "history",
-      label: "Inspection History",
-      icon: History
-    },
-    {
-      id: "analytics",
-      label: "Production Analytics",
-      icon: BarChart3
-    },
-    {
-      id: "reports",
-      label: "Reports",
-      icon: FileText
-    }
-  ];
+function Sidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const items =
-    role === "factory_supervisor"
-      ? supervisorItems
-      : engineerItems;
+  const role = localStorage.getItem("role");
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("role");
+    navigate("/login", { replace: true });
+  };
+
+  const visibleItems = NAV_ITEMS.filter(
+    ([, , , requiredRole]) =>
+      !requiredRole || requiredRole === role
+  );
 
   return (
-    <aside className="sidebar">
+    <aside className="dashboard-sidebar">
+
       <div className="sidebar-brand">
-        <div className="brand-icon">
-          <Factory size={25} />
-        </div>
+        <div className="sidebar-logo">V</div>
 
         <div>
-          <strong>VisionInspect-AI</strong>
-          <span>AI-Powered Quality Inspection</span>
+          <div className="sidebar-brand-name">
+            Vision<span>Inspect AI</span>
+          </div>
+
+          <div className="sidebar-brand-subtitle">
+            QUALITY INTELLIGENCE
+          </div>
         </div>
       </div>
 
-      <nav className="sidebar-nav">
-        {items.map((item) => {
-          const Icon = item.icon;
+      <nav
+        className="sidebar-navigation"
+        aria-label="Primary navigation"
+      >
+        <div className="sidebar-section-title">
+          WORKSPACE
+        </div>
 
-          return (
-            <button
-              key={item.id}
-              className={
-                activePage === item.id
-                  ? "nav-item active"
-                  : "nav-item"
-              }
-              onClick={() => setActivePage(item.id)}
-            >
-              <Icon size={20} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
+        {visibleItems.map(([icon, label, path]) => (
+          <button
+            className={`sidebar-nav ${
+              location.pathname === path ? "active" : ""
+            }`}
+            key={path}
+            onClick={() => navigate(path)}
+            type="button"
+          >
+            <span className="nav-icon">{icon}</span>
+            {label}
+          </button>
+        ))}
       </nav>
 
-      <div className="sidebar-bottom">
-        <button
-          className="nav-item"
-          onClick={() => setActivePage("profile")}
-        >
-          <UserCircle size={20} />
-          <span>Profile</span>
-        </button>
+      <div className="dashboard-sidebar-spacer" />
 
-        <button
-          className="nav-item"
-          onClick={() => setActivePage("settings")}
-        >
-          <Settings size={20} />
-          <span>Settings</span>
-        </button>
+      <button
+        className="sidebar-logout"
+        onClick={logout}
+        type="button"
+      >
+        <span>⇥</span>
+        Logout
+      </button>
 
-        <button
-          className="nav-item logout-nav"
-          onClick={onLogout}
-        >
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
-      </div>
     </aside>
   );
 }

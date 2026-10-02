@@ -1,0 +1,195 @@
+[
+    {
+        "category": "bottle",
+        "classes": [
+            "broken_large",
+            "broken_small",
+            "contamination"
+        ],
+        "num_classes": 3,
+        "best_validation_accuracy": 0.5556,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\bottle_classifier.pth"
+    },
+    {
+        "category": "cable",
+        "classes": [
+            "bent_wire",
+            "cable_swap",
+            "combined",
+            "cut_inner_insulation",
+            "cut_outer_insulation",
+            "missing_cable",
+            "missing_wire",
+            "poke_insulation"
+        ],
+        "num_classes": 8,
+        "best_validation_accuracy": 0.5556,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\cable_classifier.pth"
+    },
+    {
+        "category": "capsule",
+        "classes": [
+            "crack",
+            "faulty_imprint",
+            "poke",
+            "scratch",
+            "squeeze"
+        ],
+        "num_classes": 5,
+        "best_validation_accuracy": 0.4667,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\capsule_classifier.pth"
+    },
+    {
+        "category": "carpet",
+        "classes": [
+            "color",
+            "cut",
+            "hole",
+            "metal_contamination",
+            "thread"
+        ],
+        "num_classes": 5,
+        "best_validation_accuracy": 0.6,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\carpet_classifier.pth"
+    },
+    {
+        "category": "grid",
+        "classes": [
+            "bent",
+            "broken",
+            "glue",
+            "metal_contamination",
+            "thread"
+        ],
+        "num_classes": 5,
+        "best_validation_accuracy": 0.4,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\grid_classifier.pth"
+    },
+    {
+        "category": "hazelnut",
+        "classes": [
+            "crack",
+            "cut",
+            "hole",
+            "print"
+        ],
+        "num_classes": 4,
+        "best_validation_accuracy": 0.625,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\hazelnut_classifier.pth"
+    },
+    {
+        "category": "leather",
+        "classes": [
+            "color",
+            "cut",
+            "fold",
+            "glue",
+            "poke"
+        ],
+        "num_classes": 5,
+        "best_validation_accuracy": 0.7,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\leather_classifier.pth"
+    },
+    {
+        "category": "metal_nut",
+        "classes": [
+            "bent",
+            "color",
+            "flip",
+            "scratch"
+        ],
+        "num_classes": 4,
+        "best_validation_accuracy": 0.8333,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\metal_nut_classifier.pth"
+    },
+    {
+        "category": "pill",
+        "classes": [
+            "color",
+            "combined",
+            "contamination",
+            "crack",
+            "faulty_imprint",
+            "pill_type",
+            "scratch"
+        ],
+        "num_classes": 7,
+        "best_validation_accuracy": 0.2941,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\pill_classifier.pth"
+    },
+    {
+        "category": "screw",
+        "classes": [
+            "manipulated_front",
+            "scratch_head",
+            "scratch_neck",
+            "thread_side",
+            "thread_top"
+        ],
+        "num_classes": 5,
+        "best_validation_accuracy": 0.3333,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\screw_classifier.pth"
+    },
+    {
+        "category": "tile",
+        "classes": [
+            "crack",
+            "glue_strip",
+            "gray_stroke",
+            "oil",
+            "rough"
+        ],
+        "num_classes": 5,
+        "best_validation_accuracy": 1.0,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\tile_classifier.pth"
+    },
+    {
+        "category": "toothbrush",
+        "classes": [
+            "defective"
+        ],
+        "num_classes": 1,
+        "best_validation_accuracy": 1.0,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\toothbrush_classifier.pth"
+    },
+    {
+        "category": "transistor",
+        "classes": [
+            "bent_lead",
+            "cut_lead",
+            "damaged_case",
+            "misplaced"
+        ],
+        "num_classes": 4,
+        "best_validation_accuracy": 0.5,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\transistor_classifier.pth"
+    },
+    {
+        "category": "wood",
+        "classes": [
+            "color",
+            "combined",
+            "hole",
+            "liquid",
+            "scratch"
+        ],
+        "num_classes": 5,
+        "best_validation_accuracy": 0.4286,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\wood_classifier.pth"
+    },
+    {
+        "category": "zipper",
+        "classes": [
+            "broken_teeth",
+            "combined",
+            "fabric_border",
+            "fabric_interior",
+            "rough",
+            "split_teeth",
+            "squeezed_teeth"
+        ],
+        "num_classes": 7,
+        "best_validation_accuracy": 0.2143,
+        "model_path": "D:\\VisionInspectAI\\ml\\classification\\saved_models\\zipper_classifier.pth"
+    }
+]

@@ -1,199 +1,227 @@
 import { useState } from "react";
-import {
-  Factory,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-  BarChart3,
-  Settings
-} from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import api from "../services/api";
 
-function Login({
-  onLogin,
-  loading,
-  error,
-  onRegister
-}) {
-  const [username, setUsername] = useState("");
+function Login() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const submit = (e) => {
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    onLogin(username, password);
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await api.post("/auth/login", {
+        email,
+        password,
+      });
+
+      localStorage.setItem("token", response.data.access_token);
+      localStorage.setItem("refresh_token", response.data.refresh_token);
+      localStorage.setItem("role", response.data.role);
+
+      navigate("/dashboard");
+    } catch (error) {
+      setError(
+        error.response?.data?.detail ||
+          "Unable to sign in. Please check your credentials."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="login-page">
-      <header className="login-header">
-        <div className="login-brand">
-          <Factory size={38} />
+      {/* LEFT BRAND PANEL */}
+      <section className="login-brand">
+        <div className="brand-header">
+          <div className="brand-logo">V</div>
 
           <div>
-            <strong>VisionInspect-AI</strong>
-            <span>AI-Powered Quality Inspection</span>
+            <h2>VisionInspect AI</h2>
+            <span>QUALITY INTELLIGENCE</span>
           </div>
         </div>
 
-        <nav>
-          <span>Home</span>
-          <span>About</span>
-          <span>Contact</span>
-        </nav>
-      </header>
+        <div className="brand-content">
+          <div className="eyebrow">AI-POWERED MANUFACTURING</div>
 
-      <main className="login-main">
-        <section className="login-intro">
           <h1>
-            Smarter Quality
+            Smarter
             <br />
-            for a Better Tomorrow
+            <span>Quality Inspection.</span>
           </h1>
 
           <p>
-            Automated defect detection for
-            manufacturing excellence
+            Transform visual inspection with intelligent computer vision and
+            automated defect detection.
           </p>
 
-          <div className="factory-illustration">
-            <Factory size={100} strokeWidth={1.2} />
-            <div className="inspection-beam"></div>
+          <div className="feature-list">
+            <div className="feature">
+              <div className="feature-icon">✓</div>
+              <div>
+                <strong>Automated Inspection</strong>
+                <span>Reduce manual quality checks</span>
+              </div>
+            </div>
+
+            <div className="feature">
+              <div className="feature-icon">◉</div>
+              <div>
+                <strong>AI-Based Detection</strong>
+                <span>Identify manufacturing anomalies</span>
+              </div>
+            </div>
+
+            <div className="feature">
+              <div className="feature-icon">▦</div>
+              <div>
+                <strong>Quality Analytics</strong>
+                <span>Track inspection performance</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="brand-footer">
+          VisionInspect AI · Intelligent Quality Control
+        </div>
+      </section>
+
+      {/* LOGIN PANEL */}
+      <section className="login-form-section">
+        <div className="login-form-container">
+          <div className="mobile-logo">
+            <div className="brand-logo">V</div>
+            <strong>VisionInspect AI</strong>
           </div>
 
-          <div className="login-features">
-            <div>
-              <ShieldCheck />
-              <span>Detect<br />Defects</span>
-            </div>
+          <div className="form-heading">
+            <span className="form-label">SECURE ACCESS</span>
 
-            <div>
-              <BarChart3 />
-              <span>Improve<br />Quality</span>
-            </div>
+            <h2>Welcome back</h2>
 
-            <div>
-              <Settings />
-              <span>Increase<br />Efficiency</span>
-            </div>
+            <p>Sign in to access your inspection workspace.</p>
           </div>
-        </section>
 
-        <section className="login-card">
-          <h2>Welcome Back</h2>
+          <form onSubmit={handleLogin}>
+            <div className="form-group">
+              <label htmlFor="login-email">Email address</label>
 
-          <p className="login-subtitle">
-            Sign in to your VisionInspect-AI account
-          </p>
+              <div className="input-wrapper">
+                <span className="input-icon">✉</span>
 
-          <form onSubmit={submit}>
-            <label>Username</label>
-
-            <div className="input-wrapper">
-              <Mail size={19} />
-
-              <input
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) =>
-                  setUsername(e.target.value)
-                }
-                required
-              />
+                <input
+                  id="login-email"
+                  type="email"
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                />
+              </div>
             </div>
 
-            <label>Password</label>
+            <div className="form-group">
+              <label htmlFor="login-password">Password</label>
 
-            <div className="input-wrapper">
-              <Lock size={19} />
+              <div className="input-wrapper">
+                <span className="input-icon">◆</span>
 
-              <input
-                type={
-                  showPassword
-                    ? "text"
-                    : "password"
-                }
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) =>
-                  setPassword(e.target.value)
-                }
-                required
-              />
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
 
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() =>
-                  setShowPassword(!showPassword)
-                }
-              >
-                {showPassword ? (
-                  <EyeOff size={19} />
-                ) : (
-                  <Eye size={19} />
-                )}
-              </button>
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="19"
+                      height="19"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="19"
+                      height="19"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M3 3l18 18" />
+                      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                      <path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.5 0 10 7 10 7a17.2 17.2 0 0 1-3.2 4.2" />
+                      <path d="M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7c1.5 0 2.8-.3 4-.8" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             {error && (
-              <div className="form-error">
+              <div className="login-error" role="alert">
+                <span>!</span>
                 {error}
               </div>
             )}
 
-            <div className="forgot-row">
-              <button
-                type="button"
-                onClick={() =>
-                  alert(
-                    "Password reset is not available in the current backend."
-                  )
-                }
-              >
-                Forgot Password?
-              </button>
-            </div>
-
             <button
               type="submit"
-              className="primary-button login-button"
+              className="login-button"
               disabled={loading}
             >
-              {loading
-                ? "Signing in..."
-                : "Login"}
+              {loading ? (
+                <>
+                  <span className="login-spinner" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign in
+                  <span className="login-arrow">→</span>
+                </>
+              )}
             </button>
           </form>
 
-          <div className="or-divider">
-            <span>OR</span>
+          <div className="register-prompt">
+            <span>Don't have an account?</span>
+            <Link to="/register">Create account</Link>
           </div>
 
-          <button
-            className="register-button"
-            onClick={onRegister}
-          >
-            Don't have an account?
-            <strong>Register</strong>
-          </button>
-        </section>
-      </main>
-
-      <footer className="login-footer">
-        <span>
-          © 2026 VisionInspect-AI. All rights reserved.
-        </span>
-
-        <span>
-          Building smarter factories with AI&nbsp; | &nbsp;
-          Version 2.0
-        </span>
-      </footer>
+          <div className="security-note">
+            <span>🔒</span>
+            Secure authentication powered by JWT
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

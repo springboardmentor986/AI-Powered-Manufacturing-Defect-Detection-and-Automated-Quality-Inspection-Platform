@@ -1,0 +1,16 @@
+category,test_images,correct,incorrect,accuracy,worst_class,worst_class_recall,decision
+bottle,11,7,4,0.6364,broken_large,0.0,KEEP_BASELINE
+cable,21,8,13,0.381,cut_inner_insulation,0.0,RETRAIN
+capsule,19,5,14,0.2632,crack,0.0,RETRAIN
+carpet,20,10,10,0.5,color,0.25,REVIEW
+grid,15,6,9,0.4,bent,0.0,REVIEW
+hazelnut,16,10,6,0.625,crack,0.25,KEEP_BASELINE
+leather,20,8,12,0.4,cut,0.0,REVIEW
+metal_nut,17,8,9,0.4706,scratch,0.0,REVIEW
+pill,29,6,23,0.2069,combined,0.0,RETRAIN
+screw,23,4,19,0.1739,manipulated_front,0.0,RETRAIN
+tile,18,15,3,0.8333,glue_strip,0.5,KEEP_BASELINE
+toothbrush,5,5,0,1.0,defective,1.0,KEEP_BASELINE
+transistor,8,2,6,0.25,bent_lead,0.0,RETRAIN
+wood,13,3,10,0.2308,color,0.0,RETRAIN
+zipper,25,1,24,0.04,broken_teeth,0.0,RETRAIN

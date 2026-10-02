@@ -1,0 +1,17 @@
+{
+    "bottle": "bottle_classifier.pth",
+    "cable": "cable_classifier_improved.pth",
+    "capsule": "capsule_classifier.pth",
+    "carpet": "carpet_classifier.pth",
+    "grid": "grid_classifier.pth",
+    "hazelnut": "hazelnut_classifier.pth",
+    "leather": "leather_classifier.pth",
+    "metal_nut": "metal_nut_classifier.pth",
+    "pill": "pill_classifier_improved.pth",
+    "screw": "screw_classifier.pth",
+    "tile": "tile_classifier.pth",
+    "toothbrush": "toothbrush_classifier.pth",
+    "transistor": "transistor_classifier_improved.pth",
+    "wood": "wood_classifier_improved.pth",
+    "zipper": "zipper_classifier_improved.pth"
+}

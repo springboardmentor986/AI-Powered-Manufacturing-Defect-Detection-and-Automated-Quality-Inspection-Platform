@@ -1,22 +1,89 @@
-
+# =========================
 # Python
-venv/
+# =========================
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
 
-# Dataset
-dataset/
+.venv/
+venv/
+env/
+backend/.venv/
+ml/.venv/
 
-# Trained model weight files (not the app/models/ source directory)
-*.pth
-*.pt
-*.onnx
-
-# Environment
+# =========================
+# Environment / Secrets
+# =========================
 .env
+**/.env
 
-# Frontend dependencies
-frontend/node_modules/
+# Keep example environment files
+!.env.example
+!**/.env.example
 
-# Frontend build output
+# =========================
+# Frontend
+# =========================
+node_modules/
+**/node_modules/
 frontend/dist/
+
+# =========================
+# MVTec / ML Datasets
+# =========================
+ml/dataset/
+ml/**/dataset/
+**/dataset/
+
+# =========================
+# Generated ML Outputs
+# =========================
+ml/runs/
+runs/
+
+# Keep YOLO trained models
+!ml/yolo/runs/
+!ml/yolo/runs/**/
+!ml/yolo/runs/**/weights/
+!ml/yolo/runs/**/weights/best.pt
+
+# =========================
+# YOLO Generated Comparison Outputs
+# =========================
+ml/yolo/comparison_results/
+
+# =========================
+# Uploaded Images
+# =========================
+backend/uploads/
+uploads/
+**/uploads/
+
+# =========================
+# Test / Cache
+# =========================
+.pytest_cache/
+**/.pytest_cache/
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Temporary / Generated Files
+# =========================
+project_structure.txt
+ml_structure.txt
+
+# =========================
+# Python temporary files
+# =========================
+*.tmp
+*.temp
