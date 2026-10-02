@@ -172,7 +172,9 @@ VisionInspect-AI/
 
 # 🔧 Backend Setup
 
-Navigate to the backend:
+The backend requires Python 3.11+, PostgreSQL, and the trained model files included under `ml/`.
+Create a PostgreSQL database named `visioninspect` (or use another name in the connection URL).
+From the repository root, navigate to the backend:
 
 ```bash
 cd backend
@@ -202,6 +204,16 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+Create the local environment file from the checked-in example:
+
+```bash
+copy .env.example .env
+```
+
+On macOS/Linux, use `cp .env.example .env`. Edit `.env` and set `DATABASE_URL` to your
+PostgreSQL connection string and `JWT_SECRET_KEY` to a long, random secret. Keep `.env`
+private; it is ignored by Git.
+
 ---
 
 ## ⚠️ Known bcrypt Issue
@@ -216,43 +228,15 @@ This project uses this version for compatibility with the installed Passlib conf
 
 ---
 
-# 🧪 MVTec AD Dataset Setup
+# 🧪 Model and Dataset Setup
 
-The anomaly detection model requires normal reference images to build its baseline.
+The inspection API loads the trained autoencoder, classifier, and YOLO weights from `ml/`.
+These runtime weights are included in the repository, so no separate training dataset is
+needed to start the application. Download the MVTec AD dataset only if you plan to retrain
+or run the evaluation scripts.
 
-The expected structure is:
-
-```text
-backend/
-└── dataset/
-    └── mvtec/
-        └── bottle/
-            ├── train/
-            │   └── good/
-            │       ├── image1.png
-            │       ├── image2.png
-            │       └── ...
-            │
-            └── test/
-                ├── good/
-                ├── broken_large/
-                ├── broken_small/
-                └── contamination/
-```
-
-Download the **bottle** category from the MVTec AD dataset and place it at:
-
-```text
-backend/dataset/mvtec/bottle/
-```
-
-If the dataset is missing or the path is incorrect, the backend may report:
-
-```text
-Model initialization failed: No images found in dataset\mvtec\bottle\train\good
-```
-
-In that case, inspection requests will not be available until the reference dataset is correctly placed.
+If you run evaluation or training scripts, download the MVTec AD categories they require
+and place them under `ml/dataset/` as described by those scripts.
 
 ---
 
@@ -261,7 +245,7 @@ In that case, inspection requests will not be available until the reference data
 From the `backend/` directory:
 
 ```bash
-python -m uvicorn app.main:app --reload
+python -m uvicorn main:app --reload
 ```
 
 Backend:
@@ -304,16 +288,16 @@ Frontend:
 http://localhost:5173
 ```
 
-The Vite configuration proxies:
+The frontend calls the backend directly at:
 
 ```text
-/api/*
+http://127.0.0.1:8000
 ```
 
-to:
+To use a different backend URL, set `VITE_API_URL` in `frontend/.env.local`, for example:
 
 ```text
-http://localhost:8000
+VITE_API_URL=http://127.0.0.1:8000
 ```
 
 Make sure the backend is running before using the inspection features.
