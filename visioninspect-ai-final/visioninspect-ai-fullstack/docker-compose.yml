@@ -1,0 +1,17 @@
+# Local development: run `docker compose up` from the project root.
+version: "3.9"
+services:
+  backend:
+    build: ./backend
+    ports: ["8000:8000"]
+    volumes: ["./backend:/app"]
+    environment:
+      - DATABASE_URL=sqlite:///./visioninspect.db
+      - JWT_SECRET=dev-secret-change-me
+      - CORS_ORIGINS=http://localhost:3000
+  frontend:
+    build: ./frontend
+    ports: ["3000:3000"]
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on: [backend]
