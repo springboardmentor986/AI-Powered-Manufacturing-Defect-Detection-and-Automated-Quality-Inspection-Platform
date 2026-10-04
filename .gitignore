@@ -1,51 +1,32 @@
 # Python
-.venv/
-venv/
 __pycache__/
-*.pyc
+*.py[cod]
+backend/venv/
+.venv/
+.venv*/
 
-# Node / React
-node_modules/
-dist/
+# Runtime and generated model artifacts
+backend/visioninspect.db
+backend/*.pkl
+backend/*.pt
+backend/defect_model.json
+backend/full_evaluation.json
 
-# Environment / secrets
+# Local dataset files; download separately using README instructions
+backend/data/mvtec_ad/
+backend/uploaded_images/
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+
+# Environment and editor files
 .env
-*.env
-
-# Datasets
-dataset1/
-dataset_preprocessed/
-processed_dataset/
-yolo_dataset/
-yolo_dataset_/
-yolo_dataset_final/
-
-# Generated data
-uploads/
-augmentation_results/
-image_analysis/
-
-# Model files
-*.pt
-*.pth
-*.onnx
-patchcore_models/
-
-# Training outputs
-runs/
-
-# Large archives
-*.zip
-*.tar
-*.tar.xz
-*.crswap
-
-# IDE
+.env.*
+!.env.example
 .vscode/
 .idea/
+*.log
 
-# OS
-.DS_Store
-Thumbs.db
-
-prediction_results/
+# Local documents
+*.pdf

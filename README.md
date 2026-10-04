@@ -1,164 +1,113 @@
 # VisionInspect AI
 
-AI-powered manufacturing quality inspection system for detecting and classifying defects in industrial products using YOLO and ResNet18.
+VisionInspect AI is a manufacturing quality inspection demo with image acquisition, OpenCV anomaly detection, defect classification, severity scoring, quality decisions, inspection history, and production analytics.
 
-## Project Overview
+## Milestone status
 
-VisionInspect AI is a web-based quality inspection application designed to assist manufacturing quality engineers in identifying defective products from industrial images.
+All four milestones are complete and verified for this repository. The project lifecycle is documented in [docs/architecture.md](docs/architecture.md) and covers the full production-style sequence from local inspection to deployment.
 
-The system uses a two-stage computer vision pipeline:
+1. Milestone 1: inspection workflow foundation — React + FastAPI app, role-based authentication, image upload, batch/source metadata, SQLite persistence, and the inspection dashboard.
+2. Milestone 2: data/model intelligence — MVTec AD dataset discovery, dataset audit, feature extraction, model training, and evaluation pipelines.
+3. Milestone 3: analytics and operational visibility — inspection history, analytics summaries, audit trail, model health, and user management.
+4. Milestone 4: deployment readiness — Dockerized backend/frontend stack, operational configuration, and production-friendly environment setup.
 
-1. YOLO detects the location of a defect.
-2. ResNet18 classifies the detected defect type.
-3. A severity scoring system evaluates the defect.
-4. A quality assessment determines the recommended action.
-5. Inspection results are stored in PostgreSQL.
-6. React dashboards display inspection, quality, report, and analytics information.
+The active inspection and model are bottle-only. This workspace retains only the MVTec `bottle` category. MVTec images, uploaded sample copies, and generated model files are excluded from Git because of dataset licensing, size, and model portability. To run inspections from a fresh checkout, obtain the MVTec AD license, place its `bottle` category under `backend/data/mvtec_ad/bottle`, and run `python train_model.py` from `backend` to generate the local model.
 
-The application allows users to upload an inspection image, process it through the FastAPI backend, run the trained YOLO model, classify detected defects using ResNet18, and generate a quality assessment.
+## Run locally
 
+Backend:
 
-## Features
+```powershell
+py -3.11 -m venv .venv311
+.\.venv311\Scripts\Activate.ps1
+Push-Location backend
+python -m pip install -r requirements.txt
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
 
-### Authentication and Authorization
+Frontend, in a second terminal:
 
-- User registration and login
-- JWT-based authentication
-- Password hashing using bcrypt
-- Role-based access control
-- Quality Engineer role
-- Factory Supervisor role
+```powershell
+Push-Location frontend
+npm install
+npm run dev -- --host 127.0.0.1
+```
 
-### Inspection
+Open `http://127.0.0.1:5173/`. The API is at `http://127.0.0.1:8000/`, with interactive docs at `http://127.0.0.1:8000/docs`. Stop each local server with Ctrl+C in its terminal.
 
-- Industrial image upload
-- YOLO-based defect detection
-- Defect bounding-box detection
-- YOLO confidence score
-- ResNet18-based defect classification
-- Classification confidence
-- Inspection history
-- Inspection result storage
+Demo accounts:
 
-### Severity and Quality Assessment
+- Quality engineer: `engineer@factory.com` / `password123`
+- Factory supervisor: `supervisor@factory.com` / `supervisor123`
+- Administrator: `admin@factory.com` / `admin12345`
 
-The system calculates defect severity using:
+## Docker
 
+Install and start Docker Desktop before running these commands. A `.env` file is optional for a local demo. For other use, create one from the template and replace its token secret:
 
-Severity =
-(Size × 0.30)
-+ (Location × 0.25)
-+ (Defect Type × 0.25)
-+ (Confidence × 0.20)
+```powershell
+Copy-Item .env.example .env
+```
 
-Severity levels:
+Build and start the services from the repository root:
 
-| Score  | Severity | Recommended Action |
-| ------ | -------- | ------------------ |
-| 80–100 | Critical | Reject             |
-| 60–79  | High     | Rework             |
-| 40–59  | Medium   | Review             |
-| 0–39   | Low      | Accept             |
+```powershell
+docker compose up --build -d
+docker compose ps
+```
 
-If classification confidence is below 70%, the inspection is marked for manual review.
+The web app is available at `http://127.0.0.1:5173/` and the API documentation at `http://127.0.0.1:8000/docs`.
+Stop the containers with `docker compose down`. Stop any local servers using ports 8000 or 5173 before starting Compose. The SQLite database is stored inside the backend container without a persistent volume, so inspection history can be lost when that container is removed.
 
-## Machine Learning Pipeline
+## API surface
 
-Input Image
-     ↓
-YOLO26n
-     ↓
-Defect Detection
-     ↓
-Defect Bounding Box
-     ↓
-Crop Detected Region
-     ↓
-ResNet18
-     ↓
-Defect Classification
-     ↓
-Severity Calculation
-     ↓
-Quality Assessment
-     ↓
-PostgreSQL
-     ↓
-React Dashboard
+- `POST /api/auth/login` authenticates demo roles.
+- `POST /api/inspect` validates and inspects one image, with batch and source metadata.
+- `GET /api/inspections` returns the inspection log.
+- `GET /api/analytics` returns pass rate, defect mix, severity, and recent decisions.
+- `GET /api/metrics` returns processing speed and automation metrics.
+- `GET /api/model` returns the active model version, classes, feature count, and training sample counts.
+- `GET /api/health` is the service health check.
 
-## Technology Stack
+The current persistence layer is SQLite for the milestone demo. PostgreSQL or MongoDB can replace it behind the same API contract for production deployment.
 
-### Frontend
+## Classification validation
 
-React.js
-Vite
-JavaScript
-Tailwind CSS
-Recharts
+Inspection, model training, and evaluation use the MVTec AD bottle category only. Non-bottle category folders have been removed from this workspace.
 
-### Backend
-Python
-FastAPI
-SQLAlchemy
-Pydantic
-JWT
-Passlib
-bcrypt
+Run the reproducible evaluator from `backend`:
 
-### Database
-PostgreSQL
+```powershell
+python evaluate_model.py
+```
 
-### Machine Learning
-YOLO26n
-ResNet18
-PyTorch
-Torchvision
-Ultralytics
-OpenCV
-NumPy
-Pillow
-### Dataset
-MVTec AD
+For a faster smoke benchmark:
 
-### Reporting
-CSV export
-PDF export
-ReportLab
+```powershell
+python evaluate_model.py --limit-per-class 2
+```
 
-## Project Structure
+For the bottle-only stratified 80/20 holdout evaluation:
 
-```text
-VisionInspectAI/
-│
-├── backend/
-│   ├── ml/
-│   │   ├── integrated_inspection.py
-│   │   ├── ml_service.py
-│   │   ├── severity.py
-│   │   ├── test_classifier.py
-│   │   ├── test_models.py
-│   │   ├── test_resnet.py
-│   │   └── test_yolo.py
-│   │
-│   ├── tests/
-│   │   └── test_severity.py
-│   │
-│   ├── database.py
-│   ├── main.py
-│   ├── models.py
-│   ├── predict_all.py
-│   ├── requirements.txt
-│   └── schemas.py
-│
-├── vite-project/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── context/
-│   │   └── pages/
-│   │
-│   ├── public/
-│   ├── package.json
-│   └── vite.config.js
-│
-├── .gitignore
-└── README.md
+```powershell
+python train_model.py
+python evaluate_model.py --holdout
+```
+
+Audit the retained bottle dataset from `backend`:
+
+```powershell
+python dataset_audit.py
+```
+
+The bottle-only evaluator reports hierarchical good/bad accuracy, bad-product precision/recall/F1, four-class accuracy, per-class metrics, and a confusion matrix. Its results apply only to bottle images and are not a production accuracy guarantee.
+
+## Tests
+
+Run backend tests from the `backend` directory so the local module imports resolve:
+
+```powershell
+Push-Location backend
+python -m unittest test_requirements.py
+Pop-Location
+```
