@@ -108,6 +108,12 @@ def create_tables():
 
             severity_level TEXT,
 
+            risk_score REAL,
+
+            risk_level TEXT,
+
+            risk_recommendation TEXT,
+
             FOREIGN KEY (user_id)
                 REFERENCES users(user_id)
 
@@ -169,7 +175,13 @@ def migrate_database():
 
         "severity_score": "REAL",
 
-        "severity_level": "TEXT"
+        "severity_level": "TEXT",
+
+        "risk_score": "REAL",
+
+        "risk_level": "TEXT",
+
+        "risk_recommendation": "TEXT"
 
     }
 

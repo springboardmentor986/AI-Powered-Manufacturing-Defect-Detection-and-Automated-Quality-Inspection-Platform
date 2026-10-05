@@ -815,33 +815,27 @@ async def upload_image(
     # ========================================================
     # FINAL DECISION
     # ========================================================
-    #
-    # The defect classifier is the primary decision source.
-    #
-    # IMPORTANT:
-    # If the classifier says "good", the final result MUST
-    # remain NORMAL. The anomaly detector must not convert
-    # "No Defect" into "DEFECTIVE".
-    #
-    # This keeps:
-    #
-    # No Defect
-    # Severity = Low / 0
-    # Risk = Low / 0
-    # Final Decision = NORMAL
-    #
-    # internally consistent.
-    # ========================================================
 
     ai_prediction = "NORMAL"
 
     # --------------------------------------------------------
-    # GOOD CLASS
+    # HIGH-CONFIDENCE GOOD
     # --------------------------------------------------------
 
     if defect_category == "good":
 
-        ai_prediction = "NORMAL"
+        if (
+            classifier_confidence is not None
+            and classifier_confidence >= 60
+        ):
+
+            ai_prediction = "NORMAL"
+
+        else:
+
+            ai_prediction = (
+                anomaly_prediction
+            )
 
     # --------------------------------------------------------
     # DEFECT CLASS
@@ -861,7 +855,9 @@ async def upload_image(
 
         else:
 
-            ai_prediction = anomaly_prediction
+            ai_prediction = (
+                anomaly_prediction
+            )
 
     # --------------------------------------------------------
     # UNKNOWN
@@ -869,14 +865,12 @@ async def upload_image(
 
     else:
 
-        ai_prediction = anomaly_prediction
+        ai_prediction = (
+            anomaly_prediction
+        )
 
     # --------------------------------------------------------
     # STRONG DEFECT OVERRIDE
-    # --------------------------------------------------------
-    #
-    # A high-confidence defect classification remains
-    # DEFECTIVE.
     # --------------------------------------------------------
 
     if (
@@ -886,6 +880,18 @@ async def upload_image(
         }
         and classifier_confidence is not None
         and classifier_confidence >= 80
+    ):
+
+        ai_prediction = "DEFECTIVE"
+
+    # --------------------------------------------------------
+    # STRONG ANOMALY OVERRIDE
+    # --------------------------------------------------------
+
+    if (
+        anomaly_prediction == "DEFECTIVE"
+        and classifier_confidence is not None
+        and classifier_confidence < 50
     ):
 
         ai_prediction = "DEFECTIVE"
@@ -910,7 +916,6 @@ async def upload_image(
     ):
 
         severity_score = 0.0
-
         severity_level = "Low"
 
     else:
@@ -945,7 +950,6 @@ async def upload_image(
             )
 
             severity_score = 0.0
-
             severity_level = "Low"
 
     # ========================================================

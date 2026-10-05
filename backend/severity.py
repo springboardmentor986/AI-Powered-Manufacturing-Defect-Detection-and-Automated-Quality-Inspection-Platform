@@ -1,75 +1,134 @@
-def calculate_severity(anomaly_score, quality_score, defect_type):
-    """
-    Calculate defect severity for the prototype.
+# ============================================================
+# VisionInspect AI - Severity Assessment
+# Milestone 3
+# ============================================================
 
-    Higher anomaly and lower quality indicate higher severity.
-    """
+def calculate_severity(
+    anomaly_score,
+    quality_score,
+    defect_type,
+    confidence
+):
 
-    # Convert anomaly score into a 0-100 severity component
+    anomaly_score = float(anomaly_score)
+    confidence = float(confidence or 0)
+
+    # --------------------------------------------------------
+    # NO DEFECT
+    # --------------------------------------------------------
+    # A normal/good product should always have zero severity.
+    if defect_type == "No Defect":
+
+        return {
+            "severity_score": 0,
+            "severity_level": "Low",
+            "size_score": 0,
+            "location_score": 0,
+            "defect_type_score": 0,
+            "confidence_score": 0
+        }
+
+    # --------------------------------------------------------
+    # SIZE SCORE
+    # --------------------------------------------------------
+
     if anomaly_score < -0.20:
-        anomaly_component = 100
+        size_score = 100
+
     elif anomaly_score < -0.10:
-        anomaly_component = 80
+        size_score = 70
+
     elif anomaly_score < 0:
-        anomaly_component = 60
+        size_score = 40
+
     else:
-        anomaly_component = 20
+        size_score = 20
 
-    # Lower quality means higher severity
-    quality_component = 100 - quality_score
+    # --------------------------------------------------------
+    # LOCATION SCORE
+    # --------------------------------------------------------
+    # Current model does not localize the defect.
+    # Neutral prototype value is used.
+    location_score = 50
 
-    # Defect type contribution
-    defect_component = {
-        "Broken Large": 100,
-        "Broken Small": 70,
-        "Contamination": 80,
-        "No Defect": 0
-    }.get(defect_type, 50)
+    # --------------------------------------------------------
+    # DEFECT TYPE SCORE
+    # --------------------------------------------------------
 
-    # Weighted severity score
+    if defect_type == "Broken Large":
+        defect_type_score = 100
+
+    elif defect_type == "Broken Small":
+        defect_type_score = 70
+
+    elif defect_type == "Contamination":
+        defect_type_score = 80
+
+    else:
+        defect_type_score = 50
+
+    # --------------------------------------------------------
+    # CONFIDENCE SCORE
+    # --------------------------------------------------------
+
+    confidence_score = max(
+        0,
+        min(
+            100,
+            confidence
+        )
+    )
+
+    # --------------------------------------------------------
+    # OFFICIAL WEIGHTS
+    # --------------------------------------------------------
+    # Size       = 30%
+    # Location   = 25%
+    # Defect Type= 25%
+    # Confidence = 20%
+
     severity_score = (
-        anomaly_component * 0.40
-        + quality_component * 0.30
-        + defect_component * 0.30
+        (size_score * 0.30) +
+        (location_score * 0.25) +
+        (defect_type_score * 0.25) +
+        (confidence_score * 0.20)
     )
 
     severity_score = round(
-        min(100, max(0, severity_score)),
+        max(
+            0,
+            min(
+                100,
+                severity_score
+            )
+        ),
         2
     )
 
-    # Severity level
+    # --------------------------------------------------------
+    # SEVERITY LEVEL
+    # --------------------------------------------------------
+
     if severity_score >= 80:
         severity_level = "Critical"
+
     elif severity_score >= 60:
         severity_level = "High"
+
     elif severity_score >= 40:
         severity_level = "Medium"
+
     else:
         severity_level = "Low"
 
     return {
         "severity_score": severity_score,
-        "severity_level": severity_level
+        "severity_level": severity_level,
+        "size_score": size_score,
+        "location_score": location_score,
+        "defect_type_score": defect_type_score,
+        "confidence_score": round(
+            confidence_score,
+            2
+        )
     }
-
-
-if __name__ == "__main__":
-
-    print("=" * 55)
-    print("VisionInspect AI - Severity Scoring")
-    print("=" * 55)
-
-    result = calculate_severity(
-        anomaly_score=-0.1138,
-        quality_score=70,
-        defect_type="Broken Small"
-    )
-
-    print("\nTest Result:")
-    print(f"Severity Score : {result['severity_score']}")
-    print(f"Severity Level : {result['severity_level']}")
-
-    print("=" * 55)
-    print("Severity module ready.")
-    print("=" * 55)
