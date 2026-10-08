@@ -1,19 +1,22 @@
 """
-Defect detection engine for VisionInspect AI (Milestone 2 & 3).
+Defect detection engine for VisionInspect AI (Milestone 2-4).
 
-Approach: classical anomaly detection, not deep learning. For each product
-category we build a "reference profile" from the MVTec AD 'good' training
-images: a pixel-wise mean and std-dev image. A new image is preprocessed
-the same way and compared against the reference using patch-based
-deviation scoring — the image is split into a grid of small patches, and
-the WORST (highest-deviation) patch determines the anomaly signal. This
-is far more sensitive to small, localized defects than a whole-image
-average.
+Two detection paths, chosen automatically per category:
 
-predict() returns the three vision-derived sub-scores used by the
-project's severity formula (Milestone 3): size, location, and confidence.
-The fourth sub-score (defect type severity) is computed by the caller
-(app/routers/inspections.py) once the defect's type label is known.
+1. Trained autoencoder (Milestone 4 upgrade) — if
+   model_artifacts/<category>_autoencoder.pt exists (from
+   train_autoencoder.py), the image is compared against its own
+   reconstruction from a neural network trained only on normal images.
+   Poorly-reconstructed regions indicate a defect.
+
+2. Statistical baseline (Milestone 2) — if no trained model exists yet
+   for a category, falls back to the original mean/std reference-profile
+   z-score method.
+
+Either way, the resulting per-pixel deviation map is scored the same
+way: split into a patch grid, and the worst patch determines the
+confidence/size/location scores used by the severity formula
+(app/routers/inspections.py).
 """
 
 import math
@@ -26,43 +29,97 @@ from .preprocessing import preprocess_path
 ARTIFACTS_DIR = Path("model_artifacts")
 ARTIFACTS_DIR.mkdir(exist_ok=True)
 
-# Confidence score (0-100) at/above which a unit is flagged defective
-DEFECT_THRESHOLD = 25
-
+DEFECT_THRESHOLD = 10  # confidence score (0-100) at/above which a unit is flagged defective
 PATCH_SIZE = 8
 
+# Scaling factors differ because the two methods produce deviation values
+# on very different numeric scales (z-scores vs. squared reconstruction
+# error). Tune these against evaluate_accuracy.py results.
+STAT_SCALE = 5
+AUTOENCODER_SCALE = 400
+
+_model_cache = {}
+
+
+# ---------------------------------------------------------------------
+# Statistical baseline (Milestone 2)
+# ---------------------------------------------------------------------
 
 def _reference_path(category_name: str) -> Path:
     return ARTIFACTS_DIR / f"{category_name}_reference.npz"
 
 
 def build_reference(category_name: str, good_image_paths: list[str]) -> dict:
-    """
-    Computes and saves the mean + std reference image for a category from
-    a list of 'good' (non-defective) training image paths.
-    """
     stack = np.stack([preprocess_path(p) for p in good_image_paths])
     mean_img = stack.mean(axis=0)
-    std_img = stack.std(axis=0) + 1e-6  # avoid divide-by-zero later
-
+    std_img = stack.std(axis=0) + 1e-6
     np.savez(_reference_path(category_name), mean=mean_img, std=std_img)
-
-    return {
-        "category": category_name,
-        "images_used": len(good_image_paths),
-    }
+    return {"category": category_name, "images_used": len(good_image_paths)}
 
 
 def has_reference(category_name: str) -> bool:
     return _reference_path(category_name).exists()
 
 
+def _statistical_deviation(image_path: str, category_name: str) -> np.ndarray:
+    data = np.load(_reference_path(category_name))
+    mean_img, std_img = data["mean"], data["std"]
+    std_img = np.clip(std_img, 1e-6, 0.25)
+    test_img = preprocess_path(image_path)
+    return np.abs(test_img - mean_img) / std_img
+
+
+# ---------------------------------------------------------------------
+# Trained autoencoder (Milestone 4)
+# ---------------------------------------------------------------------
+
+def _autoencoder_path(category_name: str) -> Path:
+    return ARTIFACTS_DIR / f"{category_name}_autoencoder.pt"
+
+
+def has_trained_model(category_name: str) -> bool:
+    return _autoencoder_path(category_name).exists()
+
+
+def _load_model(category_name: str):
+    if category_name in _model_cache:
+        return _model_cache[category_name]
+
+    import torch
+    from .autoencoder import ConvAutoencoder
+
+    model = ConvAutoencoder()
+    model.load_state_dict(
+        torch.load(_autoencoder_path(category_name), map_location="cpu")
+    )
+    model.eval()
+    _model_cache[category_name] = model
+    return model
+
+
+def _autoencoder_deviation(image_path: str, category_name: str) -> np.ndarray:
+    import torch
+
+    model = _load_model(category_name)
+    img = preprocess_path(image_path)  # 128x128, float32 in [0, 1]
+    tensor = torch.from_numpy(img).unsqueeze(0).unsqueeze(0)  # (1, 1, 128, 128)
+
+    with torch.no_grad():
+        reconstruction = model(tensor)
+
+    error = (tensor - reconstruction).pow(2).squeeze().numpy()
+    return error
+
+
+# ---------------------------------------------------------------------
+# Shared patch scoring + prediction
+# ---------------------------------------------------------------------
+
+def has_reference_or_model(category_name: str) -> bool:
+    return has_trained_model(category_name) or has_reference(category_name)
+
+
 def _patch_grid_scores(deviation: np.ndarray, patch_size: int = PATCH_SIZE):
-    """
-    Splits the deviation map into a grid of patches and returns:
-    - a 2D array of per-patch mean deviation scores
-    - the (row, col) grid index of the worst patch
-    """
     h, w = deviation.shape
     rows = math.ceil(h / patch_size)
     cols = math.ceil(w / patch_size)
@@ -80,46 +137,29 @@ def _patch_grid_scores(deviation: np.ndarray, patch_size: int = PATCH_SIZE):
 
 
 def predict(image_path: str, category_name: str) -> dict:
-    """
-    Scores a single image against its category's reference profile.
-
-    Returns confidence_score (how anomalous the worst region is),
-    size_score (how much of the image is affected), and location_score
-    (how close the affected region is to the image center — a proxy for
-    'functional vs cosmetic area', per the project's severity framework).
-    """
-    ref_path = _reference_path(category_name)
-    if not ref_path.exists():
+    if has_trained_model(category_name):
+        deviation = _autoencoder_deviation(image_path, category_name)
+        scale = AUTOENCODER_SCALE
+    elif has_reference(category_name):
+        deviation = _statistical_deviation(image_path, category_name)
+        scale = STAT_SCALE
+    else:
         raise FileNotFoundError(
-            f"No reference profile for category '{category_name}'. "
-            f"Run build_references.py first."
+            f"No trained model or reference profile for category "
+            f"'{category_name}'. Run build_references.py or "
+            f"train_autoencoder.py first."
         )
-
-    data = np.load(ref_path)
-    mean_img, std_img = data["mean"], data["std"]
-
-    # cap std so naturally 'busy' regions (textures, patterns) don't
-    # drown out real defects after z-score normalization
-    std_img = np.clip(std_img, 1e-6, 0.25)
-
-    test_img = preprocess_path(image_path)
-    deviation = np.abs(test_img - mean_img) / std_img
 
     grid, (worst_r, worst_c) = _patch_grid_scores(deviation, PATCH_SIZE)
     worst_score = float(grid[worst_r, worst_c])
 
-    # --- Confidence score: how strongly the worst patch stands out ---
-    confidence_score = float(min(100, round(worst_score * 5, 2)))
+    confidence_score = float(min(100, round(worst_score * scale, 2)))
     is_defective = confidence_score >= DEFECT_THRESHOLD
 
-    # --- Size score: what fraction of the image is similarly affected ---
-    # patches scoring at least half the worst patch's deviation are
-    # treated as "part of the same defect region"
     affected = grid >= (worst_score * 0.5)
     size_fraction = float(affected.sum()) / grid.size
     size_score = float(min(100, round(size_fraction * 400, 2)))
 
-    # --- Location score: distance of the worst patch from image center ---
     rows, cols = grid.shape
     center_r, center_c = (rows - 1) / 2, (cols - 1) / 2
     max_dist = math.sqrt(center_r**2 + center_c**2) or 1.0

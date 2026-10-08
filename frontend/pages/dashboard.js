@@ -26,6 +26,8 @@ export default function Dashboard() {
   const [loadingPage, setLoadingPage] = useState(true);
   const [page, setPage] = useState(1);
   const [filterCategory, setFilterCategory] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+
 
   useEffect(() => {
     if (!getToken()) {
@@ -50,11 +52,15 @@ export default function Dashboard() {
     const categories = new Set(images.map((i) => i.category_id).filter(Boolean));
     const mvtec = images.filter((i) => i.image_source === "mvtec").length;
     const uploaded = images.length - mvtec;
+    const inspected = images.filter((i) => i.inspection_status).length;
+    const failed = images.filter((i) => i.inspection_status === "defective").length;
     return {
       total: images.length,
       categories: categories.size,
       mvtec,
       uploaded,
+      inspected,
+      failed,
     };
   }, [images]);
 
@@ -66,9 +72,19 @@ export default function Dashboard() {
   }, [images]);
 
   const filteredImages = useMemo(() => {
-    if (filterCategory === "all") return images;
-    return images.filter((i) => String(i.category_id) === String(filterCategory));
-  }, [images, filterCategory]);
+    let list = images;
+    if (filterCategory !== "all") {
+      list = list.filter((i) => String(i.category_id) === String(filterCategory));
+    }
+    if (filterStatus !== "all") {
+      if (filterStatus === "pending") {
+        list = list.filter((i) => !i.inspection_status);
+      } else {
+        list = list.filter((i) => i.inspection_status === filterStatus);
+      }
+    }
+    return list;
+  }, [images, filterCategory, filterStatus]);
 
   const totalPages = Math.max(1, Math.ceil(filteredImages.length / PAGE_SIZE));
   const pageImages = filteredImages.slice(
@@ -78,7 +94,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     setPage(1);
-  }, [filterCategory]);
+  }, [filterCategory, filterStatus]);
+
 
   async function handleUpload(e) {
     e.preventDefault();
@@ -151,10 +168,12 @@ export default function Dashboard() {
           {/* STAT STRIP */}
           <section style={styles.statRow}>
             <StatCard label="Units logged" value={stats.total} accent="var(--accent)" />
-            <StatCard label="Categories" value={stats.categories} accent="#7dd3fc" />
-            <StatCard label="MVTec dataset" value={stats.mvtec} accent="#3dd68c" />
-            <StatCard label="Manually uploaded" value={stats.uploaded} accent="#c084fc" />
+            <StatCard label="Inspected" value={stats.inspected} accent="#7dd3fc" />
+            <StatCard label="Failed" value={stats.failed} accent="var(--danger)" />
+            <StatCard label="Categories" value={stats.categories} accent="#3dd68c" />
+            <StatCard label="MVTec dataset" value={stats.mvtec} accent="#c084fc" />
           </section>
+
 
           {/* SCAN BAY — full width, horizontal layout */}
           <section style={styles.uploadCard}>
@@ -231,6 +250,31 @@ export default function Dashboard() {
                 ))}
               </select>
             </div>
+             <div style={{ display: "flex", gap: 8 }}>
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  style={styles.filterSelect}
+                >
+                  <option value="all">All categories</option>
+                  {categoryOptions.map((id) => (
+                    <option key={id} value={id}>
+                      Category {id}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  style={styles.filterSelect}
+                >
+                  <option value="all">All statuses</option>
+                  <option value="normal">Passed</option>
+                  <option value="defective">Failed</option>
+                  <option value="pending">Not inspected</option>
+                </select>
+              </div>
+
 
             {pageImages.length === 0 ? (
               <div style={styles.emptyState}>
@@ -252,6 +296,23 @@ export default function Dashboard() {
                         loading="lazy"
                       />
                       <span style={styles.thumbId}>#{img.image_id}</span>
+                      {img.inspection_status && (
+                        <span
+                          style={{
+                            ...styles.statusBadge,
+                            color:
+                              img.inspection_status === "defective"
+                                ? "var(--danger)"
+                                : "var(--ok)",
+                            borderColor:
+                              img.inspection_status === "defective"
+                                ? "var(--danger)"
+                                : "var(--ok)",
+                          }}
+                        >
+                          {img.inspection_status === "defective" ? "FAIL" : "PASS"}
+                        </span>
+                      )}
                       <span
                         style={{
                           ...styles.sourceTag,
@@ -268,6 +329,7 @@ export default function Dashboard() {
                         {img.image_source}
                       </span>
                     </div>
+
                     <div style={styles.unitMeta}>
                       <span style={styles.unitCategory}>
                         Category {img.category_id ?? "—"}
@@ -430,9 +492,10 @@ const styles = {
   },
   statRow: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
+    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
     gap: 16,
   },
+
   statCard: {
     position: "relative",
     background: "var(--surface)",
@@ -657,6 +720,20 @@ const styles = {
     padding: "2px 6px",
     borderRadius: 4,
   },
+  statusBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    fontFamily: "var(--font-mono)",
+    fontSize: 9,
+    fontWeight: 700,
+    letterSpacing: "0.06em",
+    border: "1px solid",
+    borderRadius: 4,
+    padding: "2px 6px",
+    background: "rgba(0,0,0,0.6)",
+  },
+
   sourceTag: {
     position: "absolute",
     bottom: 6,

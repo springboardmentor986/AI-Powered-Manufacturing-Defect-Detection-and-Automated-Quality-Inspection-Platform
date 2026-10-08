@@ -52,7 +52,36 @@ def list_images(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user),
 ):
-    return db.query(models.Image).all()
+    """
+    Lists all images, each annotated with its latest inspection status
+    (None if the unit hasn't been inspected yet) — used by the dashboard
+    to show a Pass/Fail/Pending badge without a separate request per unit.
+    """
+    images = db.query(models.Image).all()
+    inspections = db.query(models.Inspection).all()
+
+    latest_by_image = {}
+    for insp in inspections:
+        existing = latest_by_image.get(insp.image_id)
+        if not existing or insp.inspection_time > existing.inspection_time:
+            latest_by_image[insp.image_id] = insp
+
+    result = []
+    for img in images:
+        insp = latest_by_image.get(img.image_id)
+        result.append(
+            {
+                "image_id": img.image_id,
+                "category_id": img.category_id,
+                "uploaded_by": img.uploaded_by,
+                "image_path": img.image_path,
+                "image_source": img.image_source,
+                "image_type": img.image_type,
+                "created_at": img.created_at,
+                "inspection_status": insp.result if insp else None,
+            }
+        )
+    return result
 
 
 @router.get("/{image_id}")
@@ -71,7 +100,6 @@ def get_image_detail(
         .first()
     )
 
-    # Most recent inspection for this image, if any exists yet
     inspection = (
         db.query(models.Inspection)
         .filter(models.Inspection.image_id == image_id)
