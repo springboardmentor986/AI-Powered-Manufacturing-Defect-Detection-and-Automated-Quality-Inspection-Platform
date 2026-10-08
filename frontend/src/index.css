@@ -1,0 +1,246 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-industrial-950: #07090f;
+  --color-industrial-900: #0c1120;
+  --color-industrial-850: #101828;
+  --color-industrial-800: #182035;
+  --color-industrial-700: #263045;
+  --color-industrial-600: #3d4f6a;
+  --color-industrial-500: #5a7090;
+  --color-industrial-400: #8fa4be;
+  --color-industrial-300: #c0cedc;
+  --color-industrial-200: #dde6f0;
+  --color-industrial-100: #eef3f8;
+  --color-industrial-50:  #f6f9fc;
+
+  /* Radius system — one scale, used everywhere */
+  --radius-card: 16px;
+  --radius-btn:  10px;
+  --radius-input: 10px;
+  --radius-badge: 999px;
+}
+
+/* ==========================================================================
+   THEME VARIABLES
+   ========================================================================== */
+
+:root, html.dark {
+  color-scheme: dark;
+  --bg-main:          #07090f;
+  --bg-surface:       #0c1120;
+  --bg-card:          rgba(12, 17, 32, 0.90);
+  --bg-card-hover:    rgba(18, 26, 48, 0.98);
+  --bg-nested:        rgba(7, 9, 15, 0.72);
+  --border-subtle:    rgba(255, 255, 255, 0.06);
+  --border-card:      rgba(255, 255, 255, 0.08);
+  --border-card-hover:rgba(6, 182, 212, 0.30);
+  --text-main:        #f0f4fa;
+  --text-sub:         #c0cedc;
+  --text-muted:       #7a93ae;
+  --shadow-card:      0 8px 32px 0 rgba(0, 0, 0, 0.55);
+  --shadow-glow-cyan: 0 0 24px rgba(6, 182, 212, 0.12);
+}
+
+html.light {
+  color-scheme: light;
+  --bg-main:          #f2f5fb;
+  --bg-surface:       #ffffff;
+  --bg-card:          #ffffff;
+  --bg-card-hover:    #ffffff;
+  --bg-nested:        #f6f9fc;
+  --border-subtle:    rgba(0,0,0,0.04);
+  --border-card:      #e2eaf2;
+  --border-card-hover:rgba(6, 182, 212, 0.45);
+  --text-main:        #0e1b2a;
+  --text-sub:         #2d4055;
+  --text-muted:       #5a7090;
+  --shadow-card:      0 2px 16px -2px rgba(0, 0, 0, 0.08);
+  --shadow-glow-cyan: none;
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
+body {
+  margin: 0;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  letter-spacing: -0.01em;
+}
+
+code, kbd, .font-mono, [class*="font-mono"] {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  letter-spacing: 0;
+}
+
+/* ==========================================================================
+   SURFACE SYSTEM
+   ========================================================================== */
+
+.glass-panel {
+  background-color: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-card);
+  color: var(--text-main);
+  border-radius: var(--radius-card);
+}
+
+.glass-panel-hover {
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-card-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card), var(--shadow-glow-cyan);
+}
+
+.surface-nested {
+  background-color: var(--bg-nested);
+  border: 1px solid var(--border-subtle);
+  border-radius: calc(var(--radius-card) - 4px);
+}
+
+/* ==========================================================================
+   ACCENT BORDER SYSTEM (StatCards & Panels)
+   ========================================================================== */
+
+.accent-border-cyan   { border-left: 3px solid #06b6d4; }
+.accent-border-emerald{ border-left: 3px solid #10b981; }
+.accent-border-rose   { border-left: 3px solid #f43f5e; }
+.accent-border-amber  { border-left: 3px solid #f59e0b; }
+.accent-border-purple { border-left: 3px solid #a855f7; }
+
+/* ==========================================================================
+   ENTRY ANIMATION
+   ========================================================================== */
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scanline {
+  0%, 100% { transform: translateY(0%);   opacity: 0.7; }
+  50%       { transform: translateY(400%); opacity: 0.25; }
+}
+
+.animate-enter {
+  animation: fadeSlideUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-enter-delay-1 { animation-delay: 0.06s; }
+.animate-enter-delay-2 { animation-delay: 0.12s; }
+.animate-enter-delay-3 { animation-delay: 0.18s; }
+.animate-enter-delay-4 { animation-delay: 0.24s; }
+
+.animate-scan {
+  animation: scanline 2.5s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   SCROLLBARS
+   ========================================================================== */
+
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+
+html.dark ::-webkit-scrollbar-track  { background: #07090f; }
+html.dark ::-webkit-scrollbar-thumb  { background: #263045; border-radius: 4px; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #3d4f6a; }
+
+html.light ::-webkit-scrollbar-track  { background: #eef3f8; }
+html.light ::-webkit-scrollbar-thumb  { background: #c0cedc; border-radius: 4px; }
+html.light ::-webkit-scrollbar-thumb:hover { background: #8fa4be; }
+
+/* ==========================================================================
+   BUTTON BASE
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-btn);
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 8px 14px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary-cyan {
+  background: linear-gradient(135deg, #0891b2, #06b6d4);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(6, 182, 212, 0.28);
+}
+.btn-primary-cyan:hover {
+  background: linear-gradient(135deg, #06b6d4, #22d3ee);
+  box-shadow: 0 4px 18px rgba(6, 182, 212, 0.38);
+}
+
+/* ==========================================================================
+   FORM INPUTS
+   ========================================================================== */
+
+.input-field {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-input);
+  background: var(--bg-nested);
+  border: 1px solid var(--border-card);
+  color: var(--text-main);
+  font-size: 0.8125rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+.input-field::placeholder { color: var(--text-muted); }
+.input-field:focus {
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+}
+
+/* ==========================================================================
+   TABLE
+   ========================================================================== */
+
+.data-table thead th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-card);
+  white-space: nowrap;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.12s ease;
+}
+
+.data-table tbody tr:hover {
+  background-color: rgba(6, 182, 212, 0.04);
+}
+
+.data-table tbody td {
+  padding: 11px 14px;
+  font-size: 0.75rem;
+}

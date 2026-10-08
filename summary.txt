@@ -1,0 +1,104 @@
+================================================================================
+          VISIONINSPECT AI — PROJECT SUMMARY & START GUIDE
+================================================================================
+
+1. AAPKA BACKEND KYA HAI? (Backend Overview)
+--------------------------------------------------------------------------------
+* Technology: Python 3.12 + FastAPI + SQLAlchemy ORM + SQLite
+* Folder Path: `backend/`
+* URL: http://127.0.0.1:8000
+* Interactive Swagger API Docs: http://127.0.0.1:8000/docs
+
+* Backend Kya Karta Hai:
+  1. Authentication & Security: JWT tokens aur Role-Based Access Control (RBAC).
+  2. Image Acquisition & Ingestion: Single aur Batch images ko validate karta hai,
+     file size/format check karta hai, thumbnails banata hai aur SHA-256 hash nikalta hai.
+  3. MVTec AD Dataset Pipeline: 15 industrial categories (bottle, cable, capsule, carpet, 
+     grid, hazelnut, leather, metal_nut, pill, screw, tile, toothbrush, transistor, 
+     wood, zipper) ko load aur explore karta hai.
+  4. Severity Assessment Model: Section 5 ke formula ke hisaab se defect severity calculate karta hai:
+     Severity = (Size x 30%) + (Location x 25%) + (Defect Type x 25%) + (Confidence x 20%)
+  5. Database Storage: SQLite Database (`backend/visioninspect.db`) me records store karta hai.
+  6. Audit Trails: Supervisor/Manager ke liye security logs maintain karta hai.
+
+
+2. AAPKA FRONTEND KYA HAI? (Frontend Overview)
+--------------------------------------------------------------------------------
+* Technology: React 18 + Vite + Tailwind CSS + Lucide Icons
+* Folder Path: `frontend/`
+* URL: http://localhost:5173
+
+* Naye Features (UI Enhancements & Themes):
+  1. Dark & Light Theme Support: Navbar me Sun/Moon icon se instant 1-click Dark aur 
+     Light mode toggle kar sakte hain. Theme automatically save rehti hai.
+  2. 3 Distinct Role Dashboards: Teeno roles ke liye customized alag-alag views:
+     - Quality Engineer View: Line Station focus, Live Inspection stream, Defect Triage,
+       quick Pass/Fail manual sign-offs, camera stream shortcut.
+     - Factory Supervisor View: Shift operations focus, Batch Ingestion control table, 
+       Line Yield efficiency %, High Severity Defect Alerts, shift audits.
+     - Production Manager View: Executive intelligence focus, 15 MVTec AD Category 
+       Benchmark Matrix, Plant Quality Yield, Compliance %, Full Security Audit Trails.
+  3. Role Header Banner & 1-Click Persona Switcher: Dashboard ke top par current role ka 
+     mission, authority, persona details aur quick role switch buttons available hain.
+  4. Image Upload Studio: Drag & Drop single/batch image uploader with live preview.
+  5. Live Conveyor Camera Simulator: Factory conveyor belt simulation with laser scan 
+     reticle and continuous automated defect inspection streaming.
+  6. MVTec AD Dataset Explorer: All 15 categories ko visually explore karne aur 
+     1-click me sample images ko inspect karne ka option.
+
+
+3. DEMO LOGIN ACCOUNTS (Roles & Permissions)
+--------------------------------------------------------------------------------
+Aap in accounts se login kar sakte hain (ya Navbar me 1-click switcher use kar sakte hain):
+
+* Role 1: Quality Engineer (Alex Rivera) - Cyan Accent
+  - Email / Username: engineer@visioninspect.ai (ya quality.engineer)
+  - Password: password123
+  - Focus: Line Inspection, Image Upload, Camera Simulation, Defect Sign-off.
+
+* Role 2: Factory Supervisor (Sarah Chen) - Amber Accent
+  - Email / Username: supervisor@visioninspect.ai (ya factory.supervisor)
+  - Password: password123
+  - Focus: Batch Production Ingestion, Record Deletion, Shift Audit Trails.
+
+* Role 3: Production Manager (Marcus Vance) - Purple Accent
+  - Email / Username: manager@visioninspect.ai (ya production.manager)
+  - Password: password123
+  - Focus: Plant Quality Yield, MVTec Benchmark Matrix, System Security Logs.
+
+
+================================================================================
+4. PROJECT KO START KAISE KAREIN? (Step-by-Step Running Guide)
+================================================================================
+
+--------------------------------------------------------------------------------
+OPTION A: 1-CLICK BATCH FILE (Sabse Aasan)
+--------------------------------------------------------------------------------
+Direct `start_project.bat` file par double click karein! Yeh backend aur frontend
+dono ko ek saath launch kar dega.
+
+--------------------------------------------------------------------------------
+OPTION B: 2 TERMINALS SE START KARNA
+--------------------------------------------------------------------------------
+Terminal 1 (Backend ke liye):
+   cd "c:\Users\Dell\Desktop\infosys project"
+   python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+
+Terminal 2 (Frontend ke liye):
+   cd "c:\Users\Dell\Desktop\infosys project\frontend"
+   npm run dev
+
+Browser me open karein:
+   http://localhost:5173
+
+
+================================================================================
+5. AUTOMATED VERIFICATION TEST RUN KARNA
+================================================================================
+Terminal me run karein:
+   python backend/test_verification.py
+
+Output:
+[SUCCESS] ALL 8 MILESTONE 1 VERIFICATION TESTS PASSED!
+
+================================================================================
