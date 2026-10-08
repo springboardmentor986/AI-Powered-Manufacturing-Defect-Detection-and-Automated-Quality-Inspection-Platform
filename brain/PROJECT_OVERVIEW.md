@@ -1,78 +1,57 @@
-# VisionInspect AI — Brain & Knowledge Base
+# VisionInspect AI: Manufacturing Defect Detection & Quality Inspection System
+## System Architecture & Project Overview
 
-## 1. Executive Summary
-**VisionInspect AI** is an industrial-grade AI-powered Manufacturing Defect Detection & Quality Inspection platform developed according to the Infosys Springboard Industry 4.0 specifications.
-
-The platform provides end-to-end automated visual inspection, defect detection, multi-class defect classification, weighted severity assessment (Low, Medium, High, Critical), automated Pass/Fail quality decisions, line stoppage alerts, and manufacturing analytics.
-
----
-
-## 2. Dataset Integration & Validation
-- **Dataset Path**: `C:\Users\Dell\Desktop\infosys project\main data`
-- **Dataset Standard**: Full MVTec Anomaly Detection (MVTec AD) benchmark dataset
-- **Categories (15/15 Active)**:
-  - **Texture Categories (5)**: `carpet`, `grid`, `leather`, `tile`, `wood`
-  - **Object Categories (10)**: `bottle`, `cable`, `capsule`, `hazelnut`, `metal_nut`, `pill`, `screw`, `toothbrush`, `transistor`, `zipper`
-- **Total Dataset Inventory**:
-  - **Total Images**: 5,354 images
-  - **Train (Good / Defect-Free)**: 3,629 images
-  - **Test (Good)**: 467 images
-  - **Test (Defects)**: 1,258 images across 70+ industrial defect types
-  - **Pixel-level Ground Truth Masks**: Available for all 15 categories
+### 1. Executive Summary
+**VisionInspect AI** is an enterprise-grade, Industry 4.0 automated visual inspection platform. It leverages deep learning computer vision, anomaly detection, automated severity assessment, and real-time manufacturing analytics to detect, classify, and localize product anomalies across 15 standard industrial domains.
 
 ---
 
-## 3. High-Level Architecture Flow
-
+### 2. High-Level System Architecture Flow
 ```text
-[ Industrial Camera / Upload / MVTec AD ]
-                   │
-                   ▼
-       [ Image Acquisition & Metadata ]
-                   │
-                   ▼
-     [ Preprocessing & ROI Extraction ]
-                   │
-                   ▼
-      [ Multi-Scale Feature Extraction ]
-                   │
-                   ▼
-       [ AI Defect / Anomaly Engine ]
-                   │
-                   ▼
-  [ Defect Classification & Severity Scoring ]
-                   │
-                   ▼
-     [ Automated Pass/Fail Quality Decision ]
-         │                    │
-         ▼                    ▼
-[ Inspection Logs DB ]  [ Manufacturing Analytics Dashboard ]
+MVTec AD / Industrial Camera Feed / Direct Upload
+                     │
+                     ▼
+             Image Acquisition
+          (Single / Batch Upload & Camera Simulation)
+                     │
+                     ▼
+          Image Preprocessing Pipeline
+      (Resize, Bilateral Filter, CLAHE, ROI Extraction)
+                     │
+                     ▼
+          Deep Feature Extraction & Embeddings
+                     │
+                     ▼
+         Defect / Anomaly Detection Engine
+     (Anomaly Localization, Heatmaps, Probability)
+                     │
+                     ▼
+     Defect Classification & Severity Assessment
+ [Severity = (Size×30%) + (Loc×25%) + (Type×25%) + (Conf×20%)]
+                     │
+                     ▼
+         Automated Quality Decision
+             (PASS / FAIL / REVIEW)
+         ┌───────────┴───────────┐
+         ▼                       ▼
+Inspection Records        Quality Analytics
+   & Audit Logs           & Yield Dashboards
 ```
 
 ---
 
-## 4. Multi-Role RBAC Specification
-The system implements strict Role-Based Access Control (RBAC) with 3 specialized dashboards:
-1. **Quality Engineer (`engineer@factory.com`)**:
-   - Camera Simulator & Real-time acquisition
-   - Manual single & batch image upload
-   - Visual inspection inspection modal with zoom and defect overlay
-   - Preprocessing inspection & feature explorer
-2. **Factory Supervisor (`supervisor@factory.com`)**:
-   - Production line monitoring & real-time shift metrics
-   - Defect severity distribution (Low/Medium/High/Critical)
-   - Quality alert acknowledgments & line stoppage overrides
-   - Daily inspection throughput & yield monitoring
-3. **Production Manager (`manager@factory.com`)**:
-   - Plant-wide Yield Rate (%) and First-Pass-Yield (FPY)
-   - Defect Pareto distribution across all 15 categories
-   - Root-cause analysis & production downtime risk reports
-   - CSV/JSON inspection report exports & audit trail review
-
----
-
-## 5. Technology Stack
-- **Backend**: FastAPI (Python 3.12), SQLAlchemy, Pydantic v2, Passlib/Bcrypt, PyJWT, Pillow, NumPy, OpenCV, Scikit-Learn
-- **Frontend**: React 18, Vite, Tailwind CSS v4, Lucide React, Recharts, Custom Theme Engine (Dark / Light)
-- **Database**: SQLite (local development) / PostgreSQL (production-ready ORM)
-- **AI / Vision**: OpenCV, Deep Feature Embeddings, Morphological ROI, GLCM Texture Descriptors, Patch-based Anomaly Scorers
+### 3. Core Architectural Modules
+1. **User & Role-Based Access Control (RBAC)**:
+   - **Quality Engineer**: Live line inspection, camera triage, instant pass/fail validation.
+   - **Factory Supervisor**: Batch operations, threshold configuration, yield analytics, anomaly review.
+   - **Production Manager**: Executive plant yield KPIs, scrap cost analysis, compliance audits.
+2. **Dataset & Storage Pipeline**:
+   - Integrated with 5,354 real images across 15 MVTec AD categories (`bottle`, `cable`, `capsule`, `carpet`, `grid`, `hazelnut`, `leather`, `metal_nut`, `pill`, `screw`, `tile`, `toothbrush`, `transistor`, `wood`, `zipper`).
+   - SQLite / SQLAlchemy persistence with automatic PostgreSQL scalability.
+3. **Computer Vision & Anomaly Engine**:
+   - Feature analysis, anomaly heatmaps, defect bounding geometry, and category-tailored decision thresholds.
+4. **Severity Scoring Engine**:
+   - Multi-factor mathematical scoring model: `Severity = (Size × 30%) + (Location × 25%) + (Defect Type × 25%) + (Confidence × 20%)`.
+   - Classification levels: Low (0-39), Medium (40-59), High (60-79), Critical (80-100).
+5. **Manufacturing Analytics & Auditing**:
+   - Real-time yield monitoring, tamper-evident audit logging, and cross-category defect distribution matrix.

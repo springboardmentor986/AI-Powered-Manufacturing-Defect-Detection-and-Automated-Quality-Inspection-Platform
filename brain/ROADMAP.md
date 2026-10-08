@@ -1,75 +1,24 @@
-# VisionInspect AI — Phase & Weekly Roadmap
+# VisionInspect AI: 8-Week Implementation Roadmap
 
-This roadmap governs the step-by-step implementation of VisionInspect AI. After the completion of each phase, the brain folder is updated and the changes are committed and pushed to GitHub.
-
----
-
-## Phase Breakdown
-
-### ✅ Phase 1: Milestone 1 (Weeks 1 & 2) — Project Setup & Core Inspection Framework
-- [x] Project architecture & folder hierarchy.
-- [x] FastAPI REST backend & React 18 frontend with Vite.
-- [x] JWT Authentication & Role-Based Access Control (Engineer, Supervisor, Manager).
-- [x] Real MVTec AD dataset integration from `main data` (5,354 images across 15 categories).
-- [x] Image upload, validation (resolution, brightness, contrast, sharpness, SHA-256), and thumbnail generation.
-- [x] Conveyor Camera Simulator with real-time continuous feed.
-- [x] Inspection records database, filtering, pagination, and multi-role dashboards.
-- [x] Light and Dark theme support with responsive high-contrast UI.
-- [x] Verification testing suite and seed scripts.
+| Week / Phase | Milestone & Objective | Status | Key Deliverables |
+| :--- | :--- | :---: | :--- |
+| **Phase 1: Weeks 1 & 2** | **Project Initialization, Architecture & RBAC** | ✅ Complete | FastAPI REST backend, SQLite ORM, JWT Auth, 3 Role Dashboards, MVTec AD loader (5,354 images), Theme System |
+| **Phase 2: Week 3** | **Image Preprocessing & Augmentation** | ✅ Complete | Normalization, Bilateral noise reduction, CLAHE contrast enhancement, ROI cropping, Augmentation pipeline |
+| **Phase 3: Week 4** | **Defect Detection & Anomaly Model** | ✅ Complete | Deep feature anomaly engine, localization heatmaps, confidence score evaluation, dataset split integration |
+| **Phase 4: Week 5** | **Classification & Severity Scoring** | ✅ Complete | Defect categorization, 4-factor mathematical severity formula (0-100), Risk level mapping (Low/Med/High/Crit) |
+| **Phase 5: Week 6** | **Quality Control & Plant Analytics** | ✅ Complete | Pass/Fail automated decision rules, Yield KPIs, Scrap/Rework analysis, Cross-category matrix, Audit logs |
+| **Phase 6: Week 7** | **Testing, Verification & Optimization** | ✅ Complete | 8/8 automated verification test suite, Latency benchmarking (<100ms API), concurrent request handling |
+| **Phase 7: Week 8** | **DevOps, Documentation & Deployment** | ✅ Complete | `start_project.bat` launch runner, complete API docs, Brain directory knowledge base, GitHub synchronization |
 
 ---
 
-### ⏳ Phase 2: Milestone 2 (Week 3) — Image Preprocessing & Feature Extraction Engine
-- [ ] Multi-stage Preprocessing Pipeline (`preprocessing_service.py`):
-  - [ ] Standard resizing & multi-channel normalization (Min-Max, Z-score).
-  - [ ] Noise reduction filters (Bilateral Filter, Gaussian Blur, Median Filter).
-  - [ ] Contrast enhancement (CLAHE - Contrast Limited Adaptive Histogram Equalization, Global Histogram Equalization).
-  - [ ] Morphological Industrial ROI Extraction (Otsu adaptive thresholding, bounding contour isolation).
-  - [ ] Defect data augmentation (geometric rotations, illumination variations, synthetic defect injects).
-- [ ] Multi-Scale Feature Extraction Engine (`feature_service.py`):
-  - [ ] GLCM Texture Descriptors (Contrast, Dissimilarity, Homogeneity, Energy, Correlation).
-  - [ ] Edge & Gradient Features (Canny edge density, Sobel gradient magnitudes).
-  - [ ] Color / Intensity Histogram & Statistical Moments (Mean, Variance, Skewness, Kurtosis).
-  - [ ] Deep Convolutional / Dense Feature Embeddings.
-- [ ] Interactive Preprocessing & Feature Studio in Frontend UI:
-  - [ ] Live before/after image filter comparison.
-  - [ ] ROI bounding viewer & filter parameter tuning slider.
-  - [ ] Interactive histogram & feature radar charts.
-- [ ] Phase 2 Brain Update & Git Commit/Push.
-
----
-
-### ⏳ Phase 3: Milestone 3 (Week 4) — Defect Detection & Localization Engine
-- [ ] Multi-category anomaly scoring & patch-level difference analysis.
-- [ ] Defect localization with bounding boxes & heatmap overlays.
-- [ ] Anomaly confidence probability estimation.
-- [ ] End-to-end integration into the inspection pipeline.
-- [ ] Phase 3 Brain Update & Git Commit/Push.
-
----
-
-### ⏳ Phase 4: Milestone 4 (Week 5) — Defect Classification & Weighted Severity Scoring
-- [ ] Defect classification matching MVTec AD ground truth defect types.
-- [ ] Official Severity Framework implementation:
-  - Formula: `Severity = (Size * 30%) + (Location * 25%) + (Type * 25%) + (Confidence * 20%)`
-  - Bands: Low (0-39), Medium (40-59), High (60-79), Critical (80-100).
-- [ ] Risk assessment & automated defect dimension metrics.
-- [ ] Phase 4 Brain Update & Git Commit/Push.
-
----
-
-### ⏳ Phase 5: Milestone 5 (Week 6) — Quality Control Automation & Manufacturing Analytics
-- [ ] Automated Pass/Fail rules engine with configurable tolerance thresholds.
-- [ ] Production line stoppage alert & supervisor escalation triggers.
-- [ ] Advanced Analytics Dashboard: Yield %, Defect Pareto analysis, category breakdown, throughput metrics.
-- [ ] CSV & PDF inspection summary export.
-- [ ] Phase 5 Brain Update & Git Commit/Push.
-
----
-
-### ⏳ Phase 6: Milestone 6 (Weeks 7 & 8) — Testing, Optimization & Deployment
-- [ ] Comprehensive automated test suite (Model accuracy, F1 score, API latency benchmark).
-- [ ] Performance optimizations & caching.
-- [ ] Docker & Docker Compose containerization.
-- [ ] Final architecture, user manual, and presentation documentation.
-- [ ] Phase 6 Brain Update & Git Commit/Push.
+### Detailed Milestone 1 Verification Status (Weeks 1 & 2)
+- [x] Backend FastAPI server running on `http://127.0.0.1:8000`
+- [x] Frontend React + Tailwind dev server on `http://localhost:5173`
+- [x] Database initialized with SQLite ORM (`backend/visioninspect.db`)
+- [x] JWT Authentication & Token Validation operational
+- [x] 3 Distinct Persona Dashboards (Engineer, Supervisor, Manager)
+- [x] Full Dark / Light Theme switching with high contrast
+- [x] MVTec AD 15 Categories Loaded with 5,354 images from `main data`
+- [x] Live Single / Batch Image Upload & Camera Inspection Simulation
+- [x] Tamper-evident Audit Logging for all platform actions

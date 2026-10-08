@@ -20,13 +20,15 @@ class Settings:
     DATA_DIR: Path = BASE_DIR / "data"
     UPLOADS_DIR: Path = BASE_DIR / "data" / "uploads"
     THUMBNAILS_DIR: Path = BASE_DIR / "data" / "thumbnails"
+    MVTEC_DIR: Path = BASE_DIR / "data" / "mvtec_ad"
+    WORKSPACE_MAIN_DATA_DIR: Path = BASE_DIR.parent / "main data"
     
-    # Priority: 1. Workspace 'main data' folder, 2. Env variable MVTEC_DIR, 3. backend/data/mvtec_ad
-    MVTEC_DIR: Path = (
-        BASE_DIR.parent / "main data"
-        if (BASE_DIR.parent / "main data").exists() and (BASE_DIR.parent / "main data" / "bottle").exists()
-        else Path(os.getenv("MVTEC_DIR", str(BASE_DIR / "data" / "mvtec_ad")))
-    )
+    # Priority dataset path resolution
+    @property
+    def ACTIVE_DATASET_DIR(self) -> Path:
+        if self.WORKSPACE_MAIN_DATA_DIR.exists() and any(self.WORKSPACE_MAIN_DATA_DIR.iterdir()):
+            return self.WORKSPACE_MAIN_DATA_DIR
+        return self.MVTEC_DIR
     
     # Allowed File Extensions & Limits
     ALLOWED_EXTENSIONS: set = {".png", ".jpg", ".jpeg", ".tiff", ".bmp"}

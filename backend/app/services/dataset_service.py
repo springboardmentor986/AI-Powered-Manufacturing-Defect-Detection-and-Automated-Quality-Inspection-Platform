@@ -9,7 +9,7 @@ from ..config import settings
 class DatasetService:
     @staticmethod
     def get_mvtec_dir() -> Path:
-        return settings.MVTEC_DIR
+        return settings.ACTIVE_DATASET_DIR
 
     @classmethod
     def get_available_categories(cls) -> List[Dict[str, Any]]:
