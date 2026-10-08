@@ -146,7 +146,7 @@ Codespaces.
 - **Frontend:** Next.js (React), CSS-in-JS
 - **Containerization:** Docker, Docker Compose
 
-## Known Limitations / Honest Notes
+## Known Limitations
 
 - Defect type classification for dataset images uses the dataset's own
   ground-truth labels rather than a trained classifier; this is a
