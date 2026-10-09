@@ -35,3 +35,20 @@ def test_settings_schema_has_confidence():
     assert "classification_confidence_threshold" in (
         SettingsUpdateSchema.model_fields
     )
+
+
+def test_all_fifteen_categories_supported():
+    from ml_inference import get_supported_categories
+    cats = get_supported_categories()
+    cat_names = {c["name"] for c in cats}
+    expected = {
+        "bottle", "cable", "capsule", "carpet", "grid", "hazelnut",
+        "leather", "metal_nut", "pill", "screw", "tile", "toothbrush",
+        "transistor", "wood", "zipper"
+    }
+    assert expected.issubset(cat_names), f"Missing categories: {expected - cat_names}"
+    for c in cats:
+        if c["name"] in expected:
+            assert c["autoencoder_available"] is True, f"AE missing for {c['name']}"
+            assert c["classifier_available"] is True, f"CLF missing for {c['name']}"
+            assert len(c["classes"]) >= 2, f"Classes empty for {c['name']}"

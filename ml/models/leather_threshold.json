@@ -1,0 +1,6 @@
+{
+  "category": "leather",
+  "anomaly_threshold": 0.0008082229178398848,
+  "best_val_loss": 0.000787001452408731,
+  "val_images": 49
+}

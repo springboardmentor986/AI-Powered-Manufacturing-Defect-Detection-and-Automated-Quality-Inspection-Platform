@@ -46,6 +46,7 @@ DEFAULT_CATEGORY = "bottle"
 
 def _model_search_dirs():
     dirs = [
+        os.path.join(PROJECT_ROOT, "trained_models"),
         os.path.join(PROJECT_ROOT, "ml", "models"),
         "/app/models",
         "/models",
@@ -69,16 +70,16 @@ def _resolve_model_path(*parts: str) -> str:
     primary = os.path.join(PROJECT_ROOT, *parts)
     if os.path.exists(primary):
         return primary
-    # Docker: models mounted at /models or /app/models
+    # Fallback to trained_models, Docker, or local app models
     for alt in (
+        os.path.join(PROJECT_ROOT, "trained_models", parts[-1]),
         os.path.join("/models", parts[-1]),
         os.path.join("/app/models", parts[-1]),
         os.path.join(BASE_DIR, "models", parts[-1]),
         os.getenv("MODEL_DIR", ""),
     ):
-        candidate = os.path.join(alt, "") if False else alt
-        if candidate and os.path.exists(candidate):
-            return candidate
+        if alt and os.path.exists(alt):
+            return alt
     return primary
 
 

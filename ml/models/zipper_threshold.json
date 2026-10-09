@@ -1,0 +1,6 @@
+{
+  "category": "zipper",
+  "anomaly_threshold": 0.002090232679620385,
+  "best_val_loss": 0.002090232679620385,
+  "val_images": 48
+}

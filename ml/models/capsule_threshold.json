@@ -1,6 +1,6 @@
 {
   "category": "capsule",
-  "anomaly_threshold": 0.0004358310086554129,
-  "best_val_loss": 0.00039620040721880895,
+  "anomaly_threshold": 0.0022421900648623705,
+  "best_val_loss": 0.0022421900648623705,
   "val_images": 44
 }

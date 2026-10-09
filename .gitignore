@@ -58,7 +58,9 @@ Thumbs.db
 *.pth
 *.pt
 !ml/models/.gitkeep
+trained_models/
 
 # Build output
 .dist/
 ml/visualizations/*.png
+

@@ -13,6 +13,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MVTEC_ROOT = PROJECT_ROOT / "dataset" / "mvtec_anomaly_detection"
+TRAINED_MODELS_DIR = PROJECT_ROOT / "trained_models"
 MODEL_DIR = PROJECT_ROOT / "ml" / "models"
 
 DEFAULT_CATEGORY = "bottle"
@@ -82,6 +83,8 @@ def get_test_classes(category: str):
 def autoencoder_candidates(category: str):
     name = normalize_category(category)
     return [
+        TRAINED_MODELS_DIR / f"{name}_autoencoder_v2.pth",
+        TRAINED_MODELS_DIR / f"{name}_autoencoder.pth",
         MODEL_DIR / f"{name}_autoencoder_v2.pth",
         MODEL_DIR / f"{name}_autoencoder.pth",
     ]
@@ -89,9 +92,13 @@ def autoencoder_candidates(category: str):
 
 def classifier_candidates(category: str):
     name = normalize_category(category)
-    cands = [MODEL_DIR / f"{name}_classifier.pth"]
+    cands = [
+        TRAINED_MODELS_DIR / f"{name}_classifier.pth",
+        MODEL_DIR / f"{name}_classifier.pth"
+    ]
     if name == "bottle":
         # Legacy alias produced by an earlier clean-data run.
+        cands.append(TRAINED_MODELS_DIR / "bottle_classifier_clean_v1.pth")
         cands.append(MODEL_DIR / "bottle_classifier_clean_v1.pth")
     return cands
 
@@ -111,7 +118,11 @@ def resolve_classifier_path(category: str):
 
 
 def threshold_path(category: str) -> Path:
-    return MODEL_DIR / f"{normalize_category(category)}_threshold.json"
+    name = normalize_category(category)
+    tm_path = TRAINED_MODELS_DIR / f"{name}_threshold.json"
+    if tm_path.exists():
+        return tm_path
+    return MODEL_DIR / f"{name}_threshold.json"
 
 
 def load_category_threshold(category: str, default: float = 90.0) -> float:

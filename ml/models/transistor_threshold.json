@@ -1,0 +1,6 @@
+{
+  "category": "transistor",
+  "anomaly_threshold": 0.004559867084026337,
+  "best_val_loss": 0.004559867084026337,
+  "val_images": 43
+}

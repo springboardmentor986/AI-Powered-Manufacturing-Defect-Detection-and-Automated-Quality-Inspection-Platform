@@ -1,0 +1,6 @@
+{
+  "category": "pill",
+  "anomaly_threshold": 0.003249518107622862,
+  "best_val_loss": 0.003249518107622862,
+  "val_images": 54
+}

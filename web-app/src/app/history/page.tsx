@@ -41,6 +41,12 @@ function detailMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
+const ALL_CATEGORIES: string[] = [
+  'bottle', 'cable', 'capsule', 'carpet', 'grid', 'hazelnut',
+  'leather', 'metal_nut', 'pill', 'screw', 'tile', 'toothbrush',
+  'transistor', 'wood', 'zipper'
+];
+
 export default function HistoryPage() {
   const router = useRouter();
   const [history, setHistory] = useState<Inspection[]>([]);
@@ -53,6 +59,7 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [availableCategories, setAvailableCategories] = useState<string[]>(ALL_CATEGORIES);
 
   // Override Modal state
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
@@ -88,6 +95,14 @@ export default function HistoryPage() {
     // Defer fetch so state updates happen outside the synchronous effect body.
     queueMicrotask(() => {
       fetchHistory(categoryFilter);
+      api.get('/inspections/categories')
+        .then((res) => {
+          const list = (res.data as { categories?: { name: string }[] })?.categories;
+          if (Array.isArray(list) && list.length > 0) {
+            setAvailableCategories(list.map((c) => c.name));
+          }
+        })
+        .catch(() => {});
     });
     const syncRole = () => {
       setUserRole(
@@ -178,8 +193,8 @@ export default function HistoryPage() {
   });
 
   const distinctCategories = Array.from(
-    new Set(history.map((h) => h.product_category || 'bottle'))
-  );
+    new Set([...availableCategories, ...history.map((h) => h.product_category || 'bottle')])
+  ).sort();
 
   const safeFormat = (d: unknown, fmt: string) => {
     try {
@@ -252,11 +267,13 @@ export default function HistoryPage() {
               aria-label="Filter by product category"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-1.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs text-slate-200"
+              className="px-3 py-1.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs text-slate-200 capitalize"
             >
-              <option value="ALL">All products</option>
+              <option value="ALL">All products ({distinctCategories.length})</option>
               {distinctCategories.map((c: string) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c.replaceAll('_', ' ')}
+                </option>
               ))}
             </select>
           </div>

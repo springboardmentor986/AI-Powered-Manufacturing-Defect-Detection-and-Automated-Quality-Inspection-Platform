@@ -1,0 +1,6 @@
+{
+  "category": "wood",
+  "anomaly_threshold": 0.003503628773614764,
+  "best_val_loss": 0.003503628773614764,
+  "val_images": 50
+}

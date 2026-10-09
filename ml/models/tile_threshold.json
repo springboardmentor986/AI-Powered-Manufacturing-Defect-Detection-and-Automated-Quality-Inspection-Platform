@@ -1,0 +1,6 @@
+{
+  "category": "tile",
+  "anomaly_threshold": 0.008603895083069801,
+  "best_val_loss": 0.008603895083069801,
+  "val_images": 46
+}

@@ -56,7 +56,23 @@ function apiDetailMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-const FALLBACK_CATEGORIES: string[] = ['bottle', 'cable', 'capsule', 'carpet', 'grid', 'hazelnut'];
+const FALLBACK_CATEGORIES: string[] = [
+  'bottle',
+  'cable',
+  'capsule',
+  'carpet',
+  'grid',
+  'hazelnut',
+  'leather',
+  'metal_nut',
+  'pill',
+  'screw',
+  'tile',
+  'toothbrush',
+  'transistor',
+  'wood',
+  'zipper',
+];
 
 export default function InspectPage() {
   const router = useRouter();
@@ -733,6 +749,28 @@ export default function InspectPage() {
 
                 <div className="glass-panel p-6 rounded-xl border border-slate-800 space-y-4">
                   <h4 className="text-lg font-bold text-white border-b border-slate-800 pb-2">Webcam Controls</h4>
+                  <div className="space-y-1">
+                    <label htmlFor="webcam-category" className="text-xs font-semibold text-slate-300">
+                      Active Product Model
+                    </label>
+                    <select
+                      id="webcam-category"
+                      value={selectedCategory}
+                      onChange={(e) => handleCategoryChange(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                    >
+                      {(categories.length > 0 ? categories : FALLBACK_CATEGORIES.map((name: string) => ({ name, display_name: name }))).map((c: ProductCategory) => (
+                        <option key={c.name} value={c.name}>
+                          {c.display_name || c.name}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedCategoryInfo?.classes && selectedCategoryInfo.classes.length > 0 && (
+                      <p className="text-[11px] text-slate-400">
+                        {selectedCategoryInfo.classes.length} classes: {selectedCategoryInfo.classes.slice(0, 4).join(', ')}{selectedCategoryInfo.classes.length > 4 ? '…' : ''}
+                      </p>
+                    )}
+                  </div>
                   {!webcamActive ? (
                     <button
                       onClick={startWebcam}

@@ -1,0 +1,6 @@
+{
+  "category": "hazelnut",
+  "anomaly_threshold": 0.0009203496156260371,
+  "best_val_loss": 0.0007991349266376346,
+  "val_images": 79
+}

@@ -2,39 +2,43 @@ import os
 import subprocess
 import sys
 
+# Already trained (skip these):
+#   bottle ✅, cable ✅, capsule ✅, carpet ✅, grid ✅
+# Training: hazelnut + next 3 (leather, metal_nut, pill)
 categories = [
-    "bottle", "cable", "capsule", "carpet", "grid", "hazelnut",
-    "leather", "metal_nut", "pill", "screw", "tile", "toothbrush",
-    "transistor", "wood", "zipper"
+    "hazelnut", "leather", "metal_nut", "pill"
 ]
 
 python_exe = os.path.join("venv", "Scripts", "python.exe")
+failed = []
 
 for cat in categories:
-    print(f"==========================================")
-    print(f"Training category: {cat}")
-    print(f"==========================================")
-    
-    # Run the unified training script for the category, including calibration
+    print(f"==========================================", flush=True)
+    print(f"Training category: {cat}", flush=True)
+    print(f"==========================================", flush=True)
+
     cmd = [python_exe, "ml/train_category.py", "--category", cat, "--calibrate"]
-    
-    # We pipe stdout and stderr so they appear in the task logs
+
     process = subprocess.Popen(
         cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
         text=True,
-        bufsize=1
     )
-    
-    for line in process.stdout:
-        print(line, end="")
-        
-    process.wait()
-    
-    if process.returncode != 0:
-        print(f"Error: Training failed for {cat} with exit code {process.returncode}")
-    else:
-        print(f"Successfully trained {cat}")
 
-print("All categories completed!")
+    process.wait()
+
+    if process.returncode != 0:
+        print(f"[ERROR] Training failed for {cat} with exit code {process.returncode}", flush=True)
+        failed.append(cat)
+    else:
+        print(f"[OK] Successfully trained {cat}", flush=True)
+
+print("\n==========================================", flush=True)
+print("ALL TRAINING COMPLETE", flush=True)
+print("==========================================", flush=True)
+if failed:
+    print(f"Failed categories: {failed}", flush=True)
+else:
+    print("All 10 categories trained successfully!", flush=True)
+

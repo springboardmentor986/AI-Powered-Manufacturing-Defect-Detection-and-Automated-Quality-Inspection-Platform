@@ -1,0 +1,6 @@
+{
+  "category": "toothbrush",
+  "anomaly_threshold": 0.015588263981044292,
+  "best_val_loss": 0.015588263981044292,
+  "val_images": 12
+}

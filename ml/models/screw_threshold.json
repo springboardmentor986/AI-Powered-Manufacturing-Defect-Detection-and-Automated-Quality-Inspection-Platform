@@ -1,0 +1,6 @@
+{
+  "category": "screw",
+  "anomaly_threshold": 0.0024836796801537275,
+  "best_val_loss": 0.0024836796801537275,
+  "val_images": 64
+}

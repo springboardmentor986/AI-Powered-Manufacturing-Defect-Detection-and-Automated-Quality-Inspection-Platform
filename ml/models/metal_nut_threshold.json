@@ -1,0 +1,6 @@
+{
+  "category": "metal_nut",
+  "anomaly_threshold": 0.00395868020132184,
+  "best_val_loss": 0.00395868020132184,
+  "val_images": 44
+}
