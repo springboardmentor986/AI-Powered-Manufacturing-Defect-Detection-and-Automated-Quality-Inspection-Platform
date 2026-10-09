@@ -87,9 +87,14 @@ export default function HistoryPage() {
   }, []);
 
   useEffect(() => {
+    const role = (localStorage.getItem('userRole') || localStorage.getItem('role') || '').toLowerCase();
     const token = localStorage.getItem('token') || localStorage.getItem('access_token');
     if (!token) {
       router.push('/login');
+      return;
+    }
+    if (role === 'inspector') {
+      router.push('/inspect');
       return;
     }
     // Defer fetch so state updates happen outside the synchronous effect body.
@@ -105,9 +110,11 @@ export default function HistoryPage() {
         .catch(() => {});
     });
     const syncRole = () => {
-      setUserRole(
-        typeof window === 'undefined' ? null : localStorage.getItem('role')
-      );
+      const currentRole = (localStorage.getItem('userRole') || localStorage.getItem('role') || '').toLowerCase();
+      setUserRole(currentRole);
+      if (currentRole === 'inspector') {
+        router.push('/inspect');
+      }
     };
     window.addEventListener('storage', syncRole);
     window.addEventListener('focus', syncRole);

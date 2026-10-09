@@ -12,14 +12,15 @@ export default function Sidebar() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    const getStoredRole = () => localStorage.getItem('userRole') || localStorage.getItem('role');
     queueMicrotask(() => {
-      setUserRole(localStorage.getItem('role'));
+      setUserRole(getStoredRole());
     });
     const syncRole = (e: StorageEvent) => {
-      if (e.key === 'role') setUserRole(e.newValue);
+      if (e.key === 'role' || e.key === 'userRole') setUserRole(getStoredRole());
     };
     const syncFocus = () => {
-      setUserRole(localStorage.getItem('role'));
+      setUserRole(getStoredRole());
     };
     window.addEventListener('storage', syncRole);
     window.addEventListener('focus', syncFocus);
@@ -34,6 +35,7 @@ export default function Sidebar() {
       localStorage.removeItem('token');
       localStorage.removeItem('access_token');
       localStorage.removeItem('role');
+      localStorage.removeItem('userRole');
       localStorage.removeItem('username');
     } finally {
       router.push('/login');
@@ -43,14 +45,31 @@ export default function Sidebar() {
   // Don't show sidebar on login page
   if (pathname === '/login') return null;
 
-  const navItems = [
-    { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { label: 'Inspection', href: '/inspect', icon: Camera },
-    { label: 'History', href: '/history', icon: History },
-  ];
+  const role = (userRole || '').toLowerCase();
+  const navItems = [];
 
-  if (userRole === 'supervisor' || userRole === 'admin') {
-    navItems.push({ label: 'Settings', href: '/settings', icon: Settings });
+  if (role === 'inspector') {
+    navItems.push(
+      { label: 'Live Inspection', href: '/inspect', icon: Camera }
+    );
+  } else if (role === 'supervisor') {
+    navItems.push(
+      { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+      { label: 'Live Inspection', href: '/inspect', icon: Camera },
+      { label: 'Analytics / History', href: '/history', icon: History }
+    );
+  } else if (role === 'admin') {
+    navItems.push(
+      { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+      { label: 'Live Inspection', href: '/inspect', icon: Camera },
+      { label: 'Analytics / History', href: '/history', icon: History },
+      { label: 'System Settings', href: '/settings', icon: Settings }
+    );
+  } else {
+    // Default fallback prior to role resolution
+    navItems.push(
+      { label: 'Live Inspection', href: '/inspect', icon: Camera }
+    );
   }
 
 

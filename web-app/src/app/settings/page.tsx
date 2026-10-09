@@ -95,13 +95,13 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    const role = localStorage.getItem('role');
+    const role = (localStorage.getItem('userRole') || localStorage.getItem('role') || '').toLowerCase();
     const token = localStorage.getItem('token') || localStorage.getItem('access_token');
     if (!token) {
       router.push('/login');
       return;
     }
-    if (role !== 'supervisor' && role !== 'admin') {
+    if (role !== 'admin') {
       router.push('/');
       return;
     }

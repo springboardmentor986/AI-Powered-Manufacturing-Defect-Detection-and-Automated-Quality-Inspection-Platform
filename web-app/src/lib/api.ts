@@ -29,6 +29,8 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('access_token');
       localStorage.removeItem('role');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('username');
       if (!window.location.pathname.startsWith('/login')) {
         // Interceptor runs outside React: router/redirect() unavailable here.
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination

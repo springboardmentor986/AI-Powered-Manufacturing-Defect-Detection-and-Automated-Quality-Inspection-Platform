@@ -21,8 +21,8 @@ export default function TopNav() {
 
   useEffect(() => {
     const readUsername = () =>
-      localStorage.getItem('username') || 'Inspector';
-    const readRole = () => localStorage.getItem('role') || '';
+      localStorage.getItem('username') || 'User';
+    const readRole = () => localStorage.getItem('userRole') || localStorage.getItem('role') || '';
     // Defer so no synchronous setState in effect body.
     queueMicrotask(() => {
       setUsername(readUsername());

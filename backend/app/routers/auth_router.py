@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from database import get_db
     from models import User
-    from schemas import UserRegister
+    from schemas import UserRegister, TokenResponse
     from auth import (
         hash_password,
         verify_password,
@@ -21,7 +21,7 @@ except ImportError:
     try:
         from app.database import get_db
         from app.models import User
-        from app.schemas import UserRegister
+        from app.schemas import UserRegister, TokenResponse
         from app.auth import (
             hash_password,
             verify_password,
@@ -31,7 +31,7 @@ except ImportError:
     except ImportError:
         from backend.app.database import get_db
         from backend.app.models import User
-        from backend.app.schemas import UserRegister
+        from backend.app.schemas import UserRegister, TokenResponse
         from backend.app.auth import (
             hash_password,
             verify_password,
@@ -149,7 +149,7 @@ def register(
 # LOGIN
 # ==========================================
 
-@router.post("/login")
+@router.post("/login", response_model=TokenResponse)
 def login(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -197,7 +197,8 @@ def login(
 
     return {
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "role": user.role
     }
 
 

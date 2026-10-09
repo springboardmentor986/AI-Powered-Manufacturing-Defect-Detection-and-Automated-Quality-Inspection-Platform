@@ -56,20 +56,26 @@ export default function LoginPage() {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
         
-        localStorage.setItem('token', res.data.access_token);
-        localStorage.setItem('access_token', res.data.access_token);
+        const { access_token, role } = res.data;
+        localStorage.setItem('token', access_token);
+        localStorage.setItem('access_token', access_token);
+        if (role) {
+          localStorage.setItem('userRole', role);
+          localStorage.setItem('role', role);
+        }
         
-        // Fetch user role using the token just received
+        // Fetch user profile to ensure complete synchronization
         try {
           const meRes = await api.get('/auth/me', {
-            headers: { Authorization: `Bearer ${res.data.access_token}` }
+            headers: { Authorization: `Bearer ${access_token}` }
           });
-          localStorage.setItem('role', meRes.data.role);
+          const userRole = meRes.data.role || role;
+          localStorage.setItem('role', userRole);
+          localStorage.setItem('userRole', userRole);
           localStorage.setItem('username', meRes.data.username);
         } catch {
-          localStorage.removeItem('token');
-          localStorage.removeItem('access_token');
-          throw new Error('Failed to fetch user profile');
+          // If /auth/me fails, we already have access_token and userRole from /auth/login
+          localStorage.setItem('username', formData.username);
         }
         
         router.replace('/');
