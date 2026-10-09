@@ -15,7 +15,7 @@ import {
 } from "recharts";
 
 function Analytics({ user }) {
-  const API_URL = "https://visioninspectai-3.onrender.com";
+  const API_URL = "http://127.0.0.1:8000";
 
   const [analytics, setAnalytics] = useState(null);
   const [days, setDays] = useState(30);
