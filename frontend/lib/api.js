@@ -7,7 +7,7 @@ export function getToken() {
 
 export function setToken(token) {
   localStorage.setItem("vi_token", token);
-} 
+}
 
 export async function getAnalyticsSummary() {
   return request("/analytics/summary");
@@ -101,4 +101,8 @@ export async function uploadImage({ categoryId, file }) {
     throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
   return res.json();
+}
+
+export async function getCategories() {
+  return request("/categories/");
 }

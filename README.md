@@ -2,6 +2,12 @@
 
 **AI-powered manufacturing defect detection and quality inspection platform.**
 
+## Live Demo
+- Frontend: https://visioninspect-ai-silk.vercel.app
+- Backend API docs: https://visioninspect-ai-gg9p.onrender.com/docs
+
+Free tier: the first request may take about 50 seconds while the backend wakes up.
+
 Detects product defects from images, classifies defect types, scores severity,
 and provides manufacturing analytics — built across four milestones.
 
@@ -146,7 +152,7 @@ Codespaces.
 - **Frontend:** Next.js (React), CSS-in-JS
 - **Containerization:** Docker, Docker Compose
 
-## Known Limitations / Honest Notes
+## Known Limitations
 
 - Defect type classification for dataset images uses the dataset's own
   ground-truth labels rather than a trained classifier; this is a
@@ -158,3 +164,5 @@ Codespaces.
 - Cloud deployment (AWS/Azure) was validated locally and in GitHub
   Codespaces; a persistent public cloud deployment is a natural next
   step beyond this milestone
+- Accuracy numbers were measured on the original MVTec images locally. The deployed demo is seeded with 515 images stored as 256px thumbnails, so individual results can differ slightly.
+- On the free hosting tier, uploaded images are temporary and are cleared when the backend restarts.

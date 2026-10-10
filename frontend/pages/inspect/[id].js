@@ -163,23 +163,56 @@ export default function InspectDetail() {
                   <div style={styles.emptyLog}>No defects logged for this unit.</div>
                 ) : (
                   <div style={styles.defectLog}>
-                    {defects.map((d, i) => (
-                      <div key={d.defect_id} style={styles.defectRow}>
-                        <span style={styles.mono}>
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <span>{d.defect_type}</span>
-                        <span
-                          style={{
-                            ...styles.severityPill,
-                            color: severityColor(d.severity),
-                            borderColor: severityColor(d.severity),
-                          }}
-                        >
-                          {(d.severity || "unknown").toUpperCase()}
-                        </span>
-                      </div>
-                    ))}
+                    {defects.map((d, i) => {
+                      const breakdown = d.location_data || null;
+                      return (
+                        <div key={d.defect_id} style={styles.defectBlock}>
+                          <div style={styles.defectRow}>
+                            <span style={styles.mono}>
+                              {String(i + 1).padStart(2, "0")}
+                            </span>
+                            <span>{d.defect_type}</span>
+                            <span
+                              style={{
+                                ...styles.severityPill,
+                                color: severityColor(d.severity),
+                                borderColor: severityColor(d.severity),
+                              }}
+                            >
+                              {(d.severity || "unknown").toUpperCase()}
+                            </span>
+                          </div>
+
+                          {breakdown && (
+                            <div style={styles.breakdownBox}>
+                              <BreakdownBar
+                                label="Size (30%)"
+                                value={breakdown.size_score}
+                              />
+                              <BreakdownBar
+                                label="Location (25%)"
+                                value={breakdown.location_score}
+                              />
+                              <BreakdownBar
+                                label="Defect Type (25%)"
+                                value={breakdown.type_score}
+                              />
+                              <BreakdownBar
+                                label="Confidence (20%)"
+                                value={breakdown.confidence_score}
+                              />
+                              <div style={styles.breakdownTotal}>
+                                Severity Score:{" "}
+                                <span style={styles.mono}>
+                                  {breakdown.severity_score}
+                                </span>{" "}
+                                / 100
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -504,6 +537,54 @@ const styles = {
     padding: "10px 12px",
     fontSize: 13,
   },
+   defectBlock: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+  },
+  breakdownBox: {
+    background: "var(--surface-2)",
+    border: "1px solid var(--border)",
+    borderRadius: 8,
+    padding: "12px 14px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+  },
+  breakdownRow: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 4,
+  },
+  breakdownLabelRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    fontSize: 11,
+    color: "var(--text-muted)",
+  },
+  breakdownLabel: {
+    fontFamily: "var(--font-mono)",
+  },
+  breakdownTrack: {
+    height: 5,
+    borderRadius: 3,
+    background: "var(--border)",
+    overflow: "hidden",
+  },
+  breakdownFill: {
+    height: "100%",
+    background: "var(--accent)",
+    borderRadius: 3,
+    transition: "width 0.4s ease",
+  },
+  breakdownTotal: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "var(--text-muted)",
+    borderTop: "1px solid var(--border)",
+    paddingTop: 8,
+  },
+
   severityPill: {
     fontFamily: "var(--font-mono)",
     fontSize: 10,
@@ -546,6 +627,7 @@ const styles = {
     boxShadow: "0 0 0 0 rgba(245,166,35,0.6)",
     animation: "pulse 1.8s ease-out infinite",
   },
+
   pendingText: {
     color: "var(--text-muted)",
     fontSize: 13,
@@ -575,3 +657,22 @@ const styles = {
     textAlign: "left",
   },
 };
+function BreakdownBar({ label, value }) {
+  const pct = Math.max(0, Math.min(100, value || 0));
+  return (
+    <div style={styles.breakdownRow}>
+      <div style={styles.breakdownLabelRow}>
+        <span style={styles.breakdownLabel}>{label}</span>
+        <span style={styles.mono}>{pct}</span>
+      </div>
+      <div style={styles.breakdownTrack}>
+        <div
+          style={{
+            ...styles.breakdownFill,
+            width: `${pct}%`,
+          }}
+        />
+      </div>
+    </div>
+  );
+}

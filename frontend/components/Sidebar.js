@@ -3,10 +3,10 @@ import { useRouter } from "next/router";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: "▣", enabled: true },
-  { key: "inspections", label: "Inspections", href: "#", icon: "◎", enabled: false },
+  { key: "inspections", label: "Inspections", href: "/inspections", icon: "◎", enabled: true },
   { key: "analytics", label: "Analytics", href: "/analytics", icon: "▤", enabled: true },
-  { key: "reports", label: "Reports", href: "#", icon: "▧", enabled: false },
-  { key: "settings", label: "Settings", href: "#", icon: "⚙", enabled: false },
+  { key: "reports", label: "Reports", href: "/reports", icon: "▧", enabled: true},
+  { key: "settings", label: "Settings", href: "/settings", icon: "⚙", enabled: true},
 ];
 
 export default function Sidebar() {
