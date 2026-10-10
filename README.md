@@ -144,6 +144,7 @@ Codespaces.
   run successfully; resolved a Postgres driver mismatch
   (`psycopg` → `psycopg2`) and a container-network MTU issue along the
   way
+- Deployed publicly on free tiers: the frontend on Vercel, and the backend with PostgreSQL on Render (live links are at the top of this README)
 
 ## Tech Stack
 
