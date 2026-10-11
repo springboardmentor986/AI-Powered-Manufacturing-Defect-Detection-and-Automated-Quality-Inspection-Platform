@@ -78,6 +78,9 @@ export const datasetAPI = {
 export const dashboardAPI = {
   getKPIStats: () => apiClient.get('/dashboard/stats'),
   getBatches: () => apiClient.get('/dashboard/batches'),
+  getAnalytics: () => apiClient.get('/dashboard/analytics'),
+  getTrends: () => apiClient.get('/dashboard/trends'),
+  getQualityReport: () => apiClient.get('/dashboard/quality-report'),
 };
 
 export const auditAPI = {

@@ -19,7 +19,12 @@ import {
   Sliders,
   FileCheck,
   Download,
-  AlertOctagon
+  AlertOctagon,
+  PieChart,
+  DollarSign,
+  FileText,
+  Printer,
+  X
 } from 'lucide-react';
 import { dashboardAPI } from '../api/client';
 import { StatCard } from '../components/StatCard';
@@ -39,17 +44,25 @@ export const DashboardPage = ({
 
   const [stats, setStats] = useState(null);
   const [batches, setBatches] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [trends, setTrends] = useState(null);
+  const [qualityReport, setQualityReport] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchStatsAndBatches = async () => {
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [statsRes, batchesRes] = await Promise.all([
+      const [statsRes, batchesRes, analyticsRes, trendsRes] = await Promise.all([
         dashboardAPI.getKPIStats(),
-        dashboardAPI.getBatches()
+        dashboardAPI.getBatches(),
+        dashboardAPI.getAnalytics(),
+        dashboardAPI.getTrends()
       ]);
       setStats(statsRes.data);
       setBatches(batchesRes.data);
+      setAnalytics(analyticsRes.data);
+      setTrends(trendsRes.data);
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
     } finally {
@@ -57,8 +70,18 @@ export const DashboardPage = ({
     }
   };
 
+  const handleOpenReportModal = async () => {
+    try {
+      const res = await dashboardAPI.getQualityReport();
+      setQualityReport(res.data);
+      setShowReportModal(true);
+    } catch (err) {
+      console.error('Failed to generate production quality report', err);
+    }
+  };
+
   useEffect(() => {
-    fetchStatsAndBatches();
+    fetchDashboardData();
   }, []);
 
   return (
@@ -76,7 +99,6 @@ export const DashboardPage = ({
       {/* ========================================================================= */}
       {role === ROLES.QUALITY_ENGINEER && (
         <div className="space-y-6">
-          {/* KPI Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Station Inspections"
@@ -99,114 +121,82 @@ export const DashboardPage = ({
               value={stats ? stats.total_failed : '--'}
               icon={XCircle}
               color="rose"
-              subtext={`${stats?.defect_rate_percentage || 0}% rejection rate`}
-              badge="Action Required"
+              subtext={`${stats?.total_failed || 0} units rejected`}
+              badge="Immediate Action"
             />
             <StatCard
-              title="MVTec AD Categories"
-              value={stats ? `${stats.categories_covered}/15` : '15/15'}
-              icon={FolderArchive}
+              title="MVTec Explorer"
+              value={stats ? `${stats.categories_covered}/15` : '--'}
+              icon={Layers}
               color="cyan"
-              subtext="Industrial benchmark domains"
-              badge="Integrated"
+              subtext="Active category profiles"
+              badge="5,354 Samples"
             />
           </div>
 
-          {/* Engineer Station Deck */}
+          {/* Quick Actions & Pareto Root Causes */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Decision Status Panel */}
-            <div className="lg:col-span-5 glass-panel p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-3">
-                <h3 className="text-[13px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-cyan-500" />
-                  Triage Counter
+            <div className="lg:col-span-7 glass-panel p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-cyan-500" />
+                  Top Defect Classes (Pareto 80/20)
                 </h3>
-                <span className="text-[11px] font-mono text-slate-400 font-semibold">Station A</span>
+                <span className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-semibold">
+                  Optical Frequency
+                </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 font-mono">
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" /> PASS (Compliant)
-                  </span>
-                  <span className="text-3xl font-black text-slate-900 dark:text-white mt-2 block">
-                    {stats?.total_passed || 0}
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20">
-                  <span className="text-xs text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
-                    <XCircle className="w-4 h-4" /> FAIL (Defective)
-                  </span>
-                  <span className="text-3xl font-black text-slate-900 dark:text-white mt-2 block">
-                    {stats?.total_failed || 0}
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-                  <span className="text-xs text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
-                    <AlertTriangle className="w-4 h-4" /> REVIEW (Hold)
-                  </span>
-                  <span className="text-3xl font-black text-slate-900 dark:text-white mt-2 block">
-                    {stats?.total_review || 0}
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-industrial-950 border border-slate-200 dark:border-slate-800">
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-bold flex items-center gap-1">
-                    <Clock className="w-4 h-4" /> PENDING
-                  </span>
-                  <span className="text-3xl font-black text-slate-900 dark:text-white mt-2 block">
-                    {stats?.total_pending || 0}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-industrial-950/80 border border-slate-200 dark:border-slate-800/60">
-                <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Click any sample below to inspect defect localization and submit sign-offs.
-                </p>
+              <div className="space-y-3">
+                {analytics?.pareto_defects && analytics.pareto_defects.length > 0 ? (
+                  analytics.pareto_defects.slice(0, 5).map((p, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between text-xs font-mono">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 capitalize">
+                          {p.defect_type.replace('_', ' ')}
+                        </span>
+                        <span className="text-slate-500">
+                          {p.count} units ({p.percentage}%) • Cumulative: {p.cumulative_percentage}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 dark:bg-industrial-900 h-2 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-cyan-500 to-rose-500 h-full rounded-full transition-all duration-500"
+                          style={{ width: `${Math.max(p.percentage, 8)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-slate-400 text-xs">No defects recorded yet.</div>
+                )}
               </div>
             </div>
 
-            {/* Ingestion Stream by Category */}
-            <div className="lg:col-span-7 glass-panel p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-3">
-                <h3 className="text-[13px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FolderArchive className="w-4 h-4 text-cyan-500" />
-                  Category Volume
+            <div className="lg:col-span-5 glass-panel p-6 space-y-4 flex flex-col justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  Live Line Controls
                 </h3>
-                <button
-                  onClick={onOpenDataset}
-                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 font-mono font-bold"
-                >
-                  Explore MVTec AD <ArrowUpRight className="w-3 h-3" />
-                </button>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 leading-relaxed">
+                  Trigger high-speed optical inspection on simulated conveyor belt, acquisition feed, or import verified MVTec AD samples.
+                </p>
               </div>
 
-              <div className="space-y-3 max-h-[250px] overflow-y-auto pr-1">
-                {stats && stats.category_distribution && Object.keys(stats.category_distribution).length > 0 ? (
-                  Object.entries(stats.category_distribution).map(([cat, count]) => {
-                    const total = Math.max(stats.total_inspections, 1);
-                    const pct = Math.round((count / total) * 100);
-                    return (
-                      <div key={cat} className="space-y-1">
-                        <div className="flex justify-between text-xs font-mono">
-                          <span className="capitalize text-slate-800 dark:text-slate-200 font-semibold">{cat}</span>
-                          <span className="text-slate-500 dark:text-slate-400">{count} inspections ({pct}%)</span>
-                        </div>
-                        <div className="w-full bg-slate-200 dark:bg-industrial-900 rounded-full h-2.5 overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full rounded-full transition-all duration-500"
-                            style={{ width: `${Math.max(pct, 5)}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-8 text-slate-400 text-xs font-mono">No data yet.</div>
-                )}
+              <div className="space-y-2.5 pt-2">
+                <button
+                  onClick={onOpenSimulator}
+                  className="w-full py-2.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow-md shadow-cyan-600/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <Scan className="w-4 h-4" /> Launch Live Conveyor Simulator
+                </button>
+                <button
+                  onClick={onOpenUpload}
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-industrial-900 hover:bg-slate-200 dark:hover:bg-industrial-800 text-slate-800 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2"
+                >
+                  <Layers className="w-4 h-4 text-cyan-500" /> Upload Inspection Batch
+                </button>
               </div>
             </div>
           </div>
@@ -218,7 +208,6 @@ export const DashboardPage = ({
       {/* ========================================================================= */}
       {role === ROLES.FACTORY_SUPERVISOR && (
         <div className="space-y-6">
-          {/* Supervisor Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Line Yield Efficiency"
@@ -254,23 +243,19 @@ export const DashboardPage = ({
             />
           </div>
 
-          {/* Supervisor Batch Control */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Batch Table */}
             <div className="lg:col-span-8 glass-panel p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <h3 className="text-[13px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Layers className="w-4 h-4 text-amber-500" />
-                    Production Batches
+                    Production Batches & Line Status
                   </h3>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    Line batch progress and pass/fail distribution.
-                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">Line batch throughput and yield stats.</p>
                 </div>
                 <button
                   onClick={onOpenUpload}
-                  className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md shadow-amber-600/20 transition-all"
                 >
                   + New Batch
                 </button>
@@ -280,7 +265,7 @@ export const DashboardPage = ({
                 <table className="w-full text-left data-table">
                   <thead className="text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                     <tr>
-                      <th className="py-2.5 px-3">Batch ID</th>
+                      <th className="py-2.5 px-3">Batch Name</th>
                       <th className="py-2.5 px-3">Category</th>
                       <th className="py-2.5 px-3">Progress</th>
                       <th className="py-2.5 px-3">Yield Count</th>
@@ -304,7 +289,7 @@ export const DashboardPage = ({
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className="py-4 text-center text-slate-400">No active batches recorded yet.</td>
+                        <td colSpan={5} className="py-4 text-center text-slate-400 text-xs">No active batches recorded yet.</td>
                       </tr>
                     )}
                   </tbody>
@@ -312,36 +297,44 @@ export const DashboardPage = ({
               </div>
             </div>
 
-            {/* Severity Model */}
+            {/* Severity Risk Tier Distribution */}
             <div className="lg:col-span-4 glass-panel p-6 space-y-4">
-              <div className="border-b border-slate-100 dark:border-slate-800/60 pb-3">
-                <h3 className="text-[13px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-amber-500" />
-                  Severity Distribution
+                  Severity Risk Tiers (Section 5)
                 </h3>
               </div>
 
-              <div className="space-y-3 text-xs font-mono">
-                <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Low Severity (0-39)</span>
-                  <span className="text-slate-900 dark:text-white font-black text-sm">{stats?.total_passed || 0} items</span>
+              <div className="space-y-2.5 text-xs font-mono">
+                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center">
+                  <div>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold block">Low Severity (0-39)</span>
+                    <span className="text-[10px] text-slate-400">PASS • Normal tolerance</span>
+                  </div>
+                  <span className="text-slate-900 dark:text-white font-black text-sm">{stats?.total_passed || 0}</span>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex justify-between items-center">
-                  <span className="text-amber-600 dark:text-amber-400 font-bold">Medium Concern (40-59)</span>
-                  <span className="text-slate-900 dark:text-white font-black text-sm">{stats?.total_review || 0} items</span>
+                <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex justify-between items-center">
+                  <div>
+                    <span className="text-amber-600 dark:text-amber-400 font-bold block">Medium Concern (40-59)</span>
+                    <span className="text-[10px] text-slate-400">REVIEW • Supervisor sign-off</span>
+                  </div>
+                  <span className="text-slate-900 dark:text-white font-black text-sm">{stats?.total_review || 0}</span>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex justify-between items-center">
-                  <span className="text-rose-600 dark:text-rose-400 font-bold">Critical Defect (80-100)</span>
-                  <span className="text-slate-900 dark:text-white font-black text-sm">{stats?.total_failed || 0} items</span>
+                <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex justify-between items-center">
+                  <div>
+                    <span className="text-rose-600 dark:text-rose-400 font-bold block">Critical Defect (80-100)</span>
+                    <span className="text-[10px] text-slate-400">FAIL • Immediate line scrap</span>
+                  </div>
+                  <span className="text-slate-900 dark:text-white font-black text-sm">{stats?.total_failed || 0}</span>
                 </div>
               </div>
 
               <button
-                onClick={() => setActiveTab('audit')}
-                className="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-industrial-900 dark:hover:bg-industrial-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-xs"
+                onClick={handleOpenReportModal}
+                className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all flex items-center justify-center gap-2"
               >
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
-                View Shift Security Audit Logs
+                <FileText className="w-3.5 h-3.5" /> Generate Quality Audit Report
               </button>
             </div>
           </div>
@@ -353,14 +346,13 @@ export const DashboardPage = ({
       {/* ========================================================================= */}
       {role === ROLES.PRODUCTION_MANAGER && (
         <div className="space-y-6">
-          {/* Executive Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Plant Quality Yield"
               value={stats ? `${stats.pass_rate_percentage}%` : '--'}
               icon={TrendingUp}
               color="purple"
-              subtext="Overall plant-wide compliance"
+              subtext="First-pass manufacturing yield"
               badge="Yield KPI"
             />
             <StatCard
@@ -368,19 +360,19 @@ export const DashboardPage = ({
               value={stats ? `${stats.defect_rate_percentage}%` : '--'}
               icon={XCircle}
               color="rose"
-              subtext="Scrap & rework frequency"
+              subtext="Scrap & containment volume"
               badge="Risk Matrix"
             />
             <StatCard
-              title="MVTec Benchmark Status"
-              value="15/15"
-              icon={FolderArchive}
+              title="Scrap Cost Impact"
+              value={analytics?.financial_impact ? `$${analytics.financial_impact.total_quality_loss_usd}` : '$0.00'}
+              icon={DollarSign}
               color="purple"
-              subtext="Industrial object & texture categories"
-              badge="100% Online"
+              subtext={`ROI Multiplier: ${analytics?.financial_impact?.roi_multiplier || 18}x`}
+              badge="Financial KPI"
             />
             <StatCard
-              title="System Audit Compliance"
+              title="Executive Compliance"
               value="99.8%"
               icon={ShieldCheck}
               color="emerald"
@@ -389,95 +381,63 @@ export const DashboardPage = ({
             />
           </div>
 
-          {/* Manager Strategy Deck */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Category Performance Matrix */}
-            <div className="lg:col-span-8 glass-panel p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-3">
-                <div>
-                  <h3 className="text-[13px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-purple-500" />
-                    Category Benchmark Matrix
-                  </h3>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                    Performance across all 15 MVTec AD industrial domains.
-                  </p>
-                </div>
-                <button
-                  onClick={onOpenDataset}
-                  className="text-xs text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 font-mono font-bold"
-                >
-                  Dataset Detail <ArrowUpRight className="w-3 h-3" />
-                </button>
-              </div>
-
-              {/* 15-Category Matrix Tiles (Dark & Light Theme High Contrast) */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 font-mono text-xs">
-                {stats && stats.category_distribution && Object.keys(stats.category_distribution).length > 0 ? (
-                  Object.entries(stats.category_distribution).map(([cat, cnt]) => (
-                    <div 
-                      key={cat} 
-                      className="p-3.5 rounded-2xl bg-white dark:bg-industrial-950 border border-slate-200 dark:border-slate-800 text-center shadow-xs hover:border-purple-500/50 transition-all hover:scale-[1.02]"
-                    >
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider block truncate">
-                        {cat}
-                      </span>
-                      <span className="text-lg font-black text-slate-900 dark:text-white mt-1 block">
-                        {cnt} units
-                      </span>
-                      <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block mt-1">
-                        Yield ~96%
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-5 text-center py-6 text-slate-400">Loading benchmark matrix...</div>
-                )}
-              </div>
-            </div>
-
-            {/* Compliance Snapshot */}
-            <div className="lg:col-span-4 glass-panel p-6 space-y-4">
-              <div className="border-b border-slate-100 dark:border-slate-800/60 pb-3">
-                <h3 className="text-[13px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4 text-purple-500" />
-                  Compliance & Audit
+          {/* 15-Category Quality Performance Matrix */}
+          <div className="glass-panel p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-purple-500" />
+                  15-Category Industrial Quality Matrix (MVTec AD Benchmark)
                 </h3>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs space-y-2.5">
-                <div className="flex justify-between font-mono">
-                  <span className="text-slate-600 dark:text-slate-300">Total Inspections:</span>
-                  <strong className="text-slate-900 dark:text-white font-bold">{stats?.total_inspections || 0}</strong>
-                </div>
-                <div className="flex justify-between font-mono">
-                  <span className="text-slate-600 dark:text-slate-300">Operator Sign-offs:</span>
-                  <strong className="text-emerald-600 dark:text-emerald-400 font-bold">100% Tracked</strong>
-                </div>
-                <div className="flex justify-between font-mono">
-                  <span className="text-slate-600 dark:text-slate-300">Audit Status:</span>
-                  <strong className="text-cyan-600 dark:text-cyan-400 font-bold">Tamper Evident</strong>
-                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Cross-category quality pass rate, average severity score, and health rating.
+                </p>
               </div>
 
               <button
-                onClick={() => setActiveTab('audit')}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 text-white font-bold text-xs shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-2"
+                onClick={handleOpenReportModal}
+                className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md shadow-purple-600/20 transition-all flex items-center gap-1.5"
               >
-                <ShieldCheck className="w-4 h-4" />
-                Access Full Plant Audit Trail
+                <FileText className="w-3.5 h-3.5" /> Executive Quality Report
               </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 font-mono text-xs">
+              {analytics?.category_matrix && analytics.category_matrix.length > 0 ? (
+                analytics.category_matrix.map(c => (
+                  <div 
+                    key={c.category}
+                    className="p-3.5 rounded-2xl bg-white dark:bg-industrial-950 border border-slate-200 dark:border-slate-800 text-center shadow-xs hover:border-purple-500/50 transition-all hover:scale-[1.02]"
+                  >
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider block truncate">
+                      {c.category}
+                    </span>
+                    <span className="text-base font-black text-slate-900 dark:text-white mt-1 block">
+                      {c.pass_rate_percentage}% Yield
+                    </span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full inline-block mt-1 ${
+                      c.health_status === 'EXCELLENT' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                      c.health_status === 'ACCEPTABLE' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
+                      'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                    }`}>
+                      {c.health_status}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-5 text-center py-6 text-slate-400">Loading benchmark matrix...</div>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* RECENT INSPECTIONS */}
+      {/* RECENT INSPECTIONS TABLE */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
-          <h2 className="text-[14px] font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
             <Activity className="w-4 h-4 text-cyan-500" />
-            Recent Inspections
+            Live Inspection Stream
           </h2>
           <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
             {stats?.recent_inspections?.length || 0} records
@@ -487,9 +447,124 @@ export const DashboardPage = ({
         <InspectionTable
           records={stats?.recent_inspections || []}
           onSelectRecord={onSelectRecord}
-          onRefresh={fetchStatsAndBatches}
+          onRefresh={fetchDashboardData}
         />
       </div>
+
+      {/* ========================================================================= */}
+      {/* MODAL: PRODUCTION QUALITY AUDIT REPORT (MILESTONE 3) */}
+      {/* ========================================================================= */}
+      {showReportModal && qualityReport && (
+        <div className="fixed inset-0 z-50 bg-black/75 dark:bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-industrial-950 w-full max-w-4xl max-h-[90vh] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+            
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-industrial-900/50">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Production Quality & Defect Intelligence Report
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                    Report ID: {qualityReport.report_id} • Location: {qualityReport.plant_location}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => window.print()}
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-industrial-800 hover:bg-slate-200 dark:hover:bg-industrial-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-all flex items-center gap-1.5"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Print / Save PDF
+                </button>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              
+              {/* Executive Summary Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-center">
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-industrial-900/60 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">Total Inspected</span>
+                  <span className="text-lg font-black text-slate-900 dark:text-white mt-1 block">
+                    {qualityReport.executive_summary.total_inspected_units} units
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-industrial-900/60 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">First-Pass Yield</span>
+                  <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
+                    {qualityReport.executive_summary.first_pass_yield_percentage}%
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-industrial-900/60 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">Defect Rate</span>
+                  <span className="text-lg font-black text-rose-600 dark:text-rose-400 mt-1 block">
+                    {qualityReport.executive_summary.defect_rate_percentage}%
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-industrial-900/60 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">Compliance Status</span>
+                  <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400 mt-2 block">
+                    {qualityReport.executive_summary.compliance_status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Financial Scrap & Rework Loss */}
+              <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-2">
+                <span className="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4" /> Financial Quality Loss & Prevention Analysis
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Critical Scrap Cost:</span>
+                    <strong className="text-rose-600 dark:text-rose-400">${qualityReport.financial_impact.scrap_cost_usd}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Rework Labor Cost:</span>
+                    <strong className="text-amber-600 dark:text-amber-400">${qualityReport.financial_impact.rework_cost_usd}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Total Quality Loss:</span>
+                    <strong className="text-slate-900 dark:text-white">${qualityReport.financial_impact.total_quality_loss_usd}</strong>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Prevented Field Recalls:</span>
+                    <strong className="text-emerald-600 dark:text-emerald-400">${qualityReport.financial_impact.estimated_prevented_field_loss_usd}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Operational Recommendations */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
+                  Automated Quality Recommendations (Section 6)
+                </h4>
+                <div className="space-y-1.5">
+                  {qualityReport.recommendations.map((rec, i) => (
+                    <div key={i} className="p-2.5 rounded-xl bg-slate-50 dark:bg-industrial-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>{rec}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

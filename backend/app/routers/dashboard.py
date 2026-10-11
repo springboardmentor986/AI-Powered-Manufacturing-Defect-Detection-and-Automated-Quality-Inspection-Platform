@@ -7,6 +7,7 @@ from ..models.inspection import InspectionRecord, BatchInspection, QualityDecisi
 from ..schemas.inspection import DashboardKPIStats, BatchInspectionResponse, InspectionRecordResponse
 from ..routers.inspections import _build_response_record
 from ..services.dataset_service import DatasetService
+from ..services.analytics_service import AnalyticsService
 from ..config import settings
 
 router = APIRouter(prefix="/dashboard", tags=["Manufacturing Analytics & KPIs"])
@@ -84,3 +85,30 @@ def list_batches(db: Session = Depends(get_db)):
         )
         for b in batches
     ]
+
+@router.get("/analytics")
+def get_manufacturing_analytics(db: Session = Depends(get_db)):
+    """
+    Milestone 3 Comprehensive Manufacturing Analytics:
+    Pareto defect distribution, 15-category quality matrix,
+    severity risk tier breakdown, and financial scrap impact.
+    """
+    return {
+        "pareto_defects": AnalyticsService.get_defect_pareto_analysis(db),
+        "category_matrix": AnalyticsService.get_category_quality_matrix(db),
+        "severity_risk_distribution": AnalyticsService.get_severity_risk_distribution(db),
+        "financial_impact": AnalyticsService.calculate_financial_scrap_impact(db)
+    }
+
+@router.get("/trends")
+def get_production_yield_trends(db: Session = Depends(get_db)):
+    """Milestone 3 Timeline Yield and Failure Rate Progression"""
+    return {
+        "timeline_series": AnalyticsService.get_yield_trend_series(db)
+    }
+
+@router.get("/quality-report")
+def get_executive_quality_report(db: Session = Depends(get_db)):
+    """Milestone 3 Production Quality & Compliance Audit Report"""
+    return AnalyticsService.generate_production_quality_report(db)
+
