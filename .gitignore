@@ -7,3 +7,7 @@ dataset/
 *.db
 *.sqlite
 .env
+# Local backup files
+backend/*_before_*.pkl
+backend/main_before_*.py
+backend/test_model_before_*.py
