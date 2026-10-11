@@ -1,0 +1,28 @@
+# Ignore Git
+.git/
+.gitignore
+
+# Ignore Virtual Environments & Caches
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Ignore Large Dataset Binaries
+main data/
+*.zip
+*.tar.gz
+
+# Ignore Frontend Build & Modules
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Ignore Local SQLite DB & Upload Temp
+*.db
+backend/visioninspect.db
+
+# System files
+.DS_Store
+desktop.ini
+Thumbs.db

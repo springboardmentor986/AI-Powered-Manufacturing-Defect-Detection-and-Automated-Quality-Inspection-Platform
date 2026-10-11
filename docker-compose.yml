@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # Backend API & Computer Vision Inference Engine
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: visioninspect-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - SECRET_KEY=visioninspect-production-secure-key-2026-auth
+      - DATABASE_URL=sqlite:////app/backend/visioninspect.db
+    volumes:
+      - ./backend/data/uploads:/app/backend/data/uploads
+      - ./backend/data/thumbnails:/app/backend/data/thumbnails
+      - ./backend/data/processed:/app/backend/data/processed
+      - ./backend/data/heatmaps:/app/backend/data/heatmaps
+    networks:
+      - visioninspect-net
+
+  # Frontend React Web Application & Nginx Reverse Proxy
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: visioninspect-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - visioninspect-net
+
+networks:
+  visioninspect-net:
+    driver: bridge
