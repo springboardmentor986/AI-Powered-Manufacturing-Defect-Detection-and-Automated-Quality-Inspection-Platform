@@ -20,6 +20,8 @@ class Settings:
     DATA_DIR: Path = BASE_DIR / "data"
     UPLOADS_DIR: Path = BASE_DIR / "data" / "uploads"
     THUMBNAILS_DIR: Path = BASE_DIR / "data" / "thumbnails"
+    PROCESSED_DIR: Path = BASE_DIR / "data" / "processed"
+    HEATMAPS_DIR: Path = BASE_DIR / "data" / "heatmaps"
     MVTEC_DIR: Path = BASE_DIR / "data" / "mvtec_ad"
     WORKSPACE_MAIN_DATA_DIR: Path = BASE_DIR.parent / "main data"
     
@@ -59,4 +61,6 @@ settings = Settings()
 settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
 settings.UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 settings.THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
+settings.PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+settings.HEATMAPS_DIR.mkdir(parents=True, exist_ok=True)
 settings.MVTEC_DIR.mkdir(parents=True, exist_ok=True)

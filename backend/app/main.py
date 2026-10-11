@@ -42,6 +42,8 @@ app.add_middleware(
 # Mount static file directories for images & thumbnails
 app.mount("/static/uploads", StaticFiles(directory=str(settings.UPLOADS_DIR)), name="uploads")
 app.mount("/static/thumbnails", StaticFiles(directory=str(settings.THUMBNAILS_DIR)), name="thumbnails")
+app.mount("/static/processed", StaticFiles(directory=str(settings.PROCESSED_DIR)), name="processed")
+app.mount("/static/heatmaps", StaticFiles(directory=str(settings.HEATMAPS_DIR)), name="heatmaps")
 app.mount("/static/mvtec", StaticFiles(directory=str(settings.ACTIVE_DATASET_DIR)), name="mvtec")
 
 # Include API Routers under /api/v1

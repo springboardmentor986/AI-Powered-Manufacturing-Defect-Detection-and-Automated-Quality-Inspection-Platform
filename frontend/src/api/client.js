@@ -64,6 +64,9 @@ export const inspectionAPI = {
     return apiClient.post(`/inspections/${id}/decision`, formData);
   },
   deleteInspection: (id) => apiClient.delete(`/inspections/${id}`),
+  analyzeInspection: (id) => apiClient.post(`/inspections/${id}/analyze`),
+  getQualityReport: (id) => apiClient.get(`/inspections/${id}/quality-report`),
+  preprocessInspection: (id) => apiClient.post(`/inspections/${id}/preprocess`),
 };
 
 export const datasetAPI = {

@@ -14,6 +14,7 @@ backend/visioninspect.db
 backend/data/uploads/*
 backend/data/thumbnails/*
 backend/data/processed/*
+backend/data/heatmaps/*
 backend/data/augmented/*
 !backend/data/uploads/.gitkeep
 !backend/data/thumbnails/.gitkeep
