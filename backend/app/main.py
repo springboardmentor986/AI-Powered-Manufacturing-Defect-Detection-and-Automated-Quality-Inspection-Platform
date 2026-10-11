@@ -42,7 +42,7 @@ app.add_middleware(
 # Mount static file directories for images & thumbnails
 app.mount("/static/uploads", StaticFiles(directory=str(settings.UPLOADS_DIR)), name="uploads")
 app.mount("/static/thumbnails", StaticFiles(directory=str(settings.THUMBNAILS_DIR)), name="thumbnails")
-app.mount("/static/mvtec", StaticFiles(directory=str(settings.MVTEC_DIR)), name="mvtec")
+app.mount("/static/mvtec", StaticFiles(directory=str(settings.ACTIVE_DATASET_DIR)), name="mvtec")
 
 # Include API Routers under /api/v1
 api_v1_prefix = settings.API_V1_STR
@@ -70,6 +70,6 @@ def health_check():
         "storage": {
             "uploads": settings.UPLOADS_DIR.exists(),
             "thumbnails": settings.THUMBNAILS_DIR.exists(),
-            "mvtec": settings.MVTEC_DIR.exists()
+            "mvtec": settings.ACTIVE_DATASET_DIR.exists()
         }
     }
