@@ -144,9 +144,9 @@ export default function InspectDetail() {
                       {isFail ? "DEFECTIVE" : "NORMAL"}
                     </div>
                     <div style={styles.confidenceText}>
-                      Model confidence:{" "}
+                      Anomaly score:{" "}
                       <span style={styles.mono}>
-                        {data.inspection.confidence_score ?? "—"}%
+                        {data.inspection.confidence_score ?? "—"} / 100
                       </span>
                     </div>
                   </div>
@@ -181,6 +181,21 @@ export default function InspectDetail() {
                             >
                               {(d.severity || "unknown").toUpperCase()}
                             </span>
+                          </div>
+                                                    <div
+                            style={{
+                              margin: "8px 0 4px",
+                              padding: "8px 12px",
+                              borderLeft: "3px solid " + severityColor(d.severity),
+                              background: "rgba(255,255,255,0.03)",
+                              fontSize: 13,
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            <span style={{ ...styles.mono, opacity: 0.7 }}>
+                              RECOMMENDED ACTION
+                            </span>
+                            <div>{recommendedAction(d.severity)}</div>
                           </div>
 
                           {breakdown && (
@@ -279,6 +294,20 @@ function QualityStat({ label, value }) {
   );
 }
 
+const RECOMMENDED_ACTIONS = {
+  critical: "Reject the product and trigger the quality inspection workflow.",
+  high: "Significant quality issue. Repair or rework recommended.",
+  medium: "Moderate quality concern. Inspection review required.",
+  low: "Minor defect. Product is generally acceptable.",
+};
+
+function recommendedAction(level) {
+  return (
+    RECOMMENDED_ACTIONS[(level || "").toLowerCase()] ||
+    "Manual review recommended."
+  );
+}
+
 function SeverityGauge({ score }) {
   const clamped = Math.max(0, Math.min(100, score));
   const radius = 42;
@@ -330,7 +359,7 @@ function SeverityGauge({ score }) {
         fontFamily="var(--font-mono)"
         letterSpacing="1"
       >
-        CONF %
+        SCORE
       </text>
     </svg>
   );

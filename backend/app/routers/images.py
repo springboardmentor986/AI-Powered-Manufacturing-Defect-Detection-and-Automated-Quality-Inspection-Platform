@@ -1,7 +1,8 @@
 import os
-import shutil
 import uuid
 
+import cv2
+import numpy as np
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -13,6 +14,80 @@ router = APIRouter(prefix="/images", tags=["Images"])
 
 UPLOAD_DIR = "uploaded_images"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "bmp", "tif", "tiff", "webp"}
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+MIN_IMAGE_SIDE = 32  # pixels
+
+
+@router.post("/upload")
+def upload_image(
+    category_id: int = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    # 1. File type
+    filename = file.filename or ""
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file type. Upload a JPG, PNG, BMP, TIFF or WebP image.",
+        )
+
+    # 2. Category must exist
+    category = (
+        db.query(models.Category)
+        .filter(models.Category.category_id == category_id)
+        .first()
+    )
+    if not category:
+        raise HTTPException(
+            status_code=404, detail=f"Category {category_id} does not exist."
+        )
+
+    # 3. Size
+    data = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) == 0:
+        raise HTTPException(status_code=400, detail="The uploaded file is empty.")
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=400, detail="File is too large. Maximum size is 10 MB."
+        )
+
+    # 4. Must really decode as an image
+    decoded = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    if decoded is None:
+        raise HTTPException(status_code=400, detail="The file is not a valid image.")
+    height, width = decoded.shape[:2]
+    if min(height, width) < MIN_IMAGE_SIDE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Image is too small. Minimum side is {MIN_IMAGE_SIDE} pixels.",
+        )
+
+    unique_name = f"{uuid.uuid4()}.{ext}"
+    save_path = os.path.join(UPLOAD_DIR, unique_name)
+    with open(save_path, "wb") as buffer:
+        buffer.write(data)
+
+    new_image = models.Image(
+        category_id=category_id,
+        uploaded_by=current_user.user_id,
+        image_path=save_path,
+        image_source="uploaded",
+        image_type="uploaded",
+    )
+    db.add(new_image)
+    db.commit()
+    db.refresh(new_image)
+
+    return {
+        "image_id": new_image.image_id,
+        "image_path": new_image.image_path,
+        "message": "Image uploaded successfully",
+    }
 
 
 @router.post("/upload")
