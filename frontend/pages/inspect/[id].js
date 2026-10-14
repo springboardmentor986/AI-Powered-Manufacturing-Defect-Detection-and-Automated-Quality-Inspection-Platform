@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { getToken, getImageDetail, getImageFileUrl, runInspection } from "../../lib/api";
+import { getToken, getImageDetail, getImageFileUrl, getHeatmapUrl, runInspection } from "../../lib/api";
 
 const SEVERITY_COLORS = {
   critical: "#ff5c5c",
@@ -23,6 +23,7 @@ export default function InspectDetail() {
   const [inspecting, setInspecting] = useState(false);
   const [inspectError, setInspectError] = useState("");
   const [quality, setQuality] = useState(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
 
   useEffect(() => {
     if (!getToken()) {
@@ -80,9 +81,33 @@ export default function InspectDetail() {
         <main style={styles.main}>
           {/* IMAGE VIEWER */}
           <section style={styles.viewerCard}>
+            {data.inspection && (
+              <div style={{ marginBottom: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowHeatmap(!showHeatmap)}
+                  style={{
+                    background: "transparent",
+                    color: "#e6eaf0",
+                    border: "1px solid #2a3340",
+                    borderRadius: 8,
+                    padding: "7px 12px",
+                    fontSize: 13,
+                    cursor: "pointer",
+                  }}
+                >
+                  {showHeatmap ? "Show original image" : "Show defect heatmap"}
+                </button>
+                {showHeatmap && (
+                  <span style={{ marginLeft: 12, fontSize: 12, color: "#8a94a1" }}>
+                    Red = highest anomaly. Box = worst patch.
+                  </span>
+                )}
+              </div>
+            )}
             <div style={styles.viewer}>
               <img
-                src={getImageFileUrl(data.image_id)}
+                src={showHeatmap ? getHeatmapUrl(data.image_id) : getImageFileUrl(data.image_id)}
                 alt={`Unit ${data.image_id}`}
                 style={styles.image}
               />

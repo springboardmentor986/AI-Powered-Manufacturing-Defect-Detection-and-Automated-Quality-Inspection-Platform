@@ -106,3 +106,7 @@ export async function uploadImage({ categoryId, file }) {
 export async function getCategories() {
   return request("/categories/");
 }
+
+export function getHeatmapUrl(imageId) {
+  return `${API_URL}/images/${imageId}/heatmap`;
+}

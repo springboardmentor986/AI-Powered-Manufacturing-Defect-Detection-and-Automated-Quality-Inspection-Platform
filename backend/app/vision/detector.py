@@ -173,3 +173,57 @@ def predict(image_path: str, category_name: str) -> dict:
         "location_score": location_score,
         "patch_location": {"row": int(worst_r), "col": int(worst_c)},
     }
+
+
+def render_heatmap(image_path: str, category_name: str, max_side: int = 512):
+    """
+    Overlay of the per-patch anomaly score on the original image (BGR uint8).
+    Red areas have the highest reconstruction error; a magenta box marks the
+    worst patch when the unit is flagged defective. Returns None if the image
+    cannot be read.
+    """
+    import cv2
+
+    img = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    if img is None:
+        return None
+
+    if has_trained_model(category_name):
+        deviation = _autoencoder_deviation(image_path, category_name)
+        scale = AUTOENCODER_SCALE
+    elif has_reference(category_name):
+        deviation = _statistical_deviation(image_path, category_name)
+        scale = STAT_SCALE
+    else:
+        raise FileNotFoundError(
+            f"No trained model or reference profile for category '{category_name}'."
+        )
+
+    grid, (worst_r, worst_c) = _patch_grid_scores(deviation, PATCH_SIZE)
+    scores = np.clip(grid * scale, 0, 100).astype(np.float32)
+
+    h, w = img.shape[:2]
+    longest = max(h, w)
+    if longest > max_side:
+        factor = max_side / longest
+        img = cv2.resize(
+            img, (int(w * factor), int(h * factor)), interpolation=cv2.INTER_AREA
+        )
+        h, w = img.shape[:2]
+
+    # Smooth upsampling of the patch-score grid to the image size
+    heat = cv2.resize(scores, (w, h), interpolation=cv2.INTER_CUBIC)
+    norm = np.clip(heat / 25.0, 0.0, 1.0)
+    colour = cv2.applyColorMap((norm * 255).astype(np.uint8), cv2.COLORMAP_JET)
+    alpha = np.clip(norm * 0.9, 0.0, 0.7)[..., None]
+    overlay = (
+        img.astype(np.float32) * (1 - alpha) + colour.astype(np.float32) * alpha
+    ).astype(np.uint8)
+
+    if float(scores[worst_r, worst_c]) >= DEFECT_THRESHOLD:
+        rows, cols = scores.shape
+        x0, x1 = int(worst_c / cols * w), int((worst_c + 1) / cols * w)
+        y0, y1 = int(worst_r / rows * h), int((worst_r + 1) / rows * h)
+        cv2.rectangle(overlay, (x0, y0), (x1, y1), (255, 0, 255), 2)
+
+    return overlay

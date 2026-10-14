@@ -4,11 +4,12 @@ import uuid
 import cv2
 import numpy as np
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 
 from .. import models, auth
 from ..database import get_db
+from ..vision import detector
 
 router = APIRouter(prefix="/images", tags=["Images"])
 
@@ -211,3 +212,33 @@ def get_image_file(
     if not image or not os.path.exists(image.image_path):
         raise HTTPException(status_code=404, detail="Image file not found")
     return FileResponse(image.image_path)
+
+
+@router.get("/{image_id}/heatmap")
+def get_image_heatmap(image_id: int, db: Session = Depends(get_db)):
+    image = db.query(models.Image).filter(models.Image.image_id == image_id).first()
+    if not image or not os.path.exists(image.image_path):
+        raise HTTPException(status_code=404, detail="Image file not found")
+
+    category = (
+        db.query(models.Category)
+        .filter(models.Category.category_id == image.category_id)
+        .first()
+    )
+    if not category:
+        raise HTTPException(status_code=400, detail="Image has no category")
+
+    try:
+        overlay = detector.render_heatmap(image.image_path, category.category_name)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Heatmap failed: {e}")
+
+    if overlay is None:
+        raise HTTPException(status_code=404, detail="Image could not be read")
+
+    ok, buf = cv2.imencode(".png", overlay)
+    if not ok:
+        raise HTTPException(status_code=500, detail="Could not encode heatmap")
+    return Response(content=buf.tobytes(), media_type="image/png")
