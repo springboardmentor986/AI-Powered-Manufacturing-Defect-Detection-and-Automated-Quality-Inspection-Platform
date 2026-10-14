@@ -118,6 +118,10 @@ Codespaces.
   defects (confirmed a known weakness of simple patch-mean deviation:
   small localized defects get diluted, and naturally high-variance
   regions like textures suppress the anomaly signal)
+- Defect localization: a heatmap of the per-patch reconstruction error is drawn over the inspected image (red = highest anomaly, box = worst patch), with a toggle on the inspection page
+- A recommended action is shown for each severity level (Critical: reject, High: repair or rework, Medium: inspection review, Low: generally acceptable)
+- Upload validation: file type, maximum size (10 MB), a readable image, and an existing category
+- The score on the result page is labelled Anomaly score (0 to 100): the scaled reconstruction error of the worst patch. A unit is flagged defective at 10 or above
 
 **Model optimization — trained autoencoder**
 - Upgraded the detector to a convolutional autoencoder (PyTorch),
@@ -138,6 +142,7 @@ Codespaces.
   export), **Settings** (account info)
 
 **Deployment**
+- The app is deployed on free hosting tiers: Vercel for the frontend, and Render for the backend and PostgreSQL. Free tiers sleep after inactivity, so the first request can take about 50 seconds. A production deployment (for example on AWS or Azure) with persistent storage is a natural next step. The Docker Compose setup (db, backend, frontend) was built and run in GitHub Codespaces.
 - Containerized backend and frontend with Docker; `docker-compose.yml`
   orchestrates the full stack (Postgres + backend + frontend)
 - Verified working in GitHub Codespaces: all three containers build and
@@ -167,3 +172,5 @@ Codespaces.
   step beyond this milestone
 - Accuracy numbers were measured on the original MVTec images locally. The deployed demo is seeded with 515 images stored as 256px thumbnails, so individual results can differ slightly.
 - On the free hosting tier, uploaded images are temporary and are cleared when the backend restarts.
+-  The detector favours recall. On the MVTec test set it catches 80.6% of defective units, but it also flags 67.9% of normal units (305 of 449). One fixed threshold is shared by all categories, and for bottle, cable, metal_nut, tile and toothbrush no normal image was passed. Per-category threshold calibration is the main planned improvement
+- The heatmap is approximate (16 x 16 patch grid). Object edges can cause false hot spots, for example on zipper images, and it is less informative on pill and metal_nut
