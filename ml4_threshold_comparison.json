@@ -1,0 +1,391 @@
+{
+  "evaluation": "Hardcoded versus calibrated thresholds",
+  "categories_evaluated": 15,
+  "method": "Both threshold sets use the same saved normal-feature center and the same test images. Scores greater than the category threshold are classified as DEFECT.",
+  "overall": {
+    "hardcoded": {
+      "test_images": 1725,
+      "TP": 1178,
+      "TN": 205,
+      "FP": 262,
+      "FN": 80,
+      "accuracy_percent": 80.17,
+      "precision_percent": 81.81,
+      "recall_percent": 93.64,
+      "f1_percent": 87.32
+    },
+    "calibrated": {
+      "test_images": 1725,
+      "TP": 808,
+      "TN": 323,
+      "FP": 144,
+      "FN": 450,
+      "accuracy_percent": 65.57,
+      "precision_percent": 84.87,
+      "recall_percent": 64.23,
+      "f1_percent": 73.12
+    }
+  },
+  "per_category": {
+    "bottle": {
+      "hardcoded": {
+        "test_images": 83,
+        "TP": 61,
+        "TN": 17,
+        "FP": 3,
+        "FN": 2,
+        "accuracy_percent": 93.98,
+        "precision_percent": 95.31,
+        "recall_percent": 96.83,
+        "f1_percent": 96.06
+      },
+      "calibrated": {
+        "test_images": 83,
+        "TP": 62,
+        "TN": 15,
+        "FP": 5,
+        "FN": 1,
+        "accuracy_percent": 92.77,
+        "precision_percent": 92.54,
+        "recall_percent": 98.41,
+        "f1_percent": 95.38
+      }
+    },
+    "cable": {
+      "hardcoded": {
+        "test_images": 150,
+        "TP": 83,
+        "TN": 24,
+        "FP": 34,
+        "FN": 9,
+        "accuracy_percent": 71.33,
+        "precision_percent": 70.94,
+        "recall_percent": 90.22,
+        "f1_percent": 79.43
+      },
+      "calibrated": {
+        "test_images": 150,
+        "TP": 66,
+        "TN": 44,
+        "FP": 14,
+        "FN": 26,
+        "accuracy_percent": 73.33,
+        "precision_percent": 82.5,
+        "recall_percent": 71.74,
+        "f1_percent": 76.74
+      }
+    },
+    "capsule": {
+      "hardcoded": {
+        "test_images": 132,
+        "TP": 108,
+        "TN": 5,
+        "FP": 18,
+        "FN": 1,
+        "accuracy_percent": 85.61,
+        "precision_percent": 85.71,
+        "recall_percent": 99.08,
+        "f1_percent": 91.91
+      },
+      "calibrated": {
+        "test_images": 132,
+        "TP": 68,
+        "TN": 15,
+        "FP": 8,
+        "FN": 41,
+        "accuracy_percent": 62.88,
+        "precision_percent": 89.47,
+        "recall_percent": 62.39,
+        "f1_percent": 73.51
+      }
+    },
+    "carpet": {
+      "hardcoded": {
+        "test_images": 117,
+        "TP": 79,
+        "TN": 16,
+        "FP": 12,
+        "FN": 10,
+        "accuracy_percent": 81.2,
+        "precision_percent": 86.81,
+        "recall_percent": 88.76,
+        "f1_percent": 87.78
+      },
+      "calibrated": {
+        "test_images": 117,
+        "TP": 83,
+        "TN": 13,
+        "FP": 15,
+        "FN": 6,
+        "accuracy_percent": 82.05,
+        "precision_percent": 84.69,
+        "recall_percent": 93.26,
+        "f1_percent": 88.77
+      }
+    },
+    "grid": {
+      "hardcoded": {
+        "test_images": 78,
+        "TP": 57,
+        "TN": 0,
+        "FP": 21,
+        "FN": 0,
+        "accuracy_percent": 73.08,
+        "precision_percent": 73.08,
+        "recall_percent": 100.0,
+        "f1_percent": 84.44
+      },
+      "calibrated": {
+        "test_images": 78,
+        "TP": 4,
+        "TN": 14,
+        "FP": 7,
+        "FN": 53,
+        "accuracy_percent": 23.08,
+        "precision_percent": 36.36,
+        "recall_percent": 7.02,
+        "f1_percent": 11.76
+      }
+    },
+    "hazelnut": {
+      "hardcoded": {
+        "test_images": 110,
+        "TP": 57,
+        "TN": 34,
+        "FP": 6,
+        "FN": 13,
+        "accuracy_percent": 82.73,
+        "precision_percent": 90.48,
+        "recall_percent": 81.43,
+        "f1_percent": 85.71
+      },
+      "calibrated": {
+        "test_images": 110,
+        "TP": 56,
+        "TN": 35,
+        "FP": 5,
+        "FN": 14,
+        "accuracy_percent": 82.73,
+        "precision_percent": 91.8,
+        "recall_percent": 80.0,
+        "f1_percent": 85.5
+      }
+    },
+    "leather": {
+      "hardcoded": {
+        "test_images": 124,
+        "TP": 83,
+        "TN": 11,
+        "FP": 21,
+        "FN": 9,
+        "accuracy_percent": 75.81,
+        "precision_percent": 79.81,
+        "recall_percent": 90.22,
+        "f1_percent": 84.69
+      },
+      "calibrated": {
+        "test_images": 124,
+        "TP": 88,
+        "TN": 6,
+        "FP": 26,
+        "FN": 4,
+        "accuracy_percent": 75.81,
+        "precision_percent": 77.19,
+        "recall_percent": 95.65,
+        "f1_percent": 85.44
+      }
+    },
+    "metal_nut": {
+      "hardcoded": {
+        "test_images": 115,
+        "TP": 91,
+        "TN": 2,
+        "FP": 20,
+        "FN": 2,
+        "accuracy_percent": 80.87,
+        "precision_percent": 81.98,
+        "recall_percent": 97.85,
+        "f1_percent": 89.22
+      },
+      "calibrated": {
+        "test_images": 115,
+        "TP": 60,
+        "TN": 14,
+        "FP": 8,
+        "FN": 33,
+        "accuracy_percent": 64.35,
+        "precision_percent": 88.24,
+        "recall_percent": 64.52,
+        "f1_percent": 74.53
+      }
+    },
+    "pill": {
+      "hardcoded": {
+        "test_images": 167,
+        "TP": 140,
+        "TN": 1,
+        "FP": 25,
+        "FN": 1,
+        "accuracy_percent": 84.43,
+        "precision_percent": 84.85,
+        "recall_percent": 99.29,
+        "f1_percent": 91.5
+      },
+      "calibrated": {
+        "test_images": 167,
+        "TP": 55,
+        "TN": 18,
+        "FP": 8,
+        "FN": 86,
+        "accuracy_percent": 43.71,
+        "precision_percent": 87.3,
+        "recall_percent": 39.01,
+        "f1_percent": 53.92
+      }
+    },
+    "screw": {
+      "hardcoded": {
+        "test_images": 160,
+        "TP": 119,
+        "TN": 1,
+        "FP": 40,
+        "FN": 0,
+        "accuracy_percent": 75.0,
+        "precision_percent": 74.84,
+        "recall_percent": 100.0,
+        "f1_percent": 85.61
+      },
+      "calibrated": {
+        "test_images": 160,
+        "TP": 28,
+        "TN": 25,
+        "FP": 16,
+        "FN": 91,
+        "accuracy_percent": 33.12,
+        "precision_percent": 63.64,
+        "recall_percent": 23.53,
+        "f1_percent": 34.36
+      }
+    },
+    "tile": {
+      "hardcoded": {
+        "test_images": 117,
+        "TP": 75,
+        "TN": 23,
+        "FP": 10,
+        "FN": 9,
+        "accuracy_percent": 83.76,
+        "precision_percent": 88.24,
+        "recall_percent": 89.29,
+        "f1_percent": 88.76
+      },
+      "calibrated": {
+        "test_images": 117,
+        "TP": 77,
+        "TN": 23,
+        "FP": 10,
+        "FN": 7,
+        "accuracy_percent": 85.47,
+        "precision_percent": 88.51,
+        "recall_percent": 91.67,
+        "f1_percent": 90.06
+      }
+    },
+    "toothbrush": {
+      "hardcoded": {
+        "test_images": 42,
+        "TP": 29,
+        "TN": 2,
+        "FP": 10,
+        "FN": 1,
+        "accuracy_percent": 73.81,
+        "precision_percent": 74.36,
+        "recall_percent": 96.67,
+        "f1_percent": 84.06
+      },
+      "calibrated": {
+        "test_images": 42,
+        "TP": 17,
+        "TN": 9,
+        "FP": 3,
+        "FN": 13,
+        "accuracy_percent": 61.9,
+        "precision_percent": 85.0,
+        "recall_percent": 56.67,
+        "f1_percent": 68.0
+      }
+    },
+    "transistor": {
+      "hardcoded": {
+        "test_images": 100,
+        "TP": 35,
+        "TN": 42,
+        "FP": 18,
+        "FN": 5,
+        "accuracy_percent": 77.0,
+        "precision_percent": 66.04,
+        "recall_percent": 87.5,
+        "f1_percent": 75.27
+      },
+      "calibrated": {
+        "test_images": 100,
+        "TP": 18,
+        "TN": 58,
+        "FP": 2,
+        "FN": 22,
+        "accuracy_percent": 76.0,
+        "precision_percent": 90.0,
+        "recall_percent": 45.0,
+        "f1_percent": 60.0
+      }
+    },
+    "wood": {
+      "hardcoded": {
+        "test_images": 79,
+        "TP": 57,
+        "TN": 8,
+        "FP": 11,
+        "FN": 3,
+        "accuracy_percent": 82.28,
+        "precision_percent": 83.82,
+        "recall_percent": 95.0,
+        "f1_percent": 89.06
+      },
+      "calibrated": {
+        "test_images": 79,
+        "TP": 59,
+        "TN": 6,
+        "FP": 13,
+        "FN": 1,
+        "accuracy_percent": 82.28,
+        "precision_percent": 81.94,
+        "recall_percent": 98.33,
+        "f1_percent": 89.39
+      }
+    },
+    "zipper": {
+      "hardcoded": {
+        "test_images": 151,
+        "TP": 104,
+        "TN": 19,
+        "FP": 13,
+        "FN": 15,
+        "accuracy_percent": 81.46,
+        "precision_percent": 88.89,
+        "recall_percent": 87.39,
+        "f1_percent": 88.14
+      },
+      "calibrated": {
+        "test_images": 151,
+        "TP": 67,
+        "TN": 28,
+        "FP": 4,
+        "FN": 52,
+        "accuracy_percent": 62.91,
+        "precision_percent": 94.37,
+        "recall_percent": 56.3,
+        "f1_percent": 70.53
+      }
+    }
+  }
+}

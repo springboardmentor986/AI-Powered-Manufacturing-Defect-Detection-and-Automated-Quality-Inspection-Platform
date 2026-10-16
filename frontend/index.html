@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>VisionInspect AI | Industrial Intelligence</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- =========================================================
+         AMBIENT BACKGROUND
+    ========================================================== -->
+
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <div class="grid-background"></div>
+
+    <!-- =========================================================
+         APP SHELL
+    ========================================================== -->
+
+    <div class="app-shell">
+
+        <!-- =====================================================
+             SIDEBAR
+        ====================================================== -->
+
+        <aside class="sidebar">
+
+            <div class="brand">
+
+                <div class="brand-mark">
+                    <span>V</span>
+                </div>
+
+                <div class="brand-text">
+                    <h2>VisionInspect</h2>
+                    <span>INDUSTRIAL AI</span>
+                </div>
+
+            </div>
+
+
+            <div class="system-pill">
+
+                <span class="system-pulse"></span>
+
+                <div>
+                    <strong>AI SYSTEM ONLINE</strong>
+                    <small>Inspection engine active</small>
+                </div>
+
+            </div>
+
+
+            <nav class="main-nav">
+
+                <div class="nav-label">
+                    CONTROL CENTER
+                </div>
+
+                <a href="#" class="nav-item active">
+
+                    <span class="nav-icon">⌂</span>
+
+                    <div>
+                        <strong>Dashboard</strong>
+                        <small>System overview</small>
+                    </div>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">◉</span>
+
+                    <div>
+                        <strong>Inspection</strong>
+                        <small>AI quality scan</small>
+                    </div>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">▣</span>
+
+                    <div>
+                        <strong>Reports</strong>
+                        <small>Quality reports</small>
+                    </div>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">◈</span>
+
+                    <div>
+                        <strong>Analytics</strong>
+                        <small>Production insights</small>
+                    </div>
+
+                </a>
+
+
+                <div class="nav-label nav-label-space">
+                    SYSTEM
+                </div>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">⚙</span>
+
+                    <div>
+                        <strong>Settings</strong>
+                        <small>System configuration</small>
+                    </div>
+
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <div class="engine-card">
+
+                    <div class="engine-header">
+
+                        <span>AI ENGINE</span>
+
+                        <span class="engine-status">
+                            ACTIVE
+                        </span>
+
+                    </div>
+
+                    <div class="engine-line">
+                        <span></span>
+                    </div>
+
+                    <div class="engine-details">
+
+                        <span>Vision Core</span>
+                        <strong>ResNet18</strong>
+
+                    </div>
+
+                    <div class="engine-details">
+
+                        <span>Categories</span>
+                        <strong>15</strong>
+
+                    </div>
+
+                </div>
+
+
+                <button class="logout-btn">
+                    <span>↪</span>
+                    Logout
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =====================================================
+             MAIN CONTENT
+        ====================================================== -->
+
+        <main class="main-content">
+
+
+            <!-- =================================================
+                 TOPBAR
+            ================================================== -->
+
+            <header class="topbar">
+
+                <div class="topbar-left">
+
+                    <div class="breadcrumb">
+                        VISIONINSPECT
+                        <span>/</span>
+                        CONTROL CENTER
+                    </div>
+
+                    <h1>
+                        Manufacturing
+                        <span>Intelligence</span>
+                    </h1>
+
+                </div>
+
+
+                <div class="topbar-right">
+
+                    <div class="live-indicator">
+
+                        <span class="live-dot"></span>
+
+                        <span>LIVE MONITORING</span>
+
+                    </div>
+
+
+                    <button class="icon-button">
+                        ⌁
+                    </button>
+
+
+                    <div class="profile">
+
+                        <div class="profile-avatar">
+                            Q
+                        </div>
+
+                        <div class="profile-info">
+
+                            <strong>Quality Engineer</strong>
+
+                            <span>Operator</span>
+
+                        </div>
+
+                        <span class="profile-arrow">
+                            ▾
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+                 HERO / COMMAND CENTER
+            ================================================== -->
+
+            <section class="hero-section">
+
+                <div class="hero-content">
+
+                    <div class="hero-eyebrow">
+
+                        <span class="eyebrow-line"></span>
+
+                        AI-POWERED VISUAL INSPECTION
+
+                    </div>
+
+
+                    <h2>
+                        See defects
+                        <br>
+                        <span>before they ship.</span>
+                    </h2>
+
+
+                    <p>
+                        VisionInspect AI transforms manufacturing
+                        inspection into intelligent, automated quality
+                        control.
+                    </p>
+
+
+                    <div class="hero-actions">
+
+                        <button class="primary-action" onclick="document.getElementById('imageInput').click()">
+
+                            <span class="action-icon">◎</span>
+
+                            Start Inspection
+
+                            <span class="action-arrow">→</span>
+
+                        </button>
+
+
+                        <div class="hero-meta">
+
+                            <span class="meta-dot"></span>
+
+                            AI inspection engine ready
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     3D INSPECTION CORE
+                ================================================== -->
+
+                <div class="inspection-core">
+
+                    <div class="core-orbit orbit-one"></div>
+                    <div class="core-orbit orbit-two"></div>
+                    <div class="core-orbit orbit-three"></div>
+
+
+                    <div class="core-ring ring-one"></div>
+                    <div class="core-ring ring-two"></div>
+
+
+                    <div class="core-product">
+
+                        <div class="product-glow"></div>
+
+                        <div class="product-body">
+
+                            <div class="product-neck"></div>
+
+                            <div class="product-label">
+                                <span>VI</span>
+                                <small>AI</small>
+                            </div>
+
+                            <div class="scan-line"></div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="scan-status">
+
+                        <span class="scan-pulse"></span>
+
+                        <div>
+                            <strong>VISION CORE</strong>
+                            <small>SCANNING READY</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="core-data data-top">
+                        <span>MODEL</span>
+                        <strong>RESNET18</strong>
+                    </div>
+
+
+                    <div class="core-data data-right">
+                        <span>INPUT</span>
+                        <strong>256×256</strong>
+                    </div>
+
+
+                    <div class="core-data data-bottom">
+                        <span>CLASSES</span>
+                        <strong>15 CATEGORIES</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 KPI STRIP
+            ================================================== -->
+
+            <section class="kpi-grid">
+
+
+                <div class="kpi-card">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            TOTAL INSPECTIONS
+                        </span>
+
+                        <div class="kpi-icon blue">
+                            ◉
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value" id="totalInspections">
+                        0
+                    </div>
+
+                    <div class="kpi-footer">
+                        <span class="neutral-indicator">●</span>
+                        All inspection sessions
+                    </div>
+
+                </div>
+
+
+                <div class="kpi-card">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            ACCEPTED
+                        </span>
+
+                        <div class="kpi-icon green">
+                            ✓
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value" id="goodProducts">
+                        0
+                    </div>
+
+                    <div class="kpi-footer">
+                        <span class="positive-indicator">●</span>
+                        Products passed
+                    </div>
+
+                </div>
+
+
+                <div class="kpi-card">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            DEFECTS DETECTED
+                        </span>
+
+                        <div class="kpi-icon red">
+                            !
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value" id="defectiveProducts">
+                        0
+                    </div>
+
+                    <div class="kpi-footer">
+                        <span class="negative-indicator">●</span>
+                        Anomalies identified
+                    </div>
+
+                </div>
+
+
+                <div class="kpi-card featured-kpi">
+
+                    <div class="kpi-top">
+
+                        <span class="kpi-label">
+                            AI PERFORMANCE
+                        </span>
+
+                        <div class="kpi-icon violet">
+                            ✦
+                        </div>
+
+                    </div>
+
+                    <div class="kpi-value">
+                        94.6<span>%</span>
+                    </div>
+
+                    <div class="performance-bar">
+                        <span></span>
+                    </div>
+
+                    <div class="kpi-footer">
+                        Model evaluation score
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 MAIN INSPECTION AREA
+            ================================================== -->
+
+            <section class="workspace-grid">
+
+
+                <!-- =================================================
+                     INSPECTION UPLOAD
+                ================================================== -->
+
+                <div class="glass-panel inspection-panel">
+
+                    <div class="panel-top">
+
+                        <div>
+
+                            <span class="panel-eyebrow">
+                                INSPECTION WORKSPACE
+                            </span>
+
+                            <h2>
+                                New AI Inspection
+                            </h2>
+
+                        </div>
+
+
+                        <div class="live-badge">
+                            <span></span>
+                            READY
+                        </div>
+
+                    </div>
+
+
+                    <!-- CATEGORY -->
+
+                    <div class="category-block">
+
+                        <label for="categorySelect">
+                            PRODUCT CATEGORY
+                        </label>
+
+                        <div class="select-wrapper">
+
+                            <span class="select-icon">
+                                ◈
+                            </span>
+
+                            <select id="categorySelect">
+
+                                <option value="bottle">
+                                    Bottle
+                                </option>
+
+                                <option value="cable">
+                                    Cable
+                                </option>
+
+                                <option value="capsule">
+                                    Capsule
+                                </option>
+
+                                <option value="carpet">
+                                    Carpet
+                                </option>
+
+                                <option value="grid">
+                                    Grid
+                                </option>
+
+                                <option value="hazelnut">
+                                    Hazelnut
+                                </option>
+
+                                <option value="leather">
+                                    Leather
+                                </option>
+
+                                <option value="metal_nut">
+                                    Metal Nut
+                                </option>
+
+                                <option value="pill">
+                                    Pill
+                                </option>
+
+                                <option value="screw">
+                                    Screw
+                                </option>
+
+                                <option value="tile">
+                                    Tile
+                                </option>
+
+                                <option value="toothbrush">
+                                    Toothbrush
+                                </option>
+
+                                <option value="transistor">
+                                    Transistor
+                                </option>
+
+                                <option value="wood">
+                                    Wood
+                                </option>
+
+                                <option value="zipper">
+                                    Zipper
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- UPLOAD -->
+
+                    <div class="drop-zone" id="uploadArea">
+
+                        <div class="drop-visual">
+
+                            <div class="upload-orbit orbit-a"></div>
+                            <div class="upload-orbit orbit-b"></div>
+
+                            <div class="upload-center">
+                                ↑
+                            </div>
+
+                        </div>
+
+
+                        <h3>
+                            Drop inspection image
+                        </h3>
+
+
+                        <p>
+                            Drag & drop product imagery here
+                            <br>
+                            or select a file from your workstation.
+                        </p>
+
+
+                        <input type="file" id="imageInput" accept="image/*" hidden>
+
+
+                        <button class="choose-button" type="button"
+                            onclick="document.getElementById('imageInput').click()">
+                            Choose Image
+                        </button>
+
+
+                        <div class="upload-specs">
+
+                            <span>PNG</span>
+                            <span>JPG</span>
+                            <span>JPEG</span>
+                            <span>MAX 10 MB</span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PREVIEW -->
+
+                    <div id="previewContainer" class="preview-workspace hidden">
+
+                        <div class="preview-image-frame">
+
+                            <img id="previewImage" src="" alt="Selected product image">
+
+                            <div class="preview-scan"></div>
+
+                            <span class="preview-corner top-left"></span>
+                            <span class="preview-corner top-right"></span>
+                            <span class="preview-corner bottom-left"></span>
+                            <span class="preview-corner bottom-right"></span>
+
+                        </div>
+
+
+                        <div class="preview-details">
+
+                            <div>
+
+                                <span class="preview-label">
+                                    SELECTED SPECIMEN
+                                </span>
+
+                                <strong id="fileName">
+                                    Image selected
+                                </strong>
+
+                                <small id="fileSize"></small>
+
+                            </div>
+
+
+                            <button id="analyzeBtn" class="analyze-button" type="button">
+
+                                <span>✦</span>
+                                RUN AI ANALYSIS
+                                <b>→</b>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     AI RESULT
+                ================================================== -->
+
+                <div class="glass-panel result-panel">
+
+                    <div class="panel-top">
+
+                        <div>
+
+                            <span class="panel-eyebrow">
+                                VISION ENGINE
+                            </span>
+
+                            <h2>
+                                Inspection Result
+                            </h2>
+
+                        </div>
+
+
+                        <div class="engine-status-small">
+
+                            <span></span>
+                            LIVE ENGINE
+
+                        </div>
+
+                    </div>
+
+
+                    <div id="resultContent" class="result-display">
+
+                        <div class="result-core">
+
+                            <div class="result-ring ring-a"></div>
+                            <div class="result-ring ring-b"></div>
+
+                            <div class="result-symbol">
+                                ✦
+                            </div>
+
+                        </div>
+
+
+                        <h3>
+                            Awaiting inspection
+                        </h3>
+
+
+                        <p>
+                            Upload a product image to activate
+                            the VisionInspect AI analysis engine.
+                        </p>
+
+
+                        <div class="result-ready">
+
+                            <span></span>
+
+                            SYSTEM READY
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 ANALYTICS ROW
+            ================================================== -->
+
+            <section class="analytics-grid">
+
+
+                <div class="glass-panel analytics-panel">
+
+                    <div class="panel-top">
+
+                        <div>
+
+                            <span class="panel-eyebrow">
+                                LIVE ANALYTICS
+                            </span>
+
+                            <h2>
+                                Quality Overview
+                            </h2>
+
+                        </div>
+
+
+                        <span class="analytics-period">
+                            CURRENT SESSION
+                        </span>
+
+                    </div>
+
+
+                    <div class="analytics-visual">
+
+                        <div class="chart-grid">
+
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+
+                        </div>
+
+
+                        <div class="chart-line">
+
+                            <i style="height: 35%;"></i>
+                            <i style="height: 50%;"></i>
+                            <i style="height: 42%;"></i>
+                            <i style="height: 68%;"></i>
+                            <i style="height: 55%;"></i>
+                            <i style="height: 76%;"></i>
+                            <i style="height: 64%;"></i>
+                            <i style="height: 88%;"></i>
+                            <i style="height: 72%;"></i>
+                            <i style="height: 94%;"></i>
+                            <i style="height: 82%;"></i>
+                            <i style="height: 98%;"></i>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="chart-footer">
+
+                        <span>
+                            INSPECTION ACTIVITY
+                        </span>
+
+                        <strong>
+                            REAL-TIME
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="glass-panel system-panel">
+
+                    <div class="panel-top">
+
+                        <div>
+
+                            <span class="panel-eyebrow">
+                                SYSTEM HEALTH
+                            </span>
+
+                            <h2>
+                                AI Engine
+                            </h2>
+
+                        </div>
+
+                        <span class="health-status">
+                            HEALTHY
+                        </span>
+
+                    </div>
+
+
+                    <div class="health-metrics">
+
+                        <div class="health-row">
+
+                            <div>
+
+                                <span>Vision Core</span>
+                                <small>ResNet18</small>
+
+                            </div>
+
+                            <strong>ONLINE</strong>
+
+                        </div>
+
+
+                        <div class="health-row">
+
+                            <div>
+
+                                <span>Feature Engine</span>
+                                <small>512D vectors</small>
+
+                            </div>
+
+                            <strong>READY</strong>
+
+                        </div>
+
+
+                        <div class="health-row">
+
+                            <div>
+
+                                <span>Inspection Classes</span>
+                                <small>MVTec AD</small>
+
+                            </div>
+
+                            <strong>15</strong>
+
+                        </div>
+
+
+                        <div class="health-row">
+
+                            <div>
+
+                                <span>API Gateway</span>
+                                <small>FastAPI</small>
+
+                            </div>
+
+                            <strong>ONLINE</strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 RECENT INSPECTIONS
+            ================================================== -->
+
+            <section class="glass-panel history-panel">
+
+                <div class="panel-top">
+
+                    <div>
+
+                        <span class="panel-eyebrow">
+                            INSPECTION LOG
+                        </span>
+
+                        <h2>
+                            Recent Inspections
+                        </h2>
+
+                    </div>
+
+
+                    <button class="view-all-button">
+                        VIEW ALL →
+                    </button>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>SPECIMEN</th>
+                                <th>FILE</th>
+                                <th>CATEGORY</th>
+                                <th>ANOMALY SCORE</th>
+                                <th>RESULT</th>
+                                <th>SEVERITY</th>
+                                <th>STATUS</th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="inspectionHistory">
+
+                            <tr class="empty-history">
+
+                                <td colspan="7">
+
+                                    <div>
+                                        NO INSPECTIONS IN CURRENT SESSION
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <footer class="footer">
+
+                <div>
+
+                    <strong>
+                        VISIONINSPECT AI
+                    </strong>
+
+                    <span>
+                        INDUSTRIAL QUALITY INTELLIGENCE
+                    </span>
+
+                </div>
+
+
+                <div class="footer-right">
+
+                    <span>
+                        SYSTEM STATUS
+                    </span>
+
+                    <span class="footer-online">
+                        ● OPERATIONAL
+                    </span>
+
+                    <span>
+                        © 2026
+                    </span>
+
+                </div>
+
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <!-- =========================================================
+         JAVASCRIPT
+    ========================================================== -->
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
