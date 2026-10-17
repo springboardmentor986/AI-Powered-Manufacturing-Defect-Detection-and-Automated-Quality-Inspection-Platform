@@ -19,18 +19,23 @@ app = FastAPI(
 )
 
 
-# CORS configuration
+import os
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+# CORS configuration - allow all origins for tunneling and production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://vision-inspect-318c5zt1v-tripurna.vercel.app",
-    ],
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount local storage directory for static image access
+Path("storage/uploads").mkdir(parents=True, exist_ok=True)
+if Path("storage").exists():
+    app.mount("/storage", StaticFiles(directory="storage"), name="storage")
 
 
 

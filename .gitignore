@@ -11,3 +11,4 @@ datasets/
 storage/uploads/
 storage/processed/
 frontend_old/
+cloudflared.exe
