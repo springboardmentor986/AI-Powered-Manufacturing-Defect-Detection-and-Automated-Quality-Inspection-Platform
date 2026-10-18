@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import CameraCapture from './CameraCapture'
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || `${API_BASE_URL}`;
+
 
 function App() {
   const [email, setEmail] = useState('engineer@gmail.com')
@@ -44,7 +47,7 @@ function App() {
   const fetchInspections = async () => {
     try {
       const t = localStorage.getItem('token')
-      const r = await fetch('https://visioninspect-ai-project-1.onrender.com/inspections/', { headers: { 'Authorization': `Bearer ${t}` } })
+      const r = await fetch(`${API_BASE_URL}/inspections/`, { headers: { 'Authorization': `Bearer ${t}` } })
       if (r.ok) setInspections(await r.json())
     } catch (e) {}
   }
@@ -52,7 +55,7 @@ function App() {
   const fetchStats = async () => {
     try {
       const t = localStorage.getItem('token')
-      const r = await fetch('https://visioninspect-ai-project-1.onrender.com/inspections/stats', { headers: { 'Authorization': `Bearer ${t}` } })
+      const r = await fetch(`${API_BASE_URL}/inspections/stats`, { headers: { 'Authorization': `Bearer ${t}` } })
       if (r.ok) setStats(await r.json())
     } catch (e) {}
   }
@@ -60,7 +63,7 @@ function App() {
   const fetchAnalytics = async () => {
     try {
       const t = localStorage.getItem('token')
-      const r = await fetch('https://visioninspect-ai-project-1.onrender.com/inspections/analytics/summary', { headers: { 'Authorization': `Bearer ${t}` } })
+      const r = await fetch(`${API_BASE_URL}/inspections/analytics/summary`, { headers: { 'Authorization': `Bearer ${t}` } })
       if (r.ok) setAnalytics(await r.json())
     } catch (e) {}
   }
@@ -68,7 +71,7 @@ function App() {
   const fetchModelPerf = async () => {
     try {
       const t = localStorage.getItem('token')
-      const r = await fetch('https://visioninspect-ai-project-1.onrender.com/inspections/model-performance', { headers: { 'Authorization': `Bearer ${t}` } })
+      const r = await fetch(`${API_BASE_URL}/inspections/model-performance`, { headers: { 'Authorization': `Bearer ${t}` } })
       if (r.ok) setModelPerf(await r.json())
     } catch (e) {}
   }
@@ -76,7 +79,7 @@ function App() {
   const fetchProducts = async () => {
     try {
       const t = localStorage.getItem('token')
-      const r = await fetch('https://visioninspect-ai-project-1.onrender.com/auth/products', { headers: { 'Authorization': `Bearer ${t}` } })
+      const r = await fetch(`${API_BASE_URL}/auth/products`, { headers: { 'Authorization': `Bearer ${t}` } })
       if (r.ok) setProducts(await r.json())
     } catch (e) {
       setProducts([
@@ -90,7 +93,7 @@ function App() {
   const fetchCategories = async () => {
     try {
       const t = localStorage.getItem('token')
-      const r = await fetch('https://visioninspect-ai-project-1.onrender.com/dataset/categories', { headers: { 'Authorization': `Bearer ${t}` } })
+      const r = await fetch(`${API_BASE_URL}/dataset/categories`, { headers: { 'Authorization': `Bearer ${t}` } })
       if (r.ok) {
         const d = await r.json()
         setCategories(d.categories || [])
@@ -101,7 +104,7 @@ function App() {
   const fetchCategoryImages = async (cat) => {
     try {
       const t = localStorage.getItem('token')
-      const r = await fetch(`https://visioninspect-ai-project-1.onrender.com/dataset/category/${cat}`, { headers: { 'Authorization': `Bearer ${t}` } })
+      const r = await fetch(`http://127.0.0.1:8000/dataset/category/${cat}`, { headers: { 'Authorization': `Bearer ${t}` } })
       if (r.ok) {
         const d = await r.json()
         setCategoryImages(d.images || [])
@@ -115,7 +118,7 @@ function App() {
     try {
       const fd = new URLSearchParams()
       fd.append('email', email); fd.append('password', password)
-      const r = await fetch('https://visioninspect-ai-project-1.onrender.com/auth/login', {
+      const r = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: fd
@@ -155,7 +158,7 @@ function App() {
       fd.append('product_id', selectedProduct)
       fd.append('image', selectedFile)
       const t = localStorage.getItem('token')
-      const r = await fetch('https://visioninspect-ai-project-1.onrender.com/inspections/upload', {
+      const r = await fetch(`${API_BASE_URL}/inspections/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${t}` },
         body: fd
@@ -522,7 +525,7 @@ function App() {
 
     const exportCSV = async () => {
       const t = localStorage.getItem('token')
-      const r = await fetch('https://visioninspect-ai-project-1.onrender.com/inspections/export/csv', {
+      const r = await fetch(`${API_BASE_URL}/inspections/export/csv`, {
         headers: { 'Authorization': `Bearer ${t}` }
       })
       if (r.ok) {
@@ -636,7 +639,7 @@ function App() {
                     style={{ marginTop: '8px' }}
                     onClick={async () => {
                       const token = localStorage.getItem('token')
-                      const r = await fetch(`https://visioninspect-ai-project-1.onrender.com/inspections/${selectedInspection.id}/pdf`, {
+                      const r = await fetch(`http://127.0.0.1:8000/inspections/${selectedInspection.id}/pdf`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                       })
                       if (r.ok) {
@@ -880,7 +883,7 @@ function App() {
                   <div className="img-grid">
                     {categoryImages.slice(0, 20).map((img, idx) => (
                       <div key={idx} className="img-cell">
-                        <img src={`https://visioninspect-ai-project-1.onrender.com/dataset/image/${selectedCategory}/${img}`}
+                        <img src={`http://127.0.0.1:8000/dataset/image/${selectedCategory}/${img}`}
                           alt={img} className="grid-img"
                           onError={e => { e.target.style.display='none'; e.target.parentElement.innerHTML=`<div class="no-img">${img}</div>` }} />
                       </div>
