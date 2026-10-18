@@ -92,6 +92,7 @@ export const DashboardPage = ({
         onOpenSimulator={onOpenSimulator}
         onOpenDataset={onOpenDataset}
         setActiveTab={setActiveTab}
+        stationSync={stats?.station_sync_percentage ?? 100}
       />
 
       {/* ========================================================================= */}
@@ -130,7 +131,7 @@ export const DashboardPage = ({
               icon={Layers}
               color="cyan"
               subtext="Active category profiles"
-              badge="5,354 Samples"
+              badge={stats?.total_dataset_samples ? `${stats.total_dataset_samples.toLocaleString()} Samples` : 'MVTec AD'}
             />
           </div>
 
@@ -219,7 +220,7 @@ export const DashboardPage = ({
             />
             <StatCard
               title="Active Production Batches"
-              value={batches.length || (stats?.total_batches || 1)}
+              value={stats?.active_batches ?? batches.length ?? 0}
               icon={Layers}
               color="amber"
               subtext="Conveyor lines monitored"
@@ -227,7 +228,7 @@ export const DashboardPage = ({
             />
             <StatCard
               title="High Severity Alerts"
-              value={stats ? stats.total_failed : '--'}
+              value={stats?.high_severity_alerts ?? stats?.total_failed ?? 0}
               icon={AlertOctagon}
               color="rose"
               subtext="Requires supervisor review"
@@ -235,7 +236,7 @@ export const DashboardPage = ({
             />
             <StatCard
               title="Inspection Latency"
-              value="~38 ms"
+              value={stats?.average_inference_latency_ms ? `~${stats.average_inference_latency_ms} ms` : '~27 ms'}
               icon={Cpu}
               color="emerald"
               subtext="Optical inference throughput"
@@ -276,12 +277,34 @@ export const DashboardPage = ({
                     {batches.length > 0 ? (
                       batches.map(b => (
                         <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-industrial-900/50 transition-colors">
-                          <td className="py-3 px-3 font-bold text-slate-900 dark:text-slate-100">{b.batch_name}</td>
+                          <td className="py-3 px-3 font-bold text-slate-900 dark:text-slate-100 font-mono text-xs">{b.batch_name}</td>
                           <td className="py-3 px-3 capitalize text-cyan-600 dark:text-cyan-400 font-semibold">{b.category || 'general'}</td>
-                          <td className="py-3 px-3">{b.processed_images} / {b.total_images} items</td>
-                          <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-semibold">{b.pass_count} Pass • {b.fail_count} Fail</td>
                           <td className="py-3 px-3">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                            <div className="space-y-1">
+                              <span className="text-[11px] font-mono text-slate-600 dark:text-slate-300">
+                                {b.processed_images} / {b.total_images} items
+                              </span>
+                              <div className="w-28 bg-slate-100 dark:bg-industrial-900 h-1.5 rounded-full overflow-hidden">
+                                <div 
+                                  className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                                  style={{ width: `${b.total_images > 0 ? Math.round((b.processed_images / b.total_images) * 100) : 0}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-xs font-mono">
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{b.pass_count} Pass</span>
+                            <span className="text-slate-400 mx-1.5">•</span>
+                            <span className="text-rose-600 dark:text-rose-400 font-bold">{b.fail_count} Fail</span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                              b.status === 'COMPLETED'
+                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                : b.status === 'PROCESSING'
+                                ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/30'
+                                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                            }`}>
                               {b.status}
                             </span>
                           </td>
@@ -289,7 +312,7 @@ export const DashboardPage = ({
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className="py-4 text-center text-slate-400 text-xs">No active batches recorded yet.</td>
+                        <td colSpan={5} className="py-6 text-center text-slate-400 text-xs">No active batches recorded yet.</td>
                       </tr>
                     )}
                   </tbody>
@@ -306,27 +329,42 @@ export const DashboardPage = ({
                 </h3>
               </div>
 
-              <div className="space-y-2.5 text-xs font-mono">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center">
+              <div className="space-y-2 text-xs font-mono">
+                <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center">
                   <div>
                     <span className="text-emerald-600 dark:text-emerald-400 font-bold block">Low Severity (0-39)</span>
-                    <span className="text-[10px] text-slate-400">PASS • Normal tolerance</span>
+                    <span className="text-[10px] text-slate-400">PASS • Normal tolerance ({analytics?.severity_risk_distribution?.low?.percentage ?? 0}%)</span>
                   </div>
-                  <span className="text-slate-900 dark:text-white font-black text-sm">{stats?.total_passed || 0}</span>
+                  <span className="text-slate-900 dark:text-white font-black text-sm">
+                    {analytics?.severity_risk_distribution?.low?.count ?? 0}
+                  </span>
                 </div>
-                <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex justify-between items-center">
+                <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex justify-between items-center">
                   <div>
                     <span className="text-amber-600 dark:text-amber-400 font-bold block">Medium Concern (40-59)</span>
-                    <span className="text-[10px] text-slate-400">REVIEW • Supervisor sign-off</span>
+                    <span className="text-[10px] text-slate-400">REVIEW • Supervisor sign-off ({analytics?.severity_risk_distribution?.medium?.percentage ?? 0}%)</span>
                   </div>
-                  <span className="text-slate-900 dark:text-white font-black text-sm">{stats?.total_review || 0}</span>
+                  <span className="text-slate-900 dark:text-white font-black text-sm">
+                    {analytics?.severity_risk_distribution?.medium?.count ?? 0}
+                  </span>
                 </div>
-                <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex justify-between items-center">
+                <div className="p-2.5 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex justify-between items-center">
+                  <div>
+                    <span className="text-orange-600 dark:text-orange-400 font-bold block">High Risk (60-79)</span>
+                    <span className="text-[10px] text-slate-400">FAIL • Route to rework ({analytics?.severity_risk_distribution?.high?.percentage ?? 0}%)</span>
+                  </div>
+                  <span className="text-slate-900 dark:text-white font-black text-sm">
+                    {analytics?.severity_risk_distribution?.high?.count ?? 0}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex justify-between items-center">
                   <div>
                     <span className="text-rose-600 dark:text-rose-400 font-bold block">Critical Defect (80-100)</span>
-                    <span className="text-[10px] text-slate-400">FAIL • Immediate line scrap</span>
+                    <span className="text-[10px] text-slate-400">FAIL & SCRAP • Immediate line scrap ({analytics?.severity_risk_distribution?.critical?.percentage ?? 0}%)</span>
                   </div>
-                  <span className="text-slate-900 dark:text-white font-black text-sm">{stats?.total_failed || 0}</span>
+                  <span className="text-slate-900 dark:text-white font-black text-sm">
+                    {analytics?.severity_risk_distribution?.critical?.count ?? 0}
+                  </span>
                 </div>
               </div>
 
@@ -373,7 +411,7 @@ export const DashboardPage = ({
             />
             <StatCard
               title="Executive Compliance"
-              value="99.8%"
+              value={stats?.executive_compliance_percentage ? `${stats.executive_compliance_percentage}%` : '100%'}
               icon={ShieldCheck}
               color="emerald"
               subtext="Tamper-evident audit logs"
@@ -407,21 +445,32 @@ export const DashboardPage = ({
                 analytics.category_matrix.map(c => (
                   <div 
                     key={c.category}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-industrial-950 border border-slate-200 dark:border-slate-800 text-center shadow-xs hover:border-purple-500/50 transition-all hover:scale-[1.02]"
+                    className="p-3 rounded-2xl bg-white dark:bg-industrial-950 border border-slate-200 dark:border-slate-800 text-center shadow-xs hover:border-purple-500/50 transition-all hover:scale-[1.02] flex flex-col justify-between"
                   >
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider block truncate">
-                      {c.category}
-                    </span>
-                    <span className="text-base font-black text-slate-900 dark:text-white mt-1 block">
-                      {c.pass_rate_percentage}% Yield
-                    </span>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full inline-block mt-1 ${
-                      c.health_status === 'EXCELLENT' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                      c.health_status === 'ACCEPTABLE' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
-                      'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                    }`}>
-                      {c.health_status}
-                    </span>
+                    <div>
+                      <span className="text-[11px] text-slate-700 dark:text-slate-300 uppercase font-black tracking-wider block truncate">
+                        {c.category}
+                      </span>
+                      <span className="text-base font-black text-slate-900 dark:text-white mt-1 block">
+                        {c.total_inspected > 0 ? `${c.pass_rate_percentage}% Yield` : 'Standby'}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        {c.total_inspected > 0 
+                          ? `${c.pass_count}P / ${c.fail_count}F (${c.total_inspected} total)`
+                          : `${c.dataset_sample_size || 0} dataset refs`
+                        }
+                      </span>
+                    </div>
+                    <div className="mt-2">
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full inline-block ${
+                        c.health_status === 'EXCELLENT' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
+                        c.health_status === 'ACCEPTABLE' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' :
+                        c.health_status === 'STANDBY' ? 'bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20' :
+                        'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                      }`}>
+                        {c.health_status}
+                      </span>
+                    </div>
                   </div>
                 ))
               ) : (

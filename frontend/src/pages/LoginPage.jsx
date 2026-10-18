@@ -51,7 +51,15 @@ export const LoginPage = ({ onLoginSuccess }) => {
       }
       onLoginSuccess?.();
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Authentication failed');
+      const detail = err.response?.data?.detail;
+      const msg = typeof detail === 'string' 
+        ? detail 
+        : Array.isArray(detail) 
+        ? detail.map(d => d.msg || JSON.stringify(d)).join(', ')
+        : (detail && typeof detail === 'object') 
+        ? (detail.msg || JSON.stringify(detail))
+        : (err.message || 'Authentication failed');
+      setError(msg);
     } finally {
       setLoading(false);
     }

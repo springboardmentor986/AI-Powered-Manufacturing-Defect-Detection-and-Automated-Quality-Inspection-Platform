@@ -71,6 +71,12 @@ class DashboardKPIStats(BaseModel):
     pass_rate_percentage: float
     defect_rate_percentage: float
     total_batches: int
+    active_batches: int = 0
+    high_severity_alerts: int = 0
+    average_inference_latency_ms: float = 0.0
+    executive_compliance_percentage: float = 100.0
+    total_dataset_samples: int = 5354
+    station_sync_percentage: float = 100.0
     categories_covered: int
     system_status: str
     category_distribution: Dict[str, int]

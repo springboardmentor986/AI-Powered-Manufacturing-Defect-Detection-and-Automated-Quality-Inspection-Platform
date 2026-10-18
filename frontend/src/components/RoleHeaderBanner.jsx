@@ -13,7 +13,8 @@ export const RoleHeaderBanner = ({
   onOpenUpload, 
   onOpenSimulator, 
   onOpenDataset, 
-  setActiveTab 
+  setActiveTab,
+  stationSync = 100
 }) => {
   const { user, switchToDemoRole } = useAuth();
   const role = user?.role || ROLES.QUALITY_ENGINEER;
@@ -163,7 +164,9 @@ export const RoleHeaderBanner = ({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Station Sync: 100%</span>
+            <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+              Station Sync: {stationSync}%
+            </span>
           </div>
         </div>
       </div>

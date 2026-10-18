@@ -161,7 +161,7 @@ export const InspectionDetail = ({ record: initialRecord, onClose, onUpdate, onD
           {error && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
+              <span>{typeof error === 'object' ? (error.message || JSON.stringify(error)) : String(error)}</span>
             </div>
           )}
 

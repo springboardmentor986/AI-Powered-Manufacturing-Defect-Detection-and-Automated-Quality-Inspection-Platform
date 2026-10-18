@@ -75,24 +75,29 @@ class AnalyticsService:
                 # Primary defect type
                 defects = [r.defect_type for r in cat_records if r.defect_type not in ["good", "unclassified"]]
                 primary_defect = max(set(defects), key=defects.count) if defects else "None"
-            else:
-                pass_rate = 100.0
-                fail_rate = 0.0
-                avg_sev = 12.0
-                primary_defect = "None"
 
-            # Benchmark status
-            if pass_rate >= 90.0:
-                health = "EXCELLENT"
-            elif pass_rate >= 75.0:
-                health = "ACCEPTABLE"
+                # Benchmark status
+                if pass_rate >= 80.0:
+                    health = "EXCELLENT"
+                elif pass_rate >= 50.0:
+                    health = "ACCEPTABLE"
+                else:
+                    health = "ATTENTION REQUIRED"
             else:
-                health = "ATTENTION REQUIRED"
+                passed = 0
+                failed = 0
+                pass_rate = 0.0
+                fail_rate = 0.0
+                avg_sev = 0.0
+                primary_defect = "None"
+                health = "STANDBY"
 
             matrix.append({
                 "category": cat_name,
                 "domain_type": cat_info["type"],
                 "total_inspected": total,
+                "pass_count": passed,
+                "fail_count": failed,
                 "dataset_sample_size": cat_info["total_images"],
                 "pass_rate_percentage": pass_rate,
                 "fail_rate_percentage": fail_rate,

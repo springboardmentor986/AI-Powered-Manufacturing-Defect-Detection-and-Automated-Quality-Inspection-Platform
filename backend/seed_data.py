@@ -83,60 +83,117 @@ def seed_database():
     trained_count = len(registry.get("models", {}))
     print(f"  [+] Found {trained_count}/15 category models trained on actual dataset.")
 
-    # 3. Seed Real Inspection Records from mv-dataset
-    print("\n[*] Processing Real MVTec AD Images through AI Vision Pipeline...")
+    # 3. Seed Real Inspection Records from mv-dataset across All 15 Categories & 3 Production Batches
+    print("\n[*] Processing Real MVTec AD Images through AI Vision Pipeline across All 15 Categories...")
     engineer_user = created_users.get(UserRole.QUALITY_ENGINEER)
     
-    # Create sample batch
-    sample_batch = db.query(BatchInspection).filter(BatchInspection.batch_name == "BATCH-2026-LINE1-A").first()
-    if not sample_batch:
-        sample_batch = BatchInspection(
-            batch_name="BATCH-2026-LINE1-A",
-            description="Optical Scanner Line 1 Conveyor Ingestion Batch",
-            category="bottle",
-            total_images=6,
-            processed_images=6,
-            pass_count=3,
-            fail_count=3,
-            review_count=0,
-            status="COMPLETED",
-            created_by=engineer_user.id if engineer_user else None,
-            created_at=datetime.now(timezone.utc) - timedelta(hours=2)
-        )
-        db.add(sample_batch)
-        db.commit()
-        db.refresh(sample_batch)
-
-    # Purge existing inspection records & batches to ensure no static mock entries remain
+    # Purge existing inspection records & batches to ensure zero legacy or static entries
     db.query(InspectionRecord).delete()
     db.query(BatchInspection).delete()
     db.commit()
 
-    # 18 representative real image instances across objects and textures
+    # Create 3 Real Production Batches
+    batch1 = BatchInspection(
+        id=str(uuid.uuid4()),
+        batch_name="BATCH-2026-LINE1-CONTAINERS",
+        description="Line 1 — Pharmaceutical bottles, capsules & oral care optical sorting",
+        category="containers",
+        total_images=0,
+        processed_images=0,
+        pass_count=0,
+        fail_count=0,
+        review_count=0,
+        status="COMPLETED",
+        created_by=engineer_user.id if engineer_user else None,
+        created_at=datetime.now(timezone.utc) - timedelta(hours=3)
+    )
+    batch2 = BatchInspection(
+        id=str(uuid.uuid4()),
+        batch_name="BATCH-2026-LINE2-HARDWARE",
+        description="Line 2 — Precision wire harness, electronic leads & structural fasteners",
+        category="hardware",
+        total_images=0,
+        processed_images=0,
+        pass_count=0,
+        fail_count=0,
+        review_count=0,
+        status="PROCESSING",
+        created_by=engineer_user.id if engineer_user else None,
+        created_at=datetime.now(timezone.utc) - timedelta(hours=1, minutes=30)
+    )
+    batch3 = BatchInspection(
+        id=str(uuid.uuid4()),
+        batch_name="BATCH-2026-LINE3-SURFACES",
+        description="Line 3 — Continuous roll, mesh & architectural surface texture triage",
+        category="surfaces",
+        total_images=0,
+        processed_images=0,
+        pass_count=0,
+        fail_count=0,
+        review_count=0,
+        status="COMPLETED",
+        created_by=engineer_user.id if engineer_user else None,
+        created_at=datetime.now(timezone.utc) - timedelta(minutes=45)
+    )
+    db.add_all([batch1, batch2, batch3])
+    db.commit()
+
+    # 45 genuine image instances covering EVERY SINGLE ONE of the 15 MVTec AD categories
     real_samples = [
-        ("bottle", "test", "broken_large", "000.png"),
-        ("bottle", "test", "broken_small", "000.png"),
-        ("bottle", "test", "contamination", "000.png"),
-        ("bottle", "test", "good", "000.png"),
-        ("capsule", "test", "crack", "000.png"),
-        ("capsule", "test", "faulty_imprint", "000.png"),
-        ("capsule", "test", "good", "000.png"),
-        ("cable", "test", "bent_wire", "000.png"),
-        ("cable", "test", "missing_wire", "000.png"),
-        ("metal_nut", "test", "scratch", "000.png"),
-        ("metal_nut", "test", "flip", "000.png"),
-        ("pill", "test", "crack", "000.png"),
-        ("pill", "test", "faulty_imprint", "000.png"),
-        ("screw", "test", "scratch_neck", "000.png"),
-        ("tile", "test", "crack", "000.png"),
-        ("tile", "test", "oil", "000.png"),
-        ("transistor", "test", "bent_lead", "000.png"),
-        ("wood", "test", "scratch", "000.png"),
-        ("zipper", "test", "broken_teeth", "000.png"),
+        # Line 1: Containers (bottle, capsule, pill, toothbrush) -> batch1
+        ("bottle", "test", "good", "000.png", batch1.id),
+        ("bottle", "test", "broken_large", "000.png", batch1.id),
+        ("bottle", "test", "broken_small", "000.png", batch1.id),
+        ("bottle", "test", "contamination", "000.png", batch1.id),
+        ("capsule", "test", "good", "000.png", batch1.id),
+        ("capsule", "test", "crack", "000.png", batch1.id),
+        ("capsule", "test", "faulty_imprint", "000.png", batch1.id),
+        ("pill", "test", "good", "000.png", batch1.id),
+        ("pill", "test", "crack", "000.png", batch1.id),
+        ("pill", "test", "faulty_imprint", "000.png", batch1.id),
+        ("toothbrush", "test", "good", "000.png", batch1.id),
+        ("toothbrush", "test", "defective", "000.png", batch1.id),
+
+        # Line 2: Hardware & Electronics (cable, metal_nut, screw, transistor) -> batch2
+        ("cable", "test", "good", "000.png", batch2.id),
+        ("cable", "test", "bent_wire", "000.png", batch2.id),
+        ("cable", "test", "missing_wire", "000.png", batch2.id),
+        ("metal_nut", "test", "good", "000.png", batch2.id),
+        ("metal_nut", "test", "scratch", "000.png", batch2.id),
+        ("metal_nut", "test", "flip", "000.png", batch2.id),
+        ("screw", "test", "good", "000.png", batch2.id),
+        ("screw", "test", "scratch_neck", "000.png", batch2.id),
+        ("screw", "test", "scratch_head", "000.png", batch2.id),
+        ("transistor", "test", "good", "000.png", batch2.id),
+        ("transistor", "test", "bent_lead", "000.png", batch2.id),
+        ("transistor", "test", "cut_lead", "000.png", batch2.id),
+
+        # Line 3: Surfaces & Textures (carpet, grid, hazelnut, leather, tile, wood, zipper) -> batch3
+        ("carpet", "test", "good", "000.png", batch3.id),
+        ("carpet", "test", "hole", "000.png", batch3.id),
+        ("carpet", "test", "cut", "000.png", batch3.id),
+        ("grid", "test", "good", "000.png", batch3.id),
+        ("grid", "test", "broken", "000.png", batch3.id),
+        ("grid", "test", "bent", "000.png", batch3.id),
+        ("hazelnut", "test", "good", "000.png", batch3.id),
+        ("hazelnut", "test", "crack", "000.png", batch3.id),
+        ("hazelnut", "test", "hole", "000.png", batch3.id),
+        ("leather", "test", "good", "000.png", batch3.id),
+        ("leather", "test", "cut", "000.png", batch3.id),
+        ("leather", "test", "fold", "000.png", batch3.id),
+        ("tile", "test", "good", "000.png", batch3.id),
+        ("tile", "test", "crack", "000.png", batch3.id),
+        ("tile", "test", "oil", "000.png", batch3.id),
+        ("wood", "test", "good", "000.png", batch3.id),
+        ("wood", "test", "scratch", "000.png", batch3.id),
+        ("wood", "test", "hole", "000.png", batch3.id),
+        ("zipper", "test", "good", "000.png", batch3.id),
+        ("zipper", "test", "broken_teeth", "000.png", batch3.id),
+        ("zipper", "test", "fabric_border", "000.png", batch3.id),
     ]
 
-    seeded_records = 0
-    for idx, (cat, split, defect, img_name) in enumerate(real_samples):
+    seeded_records = []
+    for idx, (cat, split, defect, img_name, target_batch_id) in enumerate(real_samples):
         src_path = settings.ACTIVE_DATASET_DIR / cat / split / defect / img_name
         if not src_path.exists():
             continue
@@ -198,7 +255,7 @@ def seed_database():
 
         rec = InspectionRecord(
             id=new_id,
-            batch_id=sample_batch.id if idx < 6 else None,
+            batch_id=target_batch_id,
             image_filename=save_name,
             image_path=str(dest_img),
             thumbnail_path=str(dest_thumb),
@@ -220,20 +277,33 @@ def seed_database():
             inspection_metadata=combined_meta,
             notes=f"Actual MVTec AD scan: {cat} ({defect}) processed with trained AI model.",
             uploaded_by=engineer_user.id if engineer_user else None,
-            created_at=datetime.now(timezone.utc) - timedelta(minutes=10 * idx)
+            created_at=datetime.now(timezone.utc) - timedelta(minutes=4 * idx)
         )
         db.add(rec)
-        seeded_records += 1
+        seeded_records.append(rec)
 
     db.commit()
-    print(f"  [+] Ingested and analyzed {seeded_records} real MVTec AD defect and normal parts.")
+
+    # Dynamically update batch summary counts based on real inserted records
+    for b in [batch1, batch2, batch3]:
+        b_records = [r for r in seeded_records if r.batch_id == b.id]
+        b.total_images = len(b_records)
+        b.processed_images = len(b_records)
+        b.pass_count = sum(1 for r in b_records if r.quality_decision == QualityDecision.PASS)
+        b.fail_count = sum(1 for r in b_records if r.quality_decision == QualityDecision.FAIL)
+        b.review_count = sum(1 for r in b_records if r.quality_decision == QualityDecision.REVIEW)
+    db.commit()
+
+    print(f"  [+] Ingested and analyzed {len(seeded_records)} real MVTec AD defect and normal parts across 3 batches.")
 
     # 4. Seed Audit Logs
     audit_events = [
         ("SYSTEM_INIT", f"System initialized and connected to actual dataset at {settings.ACTIVE_DATASET_DIR}"),
         ("MODELS_VERIFIED", f"Verified 15 AI anomaly models trained on actual MVTec AD train/good images"),
-        ("BATCH_CREATED", "Batch BATCH-2026-LINE1-A ingested via optical line scanner"),
-        ("INSPECTIONS_ANALYZED", f"Processed {seeded_records} real inspection images through trained CV pipeline")
+        ("BATCH_CREATED", f"Batch {batch1.batch_name} ingested with {batch1.total_images} optical line records"),
+        ("BATCH_CREATED", f"Batch {batch2.batch_name} ingested with {batch2.total_images} optical line records"),
+        ("BATCH_CREATED", f"Batch {batch3.batch_name} ingested with {batch3.total_images} optical line records"),
+        ("INSPECTIONS_ANALYZED", f"Processed {len(seeded_records)} real inspection images through trained CV pipeline")
     ]
     for action, detail in audit_events:
         log = SystemAuditLog(
@@ -242,12 +312,12 @@ def seed_database():
             action=action,
             resource_type="system",
             details={"info": detail},
-            timestamp=datetime.now(timezone.utc) - timedelta(minutes=20)
+            timestamp=datetime.now(timezone.utc) - timedelta(minutes=15)
         )
         db.add(log)
     db.commit()
     db.close()
-    print("\n[+] Database Seeding Complete with Real MVTec AD Data!")
+    print("\n[+] Database Seeding Complete with Real MVTec AD Data across All 15 Categories & 3 Batches!")
 
 if __name__ == "__main__":
     seed_database()
