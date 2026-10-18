@@ -37,6 +37,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Ensure static directories exist
+for dir_path in [settings.UPLOADS_DIR, settings.THUMBNAILS_DIR, settings.PROCESSED_DIR, settings.HEATMAPS_DIR, settings.ACTIVE_DATASET_DIR]:
+    dir_path.mkdir(parents=True, exist_ok=True)
+
 # Mount static file directories for images & thumbnails
 app.mount("/static/uploads", StaticFiles(directory=str(settings.UPLOADS_DIR)), name="uploads")
 app.mount("/static/thumbnails", StaticFiles(directory=str(settings.THUMBNAILS_DIR)), name="thumbnails")
