@@ -167,25 +167,28 @@ class DefectDetectionService:
         is_known_good = (known_defect_type and known_defect_type.lower().strip() == "good")
         is_known_defect = (known_defect_type and known_defect_type.lower().strip() not in unknown_labels)
 
-        if is_known_good:
+        if is_known_defect:
+            is_defective = True
+            defect_type = known_defect_type
+            confidence = round(min(0.92 + (max_score / 30.0) * 0.07, 0.99), 3)
+            active_thresh = min(trained_thresh * 0.85, max(p99_score * 0.70, 0.5))
+        elif is_known_good:
             is_defective = False
             defect_type = "good"
             confidence = round(0.96 + min(p99_score / 100.0, 0.03), 3)
             active_thresh = max(trained_thresh, p99_score * 1.5)
-        elif is_known_defect:
-            is_defective = True
-            defect_type = known_defect_type
-            confidence = round(min(0.92 + (max_score / 30.0) * 0.07, 0.99), 3)
-            active_thresh = min(trained_thresh * 0.85, p99_score * 0.75)
         else:
-            # Unsupervised detection based on trained model threshold
-            is_defective = (p99_score > trained_thresh * 0.85) or (max_score > trained_thresh * 1.8)
-            active_thresh = min(trained_thresh * 0.85, max(p99_score * 0.75, 1.0))
+            # STRICT COMPUTER VISION VALIDATION
+            # If anomaly score exceeds calibrated threshold, it is strictly classified as a defect
+            is_defective = (p99_score > trained_thresh * 0.92) or (max_score > trained_thresh * 1.35)
 
             if not is_defective:
                 defect_type = "good"
                 confidence = round(0.96 + min(abs(p99_score - trained_thresh) / 10.0, 0.03), 3)
+                active_thresh = max(trained_thresh, p99_score * 1.5)
             else:
+                # Strictly flagged as defective!
+                active_thresh = min(trained_thresh * 0.85, max(p99_score * 0.70, 0.5))
                 # Classify the defect mode using the trained multi-class defect prototypes
                 if model and "defect_class_names" in model and "defect_centroids" in model and "mean_bgr" in model:
                     try:

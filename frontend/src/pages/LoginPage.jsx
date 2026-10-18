@@ -102,7 +102,7 @@ export const LoginPage = ({ onLoginSuccess }) => {
           </div>
           <div>
             <span className="font-black text-lg text-white tracking-tight">VisionInspect AI</span>
-            <span className="block text-[10px] font-mono text-slate-500 tracking-wider uppercase mt-0.5">v1.0 · Milestone 1</span>
+            <span className="block text-[10px] font-mono text-slate-500 tracking-wider uppercase mt-0.5">Enterprise Edition</span>
           </div>
         </div>
 

@@ -23,6 +23,9 @@ export const CameraSimulator = ({ onNewInspection }) => {
   const [intervalSec, setIntervalSec] = useState(3);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [categorySamples, setCategorySamples] = useState([]);
+  const [streamMode, setStreamMode] = useState('defects'); // 'defects', 'mixed', 'good'
+  const [selectedDefectFilter, setSelectedDefectFilter] = useState('all');
+  const [availableDefects, setAvailableDefects] = useState([]);
   const [latestResult, setLatestResult] = useState(null);
   const [ingestedLog, setIngestedLog] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,27 +33,54 @@ export const CameraSimulator = ({ onNewInspection }) => {
   const timerRef = useRef(null);
 
   useEffect(() => {
-    fetchSamples(selectedCategory);
-  }, [selectedCategory]);
+    fetchSamples(selectedCategory, streamMode, selectedDefectFilter);
+  }, [selectedCategory, streamMode, selectedDefectFilter]);
 
-  const fetchSamples = async (cat) => {
+  const fetchSamples = async (cat, mode, filter) => {
     try {
       const res = await datasetAPI.getCategoryDetail(cat);
       if (res.data && res.data.splits) {
-        const samples = [];
-        if (res.data.splits.test?.good) {
-          res.data.splits.test.good.forEach(img => {
-            samples.push({ category: cat, split: 'test', defect: 'good', url: img, name: img.split('/').pop() });
-          });
-        }
-        Object.keys(res.data.splits.test || {}).forEach(defect => {
-          if (defect !== 'good') {
-            res.data.splits.test[defect].forEach(img => {
-              samples.push({ category: cat, split: 'test', defect: defect, url: img, name: img.split('/').pop() });
+        const defectsList = Object.keys(res.data.splits.test || {}).filter(d => d !== 'good');
+        setAvailableDefects(defectsList);
+
+        const goodSamples = (res.data.splits.test?.good || []).map(img => ({
+          category: cat, split: 'test', defect: 'good', url: img, name: img.split('/').pop()
+        }));
+
+        let defectSamples = [];
+        defectsList.forEach(defect => {
+          if (filter === 'all' || filter === defect) {
+            (res.data.splits.test[defect] || []).forEach(img => {
+              defectSamples.push({ category: cat, split: 'test', defect: defect, url: img, name: img.split('/').pop() });
             });
           }
         });
-        setCategorySamples(samples);
+
+        let finalSamples = [];
+        if (mode === 'defects') {
+          // Defect Triage Focus: Interleave 3 defects then 1 good part
+          let dIdx = 0, gIdx = 0;
+          while (dIdx < defectSamples.length || gIdx < goodSamples.length) {
+            for (let i = 0; i < 3 && dIdx < defectSamples.length; i++) {
+              finalSamples.push(defectSamples[dIdx++]);
+            }
+            if (gIdx < goodSamples.length) {
+              finalSamples.push(goodSamples[gIdx++]);
+            }
+          }
+        } else if (mode === 'good') {
+          finalSamples = goodSamples;
+        } else {
+          // Mixed 50/50
+          let i = 0;
+          while (i < Math.max(defectSamples.length, goodSamples.length)) {
+            if (i < defectSamples.length) finalSamples.push(defectSamples[i]);
+            if (i < goodSamples.length) finalSamples.push(goodSamples[i]);
+            i++;
+          }
+        }
+
+        setCategorySamples(finalSamples.length > 0 ? finalSamples : defectSamples.concat(goodSamples));
         setCurrentImageIndex(0);
       }
     } catch (err) {
@@ -215,20 +245,36 @@ export const CameraSimulator = ({ onNewInspection }) => {
             </button>
           </div>
 
-          {/* Speed & Category controls */}
-          <div className="flex items-center space-x-3">
+          {/* Controls: Mode, Defect Filter, Interval, Category */}
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center space-x-1.5">
-              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">Interval:</span>
+              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">Stream:</span>
               <select
-                value={intervalSec}
-                onChange={(e) => setIntervalSec(Number(e.target.value))}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-industrial-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-mono"
+                value={streamMode}
+                onChange={(e) => setStreamMode(e.target.value)}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-industrial-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-mono font-medium"
               >
-                <option value={1.5}>1.5s (High Speed)</option>
-                <option value={3}>3.0s (Normal)</option>
-                <option value={5}>5.0s (Demo)</option>
+                <option value="defects">⚡ Defect Focus (Active Failures)</option>
+                <option value="mixed">⚖️ Mixed Conveyor (50/50)</option>
+                <option value="good">✅ Normal Parts Only</option>
               </select>
             </div>
+
+            {streamMode === 'defects' && availableDefects.length > 0 && (
+              <div className="flex items-center space-x-1.5">
+                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">Fault:</span>
+                <select
+                  value={selectedDefectFilter}
+                  onChange={(e) => setSelectedDefectFilter(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-industrial-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-mono capitalize"
+                >
+                  <option value="all">All Fault Modes</option>
+                  {availableDefects.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="flex items-center space-x-1.5">
               <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">Category:</span>
@@ -240,6 +286,19 @@ export const CameraSimulator = ({ onNewInspection }) => {
                 {CATEGORIES.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-1.5">
+              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">Interval:</span>
+              <select
+                value={intervalSec}
+                onChange={(e) => setIntervalSec(Number(e.target.value))}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-industrial-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-mono"
+              >
+                <option value={1.5}>1.5s (High Speed)</option>
+                <option value={3}>3.0s (Normal)</option>
+                <option value={5}>5.0s (Demo)</option>
               </select>
             </div>
           </div>

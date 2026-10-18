@@ -148,10 +148,10 @@ export const RoleHeaderBanner = ({
                   <ShieldAlert className="w-3.5 h-3.5" /> Audit Trail
                 </button>
                 <button
-                  onClick={onOpenDataset}
+                  onClick={() => setActiveTab('inspections')}
                   className={`px-4 py-2 rounded-[10px] font-semibold text-[12px] transition-all flex items-center gap-1.5 ${cfg.btnSecondary}`}
                 >
-                  <Layers className="w-3.5 h-3.5" /> Benchmark Matrix
+                  <Layers className="w-3.5 h-3.5" /> Inspection Records
                 </button>
               </>
             )}

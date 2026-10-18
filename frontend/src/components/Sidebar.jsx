@@ -29,13 +29,6 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       roles: [ROLES.QUALITY_ENGINEER, ROLES.FACTORY_SUPERVISOR, ROLES.PRODUCTION_MANAGER, ROLES.ADMIN],
     },
     {
-      id: 'dataset',
-      label: 'MVTec AD Dataset',
-      icon: FolderArchive,
-      roles: [ROLES.QUALITY_ENGINEER, ROLES.FACTORY_SUPERVISOR, ROLES.PRODUCTION_MANAGER, ROLES.ADMIN],
-      badge: '15'
-    },
-    {
       id: 'simulator',
       label: 'Camera Simulator',
       icon: Video,
@@ -85,42 +78,6 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
             </button>
           );
         })}
-      </div>
-
-      {/* Bottom section */}
-      <div className="space-y-3">
-        {/* Milestone card */}
-        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-industrial-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Milestone 1</span>
-            <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
-              <CheckCircle2 className="w-3 h-3" /> Active
-            </span>
-          </div>
-          <div className="w-full bg-slate-200 dark:bg-industrial-800 rounded-full h-1 overflow-hidden">
-            <div className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full w-full rounded-full" />
-          </div>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed font-mono">
-            Core RBAC + MVTec AD Pipeline
-          </p>
-        </div>
-
-        {/* System specs */}
-        <div className="px-1 space-y-1.5">
-          {[
-            { label: 'Engine',  value: 'FastAPI + PyTorch' },
-            { label: 'Dataset', value: 'MVTec AD (15)' },
-            { label: 'Storage', value: 'SQLite', color: 'text-emerald-600 dark:text-emerald-400' },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="flex items-center justify-between text-[10px] font-mono text-slate-400 dark:text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <Cpu className="w-3 h-3 text-slate-400 dark:text-slate-600" />
-                {label}
-              </span>
-              <span className={color || 'text-slate-600 dark:text-slate-300'}>{value}</span>
-            </div>
-          ))}
-        </div>
       </div>
     </aside>
   );

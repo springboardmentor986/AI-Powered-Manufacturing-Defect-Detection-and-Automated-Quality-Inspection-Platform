@@ -40,9 +40,6 @@ export const Navbar = ({ onOpenUpload, onOpenSimulator }) => {
             <span className="font-bold text-[15px] text-slate-900 dark:text-slate-50 tracking-tight leading-none">
               VisionInspect
             </span>
-            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-mono hidden md:block mt-0.5 leading-none">
-              Manufacturing QC · Defect Detection
-            </p>
           </div>
         </div>
 
