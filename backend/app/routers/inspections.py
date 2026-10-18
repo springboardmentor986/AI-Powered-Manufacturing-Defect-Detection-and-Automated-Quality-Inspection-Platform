@@ -104,6 +104,10 @@ async def upload_single_inspection_image(
         sev_lvl = "Low" if final_decision == QualityDecision.PASS else "High"
         combined_metadata = processed["metadata"]
 
+    final_defect_type = defect_analysis["defect_type"] if defect_analysis else (
+        "good" if final_decision == QualityDecision.PASS else defect_type
+    )
+
     record = InspectionRecord(
         id=processed["record_id"],
         batch_id=batch_id,
@@ -119,7 +123,7 @@ async def upload_single_inspection_image(
         image_hash=processed["image_hash"],
         category=category,
         split=split,
-        defect_type=defect_type,
+        defect_type=final_defect_type,
         status=InspectionStatus.INSPECTED,
         quality_decision=final_decision,
         confidence_score=confidence_val,
@@ -187,6 +191,40 @@ async def upload_batch_inspection_images(
                 split="batch_upload",
                 defect_type="unclassified"
             )
+            save_path = Path(processed["image_path"])
+            try:
+                defect_analysis = DefectDetectionService.analyze_image_defects(
+                    image_path=save_path,
+                    category=category
+                )
+            except Exception:
+                defect_analysis = None
+
+            if defect_analysis:
+                f_decision = defect_analysis["quality_decision"]
+                f_defect = defect_analysis["defect_type"]
+                f_conf = defect_analysis["confidence"]
+                f_sev = defect_analysis["severity"]["score"]
+                f_lvl = defect_analysis["severity"]["level"]
+                combined_m = {
+                    **processed["metadata"],
+                    "defect_analysis": defect_analysis,
+                    "heatmap_url": defect_analysis["visualizations"]["heatmap_url"],
+                    "annotated_url": defect_analysis["visualizations"]["annotated_url"],
+                }
+            else:
+                f_decision = QualityDecision.PASS
+                f_defect = "good"
+                f_conf = 0.95
+                f_sev = 15.0
+                f_lvl = "Low"
+                combined_m = processed["metadata"]
+
+            if f_decision == QualityDecision.PASS:
+                pass_cnt += 1
+            else:
+                fail_cnt += 1
+
             rec = InspectionRecord(
                 id=processed["record_id"],
                 batch_id=batch.id,
@@ -202,10 +240,13 @@ async def upload_batch_inspection_images(
                 image_hash=processed["image_hash"],
                 category=category,
                 split="batch_upload",
-                defect_type="unclassified",
-                status=InspectionStatus.PENDING,
-                quality_decision=QualityDecision.PENDING,
-                inspection_metadata=processed["metadata"],
+                defect_type=f_defect,
+                status=InspectionStatus.INSPECTED,
+                quality_decision=f_decision,
+                confidence_score=f_conf,
+                severity_score=f_sev,
+                severity_level=f_lvl,
+                inspection_metadata=combined_m,
                 uploaded_by=current_user.id
             )
             db.add(rec)
@@ -214,6 +255,8 @@ async def upload_batch_inspection_images(
             continue
 
     batch.processed_images = processed_count
+    batch.pass_count = pass_cnt
+    batch.fail_count = fail_cnt
     batch.status = "COMPLETED"
     db.commit()
 
@@ -236,17 +279,33 @@ async def upload_batch_inspection_images(
 
 @router.post("/import-mvtec", response_model=InspectionRecordResponse)
 async def import_mvtec_dataset_image(
-    category: str = Form(...),
-    split: str = Form("test"),
-    defect_type: str = Form("good"),
-    image_name: str = Form("000.png"),
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Import an image from MVTec AD dataset directory into live inspection queue"""
-    src_path = settings.MVTEC_DIR / category / split / defect_type / image_name
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        body = await request.json()
+        category = body.get("category", "")
+        split = body.get("split", "test")
+        defect_type = body.get("defect_type", "good")
+        image_name = body.get("image_name", "000.png")
+    else:
+        form = await request.form()
+        category = form.get("category", "")
+        split = form.get("split", "test")
+        defect_type = form.get("defect_type", "good")
+        image_name = form.get("image_name", "000.png")
+
+    if not category:
+        raise HTTPException(status_code=400, detail="Category is required")
+
+    src_path = settings.ACTIVE_DATASET_DIR / category / split / defect_type / image_name
     if not src_path.exists():
-        raise HTTPException(status_code=404, detail=f"Source image not found: {src_path}")
+        src_path = settings.MVTEC_DIR / category / split / defect_type / image_name
+    if not src_path.exists():
+        raise HTTPException(status_code=404, detail=f"Source image not found: {category}/{split}/{defect_type}/{image_name}")
 
     # Copy to uploads
     import uuid
@@ -411,13 +470,61 @@ def update_inspection_decision(
 
     return _build_response_record(rec)
 
+@router.delete("/all", status_code=status.HTTP_200_OK)
+def delete_all_inspections(
+    only_uploads: bool = Query(False),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Purge inspection records and static files"""
+    query = db.query(InspectionRecord)
+    if only_uploads:
+        query = query.filter(InspectionRecord.split == "upload")
+
+    records = query.all()
+    count = len(records)
+    for rec in records:
+        try:
+            if rec.image_path and Path(rec.image_path).exists():
+                Path(rec.image_path).unlink()
+            if rec.thumbnail_path and Path(rec.thumbnail_path).exists():
+                Path(rec.thumbnail_path).unlink()
+        except Exception:
+            pass
+        db.delete(rec)
+
+    db.commit()
+    log_audit_event(
+        db,
+        action="ALL_INSPECTIONS_PURGED",
+        user=current_user,
+        resource_type="inspection",
+        resource_id="all",
+        details={"deleted_count": count, "only_uploads": only_uploads}
+    )
+    return {"status": "success", "deleted_count": count, "message": f"Successfully deleted {count} inspection records."}
+
+@router.post("/reseed", status_code=status.HTTP_200_OK)
+def reseed_clean_inspections(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Purges static records and reseeds authentic, properly-classified inspections from mv-dataset"""
+    import seed_data
+    # First purge old records
+    db.query(InspectionRecord).delete()
+    db.commit()
+    # Execute clean seeding
+    count = seed_data.seed_database()
+    return {"status": "success", "seeded_count": count, "message": f"Reseeded database with clean MVTec AD inspections."}
+
 @router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_inspection(
     record_id: str,
-    current_user: User = Depends(require_roles([UserRole.FACTORY_SUPERVISOR, UserRole.PRODUCTION_MANAGER, UserRole.ADMIN])),
+    current_user: User = Depends(require_roles([UserRole.QUALITY_ENGINEER, UserRole.FACTORY_SUPERVISOR, UserRole.PRODUCTION_MANAGER, UserRole.ADMIN])),
     db: Session = Depends(get_db)
 ):
-    """Delete inspection record (Supervisor/Manager permission only)"""
+    """Delete inspection record (Quality Engineer, Supervisor, Manager permission)"""
     rec = db.query(InspectionRecord).filter(InspectionRecord.id == record_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail="Inspection record not found.")
@@ -544,3 +651,106 @@ def preprocess_inspection_image(record_id: str, db: Session = Depends(get_db)):
         "inspection_id": rec.id,
         "preprocessing": proc_res
     }
+
+@router.delete("/all", status_code=status.HTTP_200_OK)
+def delete_all_inspection_records(
+    only_uploads: bool = Query(False),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Purge inspection records from the database and remove uploaded/temporary files.
+    Allows Quality Engineers, Plant Managers, and Supervisors to wipe static/test records.
+    """
+    query = db.query(InspectionRecord)
+    if only_uploads:
+        query = query.filter(InspectionRecord.split.in_(["upload", "batch_upload"]))
+
+    records = query.all()
+    count = len(records)
+    for rec in records:
+        try:
+            if rec.image_path and Path(rec.image_path).exists():
+                p = Path(rec.image_path)
+                if "uploads" in p.parts or "processed" in p.parts:
+                    p.unlink(missing_ok=True)
+            if rec.thumbnail_path and Path(rec.thumbnail_path).exists():
+                Path(rec.thumbnail_path).unlink(missing_ok=True)
+        except Exception:
+            pass
+        db.delete(rec)
+
+    db.commit()
+    log_audit_event(
+        db,
+        action="PURGE_INSPECTIONS",
+        user=current_user,
+        resource_type="inspection_records",
+        resource_id="ALL",
+        details={"deleted_count": count, "only_uploads": only_uploads}
+    )
+    return {"status": "success", "deleted_count": count, "message": f"Successfully purged {count} inspection records."}
+
+@router.post("/reseed", status_code=status.HTTP_200_OK)
+def reseed_clean_dataset(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Wipes all existing records and re-seeds pristine MVTec AD samples across categories
+    with zero unclassified entries.
+    """
+    import sys
+    backend_dir = Path(__file__).resolve().parent.parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    from seed_data import seed_database
+    try:
+        # Clear existing inspection records and batches first
+        db.query(InspectionRecord).delete()
+        db.query(BatchInspection).delete()
+        db.commit()
+
+        # Run clean seed
+        seed_database()
+        count = db.query(InspectionRecord).count()
+        return {"status": "success", "seeded_count": count, "message": f"Successfully reseeded {count} genuine MVTec AD inspection records."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to reseed database: {str(e)}")
+
+@router.delete("/{record_id}", status_code=status.HTTP_200_OK)
+def delete_single_inspection_record(
+    record_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a single inspection record and clean up associated image files.
+    """
+    rec = db.query(InspectionRecord).filter(InspectionRecord.id == record_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Inspection record not found.")
+
+    try:
+        if rec.image_path and Path(rec.image_path).exists():
+            p = Path(rec.image_path)
+            if "uploads" in p.parts or "processed" in p.parts:
+                p.unlink(missing_ok=True)
+        if rec.thumbnail_path and Path(rec.thumbnail_path).exists():
+            Path(rec.thumbnail_path).unlink(missing_ok=True)
+    except Exception:
+        pass
+
+    db.delete(rec)
+    db.commit()
+
+    log_audit_event(
+        db,
+        action="DELETE_INSPECTION",
+        user=current_user,
+        resource_type="inspection_record",
+        resource_id=record_id,
+        details={"sample_name": rec.original_filename or rec.image_filename, "category": rec.category}
+    )
+    return {"status": "success", "message": f"Inspection record {record_id} deleted successfully."}

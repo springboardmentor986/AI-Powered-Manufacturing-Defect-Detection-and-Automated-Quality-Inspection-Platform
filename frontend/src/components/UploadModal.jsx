@@ -20,7 +20,7 @@ const MVTEC_CATEGORIES = [
 export const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
   const [activeMode, setActiveMode] = useState('single'); // 'single' or 'batch'
   const [selectedCategory, setSelectedCategory] = useState('capsule');
-  const [defectType, setDefectType] = useState('unclassified');
+  const [defectType, setDefectType] = useState('auto');
   const [notes, setNotes] = useState('');
   const [batchName, setBatchName] = useState(`BATCH-${new Date().toISOString().slice(0, 10)}-01`);
 
@@ -289,7 +289,7 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
                   onChange={(e) => setDefectType(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-industrial-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:border-cyan-500 font-medium"
                 >
-                  <option value="unclassified">Unclassified (Auto-Inspect)</option>
+                  <option value="auto">Auto-Classify (AI Vision Model)</option>
                   <option value="good">Good (No Defect)</option>
                   <option value="scratch">Scratch</option>
                   <option value="crack">Crack / Fracture</option>

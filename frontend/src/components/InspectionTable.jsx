@@ -7,8 +7,10 @@ import {
   Eye, 
   Sparkles,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  Trash2
 } from 'lucide-react';
+import { inspectionAPI } from '../api/client';
 
 export const InspectionTable = ({ records, onSelectRecord, onRefresh }) => {
   const getDecisionBadge = (decision) => {
@@ -176,16 +178,36 @@ export const InspectionTable = ({ records, onSelectRecord, onRefresh }) => {
 
                 {/* Actions */}
                 <td className="py-3 px-4 text-right">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectRecord && onSelectRecord(rec);
-                    }}
-                    className="p-1.5 rounded-lg bg-slate-100 hover:bg-cyan-500/20 dark:bg-industrial-800 dark:hover:bg-cyan-500/20 text-slate-700 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 border border-slate-200 dark:border-slate-700 transition-colors inline-flex items-center gap-1 text-[11px] font-medium"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Inspect</span>
-                  </button>
+                  <div className="flex items-center justify-end space-x-1.5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectRecord && onSelectRecord(rec);
+                      }}
+                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-cyan-500/20 dark:bg-industrial-800 dark:hover:bg-cyan-500/20 text-slate-700 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 border border-slate-200 dark:border-slate-700 transition-colors inline-flex items-center gap-1 text-[11px] font-medium"
+                      title="Inspect Details"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Inspect</span>
+                    </button>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Delete record for ${rec.original_filename}?`)) {
+                          try {
+                            await inspectionAPI.deleteInspection(rec.id);
+                            onRefresh && onRefresh();
+                          } catch (err) {
+                            console.error('Failed to delete inspection', err);
+                          }
+                        }
+                      }}
+                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-500/20 dark:bg-industrial-800 dark:hover:bg-rose-500/20 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 transition-colors inline-flex items-center"
+                      title="Delete Record"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

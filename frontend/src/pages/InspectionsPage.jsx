@@ -7,7 +7,9 @@ import {
   Download, 
   Zap, 
   Video,
-  Layers
+  Layers,
+  Trash2,
+  Database
 } from 'lucide-react';
 import { inspectionAPI } from '../api/client';
 import { InspectionTable } from '../components/InspectionTable';
@@ -25,6 +27,8 @@ export const InspectionsPage = ({ onSelectRecord, onOpenUpload, onOpenSimulator 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDecision, setSelectedDecision] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [bannerMsg, setBannerMsg] = useState(null);
 
   const fetchRecords = async () => {
     setLoading(true);
@@ -54,6 +58,36 @@ export const InspectionsPage = ({ onSelectRecord, onOpenUpload, onOpenSimulator 
     fetchRecords();
   };
 
+  const handleDeleteAll = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL static and inspection records from the database?')) return;
+    setActionLoading(true);
+    try {
+      const res = await inspectionAPI.deleteAll(false);
+      setBannerMsg(`Successfully deleted ${res.data?.deleted_count || 0} static/inspection records.`);
+      setTimeout(() => setBannerMsg(null), 4000);
+      fetchRecords();
+    } catch (err) {
+      console.error('Failed to delete records', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReseed = async () => {
+    if (!window.confirm('Delete all records and reseed with clean, properly-classified MVTec AD samples?')) return;
+    setActionLoading(true);
+    try {
+      await inspectionAPI.reseed();
+      setBannerMsg('Reseeded database with clean MVTec AD samples across categories!');
+      setTimeout(() => setBannerMsg(null), 4000);
+      fetchRecords();
+    } catch (err) {
+      console.error('Failed to reseed database', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-enter">
       {/* Page Header */}
@@ -68,14 +102,42 @@ export const InspectionsPage = ({ onSelectRecord, onOpenUpload, onOpenSimulator 
           </p>
         </div>
 
-        <div className="flex items-center space-x-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {bannerMsg && (
+            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5 rounded-lg animate-pulse">
+              {bannerMsg}
+            </span>
+          )}
+
           <button
             onClick={fetchRecords}
+            disabled={actionLoading || loading}
             className="p-2 rounded-xl bg-slate-100 dark:bg-industrial-900 hover:bg-slate-200 dark:hover:bg-industrial-800 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
-            title="Refresh"
+            title="Refresh Table"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-cyan-500' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading || actionLoading ? 'animate-spin text-cyan-500' : ''}`} />
           </button>
+
+          <button
+            onClick={handleDeleteAll}
+            disabled={actionLoading || records.length === 0}
+            className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-all flex items-center space-x-1.5 disabled:opacity-50"
+            title="Purge all static & test records from database"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete All Records</span>
+          </button>
+
+          <button
+            onClick={handleReseed}
+            disabled={actionLoading}
+            className="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold transition-all flex items-center space-x-1.5 disabled:opacity-50"
+            title="Seed clean MVTec AD dataset records"
+          >
+            <Database className="w-3.5 h-3.5" />
+            <span>Reseed Dataset</span>
+          </button>
+
           <button
             onClick={onOpenUpload}
             className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 transition-all flex items-center space-x-2"

@@ -107,7 +107,12 @@ def seed_database():
         db.commit()
         db.refresh(sample_batch)
 
-    # 12 representative real image instances across objects and textures
+    # Purge existing inspection records & batches to ensure no static mock entries remain
+    db.query(InspectionRecord).delete()
+    db.query(BatchInspection).delete()
+    db.commit()
+
+    # 18 representative real image instances across objects and textures
     real_samples = [
         ("bottle", "test", "broken_large", "000.png"),
         ("bottle", "test", "broken_small", "000.png"),
@@ -117,10 +122,17 @@ def seed_database():
         ("capsule", "test", "faulty_imprint", "000.png"),
         ("capsule", "test", "good", "000.png"),
         ("cable", "test", "bent_wire", "000.png"),
+        ("cable", "test", "missing_wire", "000.png"),
+        ("metal_nut", "test", "scratch", "000.png"),
+        ("metal_nut", "test", "flip", "000.png"),
+        ("pill", "test", "crack", "000.png"),
+        ("pill", "test", "faulty_imprint", "000.png"),
+        ("screw", "test", "scratch_neck", "000.png"),
         ("tile", "test", "crack", "000.png"),
         ("tile", "test", "oil", "000.png"),
-        ("metal_nut", "test", "scratch", "000.png"),
         ("transistor", "test", "bent_lead", "000.png"),
+        ("wood", "test", "scratch", "000.png"),
+        ("zipper", "test", "broken_teeth", "000.png"),
     ]
 
     seeded_records = 0

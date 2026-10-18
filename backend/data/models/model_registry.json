@@ -8,14 +8,19 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 1.034,
-      "training_duration_seconds": 4.82,
-      "trained_at": "2026-10-18T14:54:24.066471+00:00",
+      "training_duration_seconds": 5.06,
+      "trained_at": "2026-10-18T15:45:20.956998+00:00",
+      "defect_classes": [
+        "broken_large",
+        "broken_small",
+        "contamination"
+      ],
       "accuracy": 0.3,
       "precision": 1.0,
       "recall": 0.0667,
       "f1_score": 0.1251,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 27.79,
+      "mean_inference_latency_ms": 18.18,
       "test_samples_evaluated": 80
     },
     "cable": {
@@ -26,14 +31,24 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 1.492,
-      "training_duration_seconds": 6.05,
-      "trained_at": "2026-10-18T14:54:34.309439+00:00",
+      "training_duration_seconds": 7.59,
+      "trained_at": "2026-10-18T15:45:31.572530+00:00",
+      "defect_classes": [
+        "bent_wire",
+        "cable_swap",
+        "combined",
+        "cut_inner_insulation",
+        "cut_outer_insulation",
+        "missing_cable",
+        "missing_wire",
+        "poke_insulation"
+      ],
       "accuracy": 0.1875,
       "precision": 1.0,
       "recall": 0.0109,
       "f1_score": 0.0216,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 36.56,
+      "mean_inference_latency_ms": 26.39,
       "test_samples_evaluated": 112
     },
     "capsule": {
@@ -44,14 +59,21 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 0.699,
-      "training_duration_seconds": 6.06,
-      "trained_at": "2026-10-18T14:54:44.906399+00:00",
+      "training_duration_seconds": 7.98,
+      "trained_at": "2026-10-18T15:45:42.751659+00:00",
+      "defect_classes": [
+        "crack",
+        "faulty_imprint",
+        "poke",
+        "scratch",
+        "squeeze"
+      ],
       "accuracy": 0.175,
       "precision": 1.0,
       "recall": 0.01,
       "f1_score": 0.0198,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 37.01,
+      "mean_inference_latency_ms": 26.11,
       "test_samples_evaluated": 120
     },
     "carpet": {
@@ -62,14 +84,21 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 1.232,
-      "training_duration_seconds": 5.69,
-      "trained_at": "2026-10-18T14:54:54.710197+00:00",
+      "training_duration_seconds": 8.02,
+      "trained_at": "2026-10-18T15:45:53.739277+00:00",
+      "defect_classes": [
+        "color",
+        "cut",
+        "hole",
+        "metal_contamination",
+        "thread"
+      ],
       "accuracy": 0.1835,
       "precision": 0.0,
       "recall": 0.0,
       "f1_score": 0.0,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 37.16,
+      "mean_inference_latency_ms": 26.67,
       "test_samples_evaluated": 109
     },
     "grid": {
@@ -80,14 +109,21 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 1.225,
-      "training_duration_seconds": 3.7,
-      "trained_at": "2026-10-18T14:55:00.406729+00:00",
+      "training_duration_seconds": 4.52,
+      "trained_at": "2026-10-18T15:45:59.564434+00:00",
+      "defect_classes": [
+        "bent",
+        "broken",
+        "glue",
+        "metal_contamination",
+        "thread"
+      ],
       "accuracy": 0.2597,
       "precision": 0.0,
       "recall": 0.0,
       "f1_score": 0.0,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 25.01,
+      "mean_inference_latency_ms": 16.06,
       "test_samples_evaluated": 77
     },
     "hazelnut": {
@@ -98,14 +134,20 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 1.079,
-      "training_duration_seconds": 5.34,
-      "trained_at": "2026-10-18T14:55:08.703259+00:00",
+      "training_duration_seconds": 6.97,
+      "trained_at": "2026-10-18T15:46:08.878230+00:00",
+      "defect_classes": [
+        "crack",
+        "cut",
+        "hole",
+        "print"
+      ],
       "accuracy": 0.3444,
       "precision": 1.0,
       "recall": 0.1571,
       "f1_score": 0.2715,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 32.21,
+      "mean_inference_latency_ms": 25.37,
       "test_samples_evaluated": 90
     },
     "leather": {
@@ -116,14 +158,21 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 1.102,
-      "training_duration_seconds": 5.3,
-      "trained_at": "2026-10-18T14:55:18.019109+00:00",
+      "training_duration_seconds": 7.39,
+      "trained_at": "2026-10-18T15:46:19.197767+00:00",
+      "defect_classes": [
+        "color",
+        "cut",
+        "fold",
+        "glue",
+        "poke"
+      ],
       "accuracy": 0.1875,
       "precision": 0.5714,
       "recall": 0.0435,
       "f1_score": 0.0808,
       "false_positive_rate": 0.15,
-      "mean_inference_latency_ms": 35.26,
+      "mean_inference_latency_ms": 25.58,
       "test_samples_evaluated": 112
     },
     "metal_nut": {
@@ -134,14 +183,20 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 1.287,
-      "training_duration_seconds": 4.1,
-      "trained_at": "2026-10-18T14:55:24.528308+00:00",
+      "training_duration_seconds": 4.45,
+      "trained_at": "2026-10-18T15:46:25.191074+00:00",
+      "defect_classes": [
+        "bent",
+        "color",
+        "flip",
+        "scratch"
+      ],
       "accuracy": 0.2,
       "precision": 0.0,
       "recall": 0.0,
       "f1_score": 0.0,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 23.28,
+      "mean_inference_latency_ms": 14.81,
       "test_samples_evaluated": 100
     },
     "pill": {
@@ -152,14 +207,23 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 0.988,
-      "training_duration_seconds": 4.33,
-      "trained_at": "2026-10-18T14:55:32.741868+00:00",
+      "training_duration_seconds": 6.46,
+      "trained_at": "2026-10-18T15:46:34.273611+00:00",
+      "defect_classes": [
+        "color",
+        "combined",
+        "contamination",
+        "crack",
+        "faulty_imprint",
+        "pill_type",
+        "scratch"
+      ],
       "accuracy": 0.1655,
       "precision": 1.0,
       "recall": 0.032,
       "f1_score": 0.062,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 26.35,
+      "mean_inference_latency_ms": 17.66,
       "test_samples_evaluated": 145
     },
     "screw": {
@@ -170,14 +234,21 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.533,
       "train_mean_anomaly_score": 1.562,
-      "training_duration_seconds": 3.97,
-      "trained_at": "2026-10-18T14:55:40.200192+00:00",
+      "training_duration_seconds": 4.81,
+      "trained_at": "2026-10-18T15:46:40.970562+00:00",
+      "defect_classes": [
+        "manipulated_front",
+        "scratch_head",
+        "scratch_neck",
+        "thread_side",
+        "thread_top"
+      ],
       "accuracy": 0.1667,
       "precision": 0.0,
       "recall": 0.0,
       "f1_score": 0.0,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 28.45,
+      "mean_inference_latency_ms": 15.24,
       "test_samples_evaluated": 120
     },
     "tile": {
@@ -188,14 +259,21 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 1.166,
-      "training_duration_seconds": 5.53,
-      "trained_at": "2026-10-18T14:55:49.229773+00:00",
+      "training_duration_seconds": 5.87,
+      "trained_at": "2026-10-18T15:46:48.965940+00:00",
+      "defect_classes": [
+        "crack",
+        "glue_strip",
+        "gray_stroke",
+        "oil",
+        "rough"
+      ],
       "accuracy": 0.1923,
       "precision": 0.0,
       "recall": 0.0,
       "f1_score": 0.0,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 32.91,
+      "mean_inference_latency_ms": 19.82,
       "test_samples_evaluated": 104
     },
     "toothbrush": {
@@ -206,14 +284,17 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 0.992,
-      "training_duration_seconds": 2.31,
-      "trained_at": "2026-10-18T14:55:52.635801+00:00",
+      "training_duration_seconds": 3.84,
+      "trained_at": "2026-10-18T15:46:53.685702+00:00",
+      "defect_classes": [
+        "defective"
+      ],
       "accuracy": 0.4062,
       "precision": 1.0,
       "recall": 0.05,
       "f1_score": 0.0952,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 31.84,
+      "mean_inference_latency_ms": 25.5,
       "test_samples_evaluated": 32
     },
     "transistor": {
@@ -224,14 +305,20 @@
       "img_size": "256x256",
       "calibrated_threshold": 3.848,
       "train_mean_anomaly_score": 1.511,
-      "training_duration_seconds": 5.62,
-      "trained_at": "2026-10-18T14:56:00.813362+00:00",
+      "training_duration_seconds": 6.68,
+      "trained_at": "2026-10-18T15:47:02.096214+00:00",
+      "defect_classes": [
+        "bent_lead",
+        "cut_lead",
+        "damaged_case",
+        "misplaced"
+      ],
       "accuracy": 0.3833,
       "precision": 1.0,
       "recall": 0.075,
       "f1_score": 0.1395,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 41.93,
+      "mean_inference_latency_ms": 28.06,
       "test_samples_evaluated": 60
     },
     "wood": {
@@ -242,14 +329,21 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.994,
       "train_mean_anomaly_score": 1.384,
-      "training_duration_seconds": 5.7,
-      "trained_at": "2026-10-18T14:56:09.374780+00:00",
+      "training_duration_seconds": 7.16,
+      "trained_at": "2026-10-18T15:47:11.370763+00:00",
+      "defect_classes": [
+        "color",
+        "combined",
+        "hole",
+        "liquid",
+        "scratch"
+      ],
       "accuracy": 0.2436,
       "precision": 0.0,
       "recall": 0.0,
       "f1_score": 0.0,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 35.69,
+      "mean_inference_latency_ms": 26.22,
       "test_samples_evaluated": 78
     },
     "zipper": {
@@ -260,16 +354,25 @@
       "img_size": "256x256",
       "calibrated_threshold": 2.5,
       "train_mean_anomaly_score": 1.02,
-      "training_duration_seconds": 3.85,
-      "trained_at": "2026-10-18T14:56:16.659711+00:00",
+      "training_duration_seconds": 4.73,
+      "trained_at": "2026-10-18T15:47:18.332472+00:00",
+      "defect_classes": [
+        "broken_teeth",
+        "combined",
+        "fabric_border",
+        "fabric_interior",
+        "rough",
+        "split_teeth",
+        "squeezed_teeth"
+      ],
       "accuracy": 0.1511,
       "precision": 1.0,
       "recall": 0.0084,
       "f1_score": 0.0167,
       "false_positive_rate": 0.0,
-      "mean_inference_latency_ms": 24.24,
+      "mean_inference_latency_ms": 15.55,
       "test_samples_evaluated": 139
     }
   },
-  "last_updated": "2026-10-18T14:56:16.659711+00:00"
+  "last_updated": "2026-10-18T15:47:18.332472+00:00"
 }

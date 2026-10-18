@@ -163,8 +163,9 @@ class DefectDetectionService:
         max_score = float(np.max(anomaly_map))
 
         # Check known defect type or unsupervised threshold
-        is_known_good = (known_defect_type and known_defect_type.lower() == "good")
-        is_known_defect = (known_defect_type and known_defect_type.lower() not in ["good", "unclassified", "upload"])
+        unknown_labels = {"good", "unclassified", "upload", "auto", "none", "null", "undefined", ""}
+        is_known_good = (known_defect_type and known_defect_type.lower().strip() == "good")
+        is_known_defect = (known_defect_type and known_defect_type.lower().strip() not in unknown_labels)
 
         if is_known_good:
             is_defective = False
@@ -178,10 +179,32 @@ class DefectDetectionService:
             active_thresh = min(trained_thresh * 0.85, p99_score * 0.75)
         else:
             # Unsupervised detection based on trained model threshold
-            is_defective = (p99_score > trained_thresh * 0.90) or (max_score > trained_thresh * 2.2)
-            confidence = round(0.85 + min(abs(p99_score - trained_thresh) / 10.0, 0.14), 3)
-            defect_type = "surface_anomaly" if is_defective else "good"
-            active_thresh = trained_thresh * 0.90
+            is_defective = (p99_score > trained_thresh * 0.85) or (max_score > trained_thresh * 1.8)
+            active_thresh = min(trained_thresh * 0.85, max(p99_score * 0.75, 1.0))
+
+            if not is_defective:
+                defect_type = "good"
+                confidence = round(0.96 + min(abs(p99_score - trained_thresh) / 10.0, 0.03), 3)
+            else:
+                # Classify the defect mode using the trained multi-class defect prototypes
+                if model and "defect_class_names" in model and "defect_centroids" in model and "mean_bgr" in model:
+                    try:
+                        sig = AnomalyTrainingService.extract_signature_vector(img_bgr, model["mean_bgr"])
+                        centroids = model["defect_centroids"]
+                        scales = model["feature_scales"]
+                        class_names = [str(c) for c in model["defect_class_names"]]
+
+                        norm_diff = (centroids - sig) / scales
+                        dists = np.linalg.norm(norm_diff, axis=1)
+                        best_idx = int(np.argmin(dists))
+                        defect_type = class_names[best_idx]
+                        confidence = round(min(0.88 + (max_score / 35.0) * 0.10, 0.99), 3)
+                    except Exception:
+                        defect_type = "defect"
+                        confidence = 0.88
+                else:
+                    defect_type = "defect"
+                    confidence = 0.88
 
         # 4. Spatial Defect Localization & Bounding Boxes
         bounding_boxes = []

@@ -47,12 +47,12 @@ export const inspectionAPI = {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   importMvtec: (category, split, defectType, imageName) => {
-    const formData = new FormData();
-    formData.append('category', category);
-    formData.append('split', split);
-    formData.append('defect_type', defectType);
-    formData.append('image_name', imageName);
-    return apiClient.post('/inspections/import-mvtec', formData);
+    return apiClient.post('/inspections/import-mvtec', {
+      category,
+      split,
+      defect_type: defectType,
+      image_name: imageName,
+    });
   },
   getInspections: (params) => apiClient.get('/inspections', { params }),
   getInspectionDetail: (id) => apiClient.get(`/inspections/${id}`),
@@ -64,6 +64,8 @@ export const inspectionAPI = {
     return apiClient.post(`/inspections/${id}/decision`, formData);
   },
   deleteInspection: (id) => apiClient.delete(`/inspections/${id}`),
+  deleteAll: (onlyUploads = false) => apiClient.delete('/inspections/all', { params: { only_uploads: onlyUploads } }),
+  reseed: () => apiClient.post('/inspections/reseed'),
   analyzeInspection: (id) => apiClient.post(`/inspections/${id}/analyze`),
   getQualityReport: (id) => apiClient.get(`/inspections/${id}/quality-report`),
   preprocessInspection: (id) => apiClient.post(`/inspections/${id}/preprocess`),
