@@ -11,7 +11,7 @@ import {
   RotateCcw,
   Zap
 } from 'lucide-react';
-import { inspectionAPI, datasetAPI } from '../api/client';
+import { inspectionAPI, datasetAPI, getMediaUrl } from '../api/client';
 
 const CATEGORIES = [
   "bottle", "cable", "capsule", "carpet", "grid", "hazelnut", "leather", "metal_nut", "pill", "screw", "tile", "toothbrush", "transistor", "wood", "zipper"
@@ -332,7 +332,7 @@ export const CameraSimulator = ({ onNewInspection }) => {
                 >
                   <div className="flex items-center space-x-2.5">
                     <div className="w-9 h-9 rounded-lg bg-white dark:bg-industrial-950 border border-slate-200 dark:border-slate-800 overflow-hidden flex-shrink-0">
-                      <img src={rec.thumbnail_url || rec.image_url} alt="" className="w-full h-full object-cover" />
+                      <img src={getMediaUrl(rec.thumbnail_url || rec.image_url)} alt="" className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <div className="font-semibold text-slate-800 dark:text-slate-200 capitalize font-mono text-[11px]">

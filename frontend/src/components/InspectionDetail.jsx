@@ -21,7 +21,7 @@ import {
   RefreshCw,
   Cpu
 } from 'lucide-react';
-import { inspectionAPI } from '../api/client';
+import { inspectionAPI, getMediaUrl } from '../api/client';
 import { useAuth, ROLES } from '../context/AuthContext';
 
 export const InspectionDetail = ({ record: initialRecord, onClose, onUpdate, onDelete }) => {
@@ -45,16 +45,15 @@ export const InspectionDetail = ({ record: initialRecord, onClose, onUpdate, onD
 
   // Determine active displayed image URL based on selected layer
   const getDisplayedImageUrl = () => {
+    let url = record.image_url;
     if (activeLayer === 'preprocessed' && meta.preprocessed_url) {
-      return meta.preprocessed_url;
+      url = meta.preprocessed_url;
+    } else if (activeLayer === 'heatmap' && meta.heatmap_url) {
+      url = meta.heatmap_url;
+    } else if (activeLayer === 'annotated' && meta.annotated_url) {
+      url = meta.annotated_url;
     }
-    if (activeLayer === 'heatmap' && meta.heatmap_url) {
-      return meta.heatmap_url;
-    }
-    if (activeLayer === 'annotated' && meta.annotated_url) {
-      return meta.annotated_url;
-    }
-    return record.image_url;
+    return getMediaUrl(url);
   };
 
   const handleRunAnalysis = async () => {

@@ -10,7 +10,7 @@ import {
   ArrowUpRight,
   Trash2
 } from 'lucide-react';
-import { inspectionAPI } from '../api/client';
+import { inspectionAPI, getMediaUrl } from '../api/client';
 
 export const InspectionTable = ({ records, onSelectRecord, onRefresh }) => {
   const getDecisionBadge = (decision) => {
@@ -99,7 +99,7 @@ export const InspectionTable = ({ records, onSelectRecord, onRefresh }) => {
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-industrial-950 border border-slate-200 dark:border-slate-800 overflow-hidden flex-shrink-0 relative group-hover:border-cyan-500/40 transition-colors">
                       <img
-                        src={rec.thumbnail_url || rec.image_url}
+                        src={getMediaUrl(rec.thumbnail_url || rec.image_url)}
                         alt={rec.original_filename}
                         className="w-full h-full object-cover"
                         loading="lazy"
