@@ -1,8 +1,16 @@
 import axios from 'axios';
 
 let RAW_BACKEND = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || '';
-if (RAW_BACKEND && !RAW_BACKEND.startsWith('http://') && !RAW_BACKEND.startsWith('https://')) {
-  RAW_BACKEND = `https://${RAW_BACKEND}`;
+if (!RAW_BACKEND && typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+  RAW_BACKEND = 'https://visioninspect-api-sp9x.onrender.com';
+}
+if (RAW_BACKEND) {
+  if (!RAW_BACKEND.includes('.') && !RAW_BACKEND.includes('localhost') && !RAW_BACKEND.includes('127.0.0.1')) {
+    RAW_BACKEND = `${RAW_BACKEND}.onrender.com`;
+  }
+  if (!RAW_BACKEND.startsWith('http://') && !RAW_BACKEND.startsWith('https://')) {
+    RAW_BACKEND = `https://${RAW_BACKEND}`;
+  }
 }
 export const BACKEND_URL = RAW_BACKEND.replace(/\/+$/, '');
 const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api/v1` : '/api/v1';
