@@ -1,39 +1,134 @@
-# Python
+# ==============================================================================
+# VisionInspect AI — Git Ignore Configuration
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Python, Bytecode & Packaging
+# ------------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.env
+*.egg
+*.egg-info/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+*.manifest
+*.spec
+
+# Virtual Environments
 venv/
 env/
 ENV/
+.venv/
+env.bak/
+venv.bak/
 
-# Database & Uploads
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+
+# ------------------------------------------------------------------------------
+# 2. Environment Variables & Secrets
+# ------------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# ------------------------------------------------------------------------------
+# 3. Databases & Server Logs
+# ------------------------------------------------------------------------------
 *.db
+*.sqlite
+*.sqlite3
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 backend/visioninspect.db
+backend/*.log
+
+# ------------------------------------------------------------------------------
+# 4. Runtime Ingestion Data & Generated Visuals (Preserve Directories via .gitkeep)
+# ------------------------------------------------------------------------------
 backend/data/uploads/*
-backend/data/thumbnails/*
-backend/data/processed/*
-backend/data/heatmaps/*
-backend/data/augmented/*
 !backend/data/uploads/.gitkeep
+
+backend/data/thumbnails/*
 !backend/data/thumbnails/.gitkeep
 
-# Large Dataset files (preserve directory reference)
+backend/data/processed/*
+!backend/data/processed/.gitkeep
+
+backend/data/heatmaps/*
+!backend/data/heatmaps/.gitkeep
+
+backend/data/augmented/*
+!backend/data/augmented/.gitkeep
+
+backend/data/reports/*
+!backend/data/reports/.gitkeep
+
+# ------------------------------------------------------------------------------
+# 5. Large Benchmark Datasets (Exclude Multi-Gigabyte Raw Image Archives)
+# ------------------------------------------------------------------------------
 main data/
 mv-dataset/
 backend/data/mvtec_ad/*
 !backend/data/mvtec_ad/.gitkeep
+*.tar.gz
+*.tar
+*.zip
+*.7z
 
-# Node / Frontend
+# ------------------------------------------------------------------------------
+# 6. Frontend Dependencies & Build Output
+# ------------------------------------------------------------------------------
+node_modules/
 frontend/node_modules/
 frontend/dist/
+frontend/build/
 frontend/.vite/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+frontend/.cache/
+.eslintcache
 
-# System
+# ------------------------------------------------------------------------------
+# 7. IDE, Editor & OS Artifacts
+# ------------------------------------------------------------------------------
 .DS_Store
-desktop.ini
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Temporary Scratch Logs
+.system_generated/
+.tempmediaStorage/
+.user_uploaded/
+.agents/
