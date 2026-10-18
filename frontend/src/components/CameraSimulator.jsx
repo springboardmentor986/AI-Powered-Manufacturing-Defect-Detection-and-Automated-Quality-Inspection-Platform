@@ -14,7 +14,7 @@ import {
 import { inspectionAPI, datasetAPI } from '../api/client';
 
 const CATEGORIES = [
-  "capsule", "bottle", "metal_nut", "screw", "tile", "wood", "cable", "pill", "carpet", "leather"
+  "bottle", "cable", "capsule", "carpet", "grid", "hazelnut", "leather", "metal_nut", "pill", "screw", "tile", "toothbrush", "transistor", "wood", "zipper"
 ];
 
 export const CameraSimulator = ({ onNewInspection }) => {

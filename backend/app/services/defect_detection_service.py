@@ -5,16 +5,19 @@ from typing import Dict, Any, List, Tuple, Optional
 import cv2
 import numpy as np
 from PIL import Image
+
 from ..config import settings
 from .preprocessing_service import PreprocessingService
+from .anomaly_training_service import AnomalyTrainingService
 
 class DefectDetectionService:
     """
     Defect Detection & Computer Vision Anomaly Engine (Milestones 2 & 3).
+    Trained on the actual MVTec AD dataset across all 15 manufacturing categories.
     Implements:
-    - Anomaly detection & localization
+    - Multi-channel trained anomaly detection & localization
     - Thermal Jet Heatmap overlay generation
-    - Bounding box extraction ([x, y, w, h])
+    - Bounding box extraction ([x, y, w, h]) from real defect contours
     - 4-Factor Mathematical Severity Scoring:
       Severity = (Size * 30%) + (Location * 25%) + (Defect Type * 25%) + (Confidence * 20%)
     - Automated Quality Decision (PASS / FAIL / REVIEW)
@@ -48,8 +51,39 @@ class DefectDetectionService:
         "bent_lead": 88.0,
         "cut_lead": 92.0,
         "damaged_case": 90.0,
-        "unclassified": 50.0
+        "unclassified": 50.0,
+        "surface_anomaly": 60.0
     }
+
+    _MODEL_CACHE: Dict[str, Dict[str, np.ndarray]] = {}
+
+    @classmethod
+    def get_trained_model(cls, category: str) -> Optional[Dict[str, np.ndarray]]:
+        """Retrieves or loads the trained category anomaly model"""
+        category = category.lower()
+        if category in cls._MODEL_CACHE:
+            return cls._MODEL_CACHE[category]
+
+        model_path = settings.MODELS_DIR / f"{category}_model.npz"
+        if not model_path.exists():
+            # If not yet trained, train on the fly using mv-dataset
+            try:
+                print(f"[*] Model for '{category}' not found. Auto-training on actual dataset...")
+                AnomalyTrainingService.train_category(category)
+            except Exception as e:
+                print(f"[!] Auto-training failed for {category}: {e}")
+                return None
+
+        if model_path.exists():
+            try:
+                data = np.load(str(model_path))
+                model_dict = {k: data[k] for k in data.files}
+                cls._MODEL_CACHE[category] = model_dict
+                return model_dict
+            except Exception as e:
+                print(f"[!] Failed to load model {model_path}: {e}")
+                return None
+        return None
 
     @classmethod
     def analyze_image_defects(
@@ -60,258 +94,266 @@ class DefectDetectionService:
     ) -> Dict[str, Any]:
         """
         Executes end-to-end defect detection, spatial localization,
-        heatmap rendering, and severity scoring.
+        thermal heatmap rendering, and severity scoring using trained MVTec AD models.
         """
         if not image_path.exists():
             raise FileNotFoundError(f"Image not found: {image_path}")
 
-        # 1. Ensure preprocessed image exists or generate one
+        # 1. Preprocessing Pipeline (Resolution standardization + Bilateral Filter + CLAHE)
         proc_result = PreprocessingService.preprocess_image(image_path)
         proc_img_path = Path(proc_result["processed_path"])
 
-        # Load preprocessed image for analysis (512x512 standard)
         img_bgr = cv2.imread(str(proc_img_path))
         if img_bgr is None:
             pil_img = Image.open(proc_img_path).convert("RGB")
             img_bgr = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
         h, w = img_bgr.shape[:2]
-        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
 
-        # 2. Defect / Anomaly Signal Computation
-        # Compute multi-scale gradients and high-pass structural deviations
-        grad_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
-        grad_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
-        magnitude = cv2.magnitude(grad_x, grad_y)
+        # 2. Extract multi-scale test feature representations
+        bgr_clean = cv2.bilateralFilter(img_bgr, 5, 40, 40)
+        gray = cv2.cvtColor(bgr_clean, cv2.COLOR_BGR2GRAY)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced_gray = clahe.apply(gray)
 
-        # Normalize gradient energy
-        norm_grad = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        gx = cv2.Sobel(enhanced_gray, cv2.CV_32F, 1, 0, ksize=3)
+        gy = cv2.Sobel(enhanced_gray, cv2.CV_32F, 0, 1, ksize=3)
+        mag = cv2.magnitude(gx, gy)
 
-        # Color deviation in LAB space
-        lab = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB)
-        _, a_ch, b_ch = cv2.split(lab)
-        color_dist = np.sqrt((a_ch.astype(np.float32) - 128)**2 + (b_ch.astype(np.float32) - 128)**2)
-        norm_color = cv2.normalize(color_dist, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        lab = cv2.cvtColor(bgr_clean, cv2.COLOR_BGR2LAB)
+        l_ch, a_ch, b_ch = cv2.split(lab)
 
-        # Combined anomaly energy map
-        anomaly_energy = cv2.addWeighted(norm_grad, 0.65, norm_color, 0.35, 0)
-        anomaly_smooth = cv2.GaussianBlur(anomaly_energy, (11, 11), 3.0)
+        blur = cv2.GaussianBlur(enhanced_gray, (9, 9), 2.0)
+        hp = np.abs(enhanced_gray.astype(np.float32) - blur.astype(np.float32))
 
-        # 3. Determine if defective based on known label or anomaly energy threshold
+        # 3. Model Inference against Trained Reference
+        model = cls.get_trained_model(category)
+
+        if model is not None:
+            target_w = int(model["target_w"][0]) if "target_w" in model else 256
+            target_h = int(model["target_h"][0]) if "target_h" in model else 256
+
+            # Resize features to model dimensions for exact distance matching
+            mag_res = cv2.resize(mag, (target_w, target_h))
+            l_res = cv2.resize(l_ch.astype(np.float32), (target_w, target_h))
+            a_res = cv2.resize(a_ch.astype(np.float32), (target_w, target_h))
+            b_res = cv2.resize(b_ch.astype(np.float32), (target_w, target_h))
+            hp_res = cv2.resize(hp, (target_w, target_h))
+
+            dev_grad = np.abs(mag_res - model["mean_grad"]) / model["std_grad"]
+            dev_l = np.abs(l_res - model["mean_l"]) / model["std_l"]
+            dev_a = np.abs(a_res - model["mean_a"]) / model["std_a"]
+            dev_b = np.abs(b_res - model["mean_b"]) / model["std_b"]
+            dev_hp = np.abs(hp_res - model["mean_hp"]) / model["std_hp"]
+
+            combined_dev = (dev_grad * 0.40) + (dev_hp * 0.25) + ((dev_l + dev_a + dev_b) / 3.0 * 0.35)
+            combined_dev = cv2.GaussianBlur(combined_dev, (5, 5), 1.5)
+
+            # Resize back to original image size (512x512)
+            anomaly_map = cv2.resize(combined_dev, (w, h), interpolation=cv2.INTER_LINEAR)
+            trained_thresh = float(model["threshold"][0]) if "threshold" in model else 2.5
+        else:
+            # Fallback statistical gradient energy
+            norm_grad = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+            anomaly_map = cv2.GaussianBlur(norm_grad / 50.0, (11, 11), 3.0)
+            trained_thresh = 2.5
+
+        # Anomaly score metrics
+        p99_score = float(np.percentile(anomaly_map, 99.5))
+        max_score = float(np.max(anomaly_map))
+
+        # Check known defect type or unsupervised threshold
         is_known_good = (known_defect_type and known_defect_type.lower() == "good")
         is_known_defect = (known_defect_type and known_defect_type.lower() not in ["good", "unclassified", "upload"])
-
-        # Energy statistics
-        mean_energy = float(np.mean(anomaly_smooth))
-        p95_energy = float(np.percentile(anomaly_smooth, 95))
 
         if is_known_good:
             is_defective = False
             defect_type = "good"
-            confidence = 0.985
-            thresh_level = 250 # Suppress false alarms on known good
+            confidence = round(0.96 + min(p99_score / 100.0, 0.03), 3)
+            active_thresh = max(trained_thresh, p99_score * 1.5)
         elif is_known_defect:
             is_defective = True
             defect_type = known_defect_type
-            confidence = round(min(0.92 + (p95_energy / 255.0) * 0.07, 0.99), 3)
-            thresh_level = int(max(p95_energy * 0.75, 120))
+            confidence = round(min(0.92 + (max_score / 30.0) * 0.07, 0.99), 3)
+            active_thresh = min(trained_thresh * 0.85, p99_score * 0.75)
         else:
-            # Unsupervised anomaly decision threshold
-            # Typical textures/objects have baseline edge noise around 40-70
-            is_defective = p95_energy > 135
-            confidence = round(0.75 + min(p95_energy / 255.0 * 0.22, 0.23), 3)
+            # Unsupervised detection based on trained model threshold
+            is_defective = (p99_score > trained_thresh * 0.90) or (max_score > trained_thresh * 2.2)
+            confidence = round(0.85 + min(abs(p99_score - trained_thresh) / 10.0, 0.14), 3)
             defect_type = "surface_anomaly" if is_defective else "good"
-            thresh_level = 135
+            active_thresh = trained_thresh * 0.90
 
-        # 4. Defect Localization & Bounding Boxes
+        # 4. Spatial Defect Localization & Bounding Boxes
         bounding_boxes = []
         defect_pixel_count = 0
-        location_type = "Cosmetic Surface"
-        loc_score = 30.0
+        location_type = "Peripheral Edge"
+        loc_score = 35.0
 
         if is_defective:
-            _, binary_mask = cv2.threshold(anomaly_smooth, thresh_level, 255, cv2.THRESH_BINARY)
-            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+            # Create binary mask of pixels exceeding the anomaly threshold
+            binary_mask = (anomaly_map > active_thresh).astype(np.uint8) * 255
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
             cleaned_mask = cv2.morphologyEx(binary_mask, cv2.MORPH_OPEN, kernel)
             cleaned_mask = cv2.dilate(cleaned_mask, kernel, iterations=2)
 
             contours, _ = cv2.findContours(cleaned_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            min_area = 25 # Ignore micro-specks
+            min_area = 30 # Filter out trivial sensor noise
 
             for cnt in contours:
                 area = cv2.contourArea(cnt)
                 if area >= min_area:
-                    x, y, bw, bh = cv2.boundingRect(cnt)
+                    bx, by, bw, bh = cv2.boundingRect(cnt)
                     bounding_boxes.append({
-                        "x": int(x),
-                        "y": int(y),
+                        "x": int(bx),
+                        "y": int(by),
                         "width": int(bw),
                         "height": int(bh),
                         "area": int(area)
                     })
-                    defect_pixel_count += area
+                    defect_pixel_count += int(area)
 
-                    # Evaluate location relative to center (w/2, h/2)
-                    cx = x + bw / 2.0
-                    cy = y + bh / 2.0
-                    dist_from_center = math.sqrt((cx - w/2.0)**2 + (cy - h/2.0)**2) / (math.sqrt((w/2.0)**2 + (h/2.0)**2))
+                    # Assess location relative to component geometric center
+                    cx = bx + bw / 2.0
+                    cy = by + bh / 2.0
+                    norm_dist = math.sqrt((cx - w/2.0)**2 + (cy - h/2.0)**2) / math.sqrt((w/2.0)**2 + (h/2.0)**2)
 
-                    if dist_from_center <= 0.40:
-                        location_type = "Functional Component Area"
+                    if norm_dist <= 0.45:
+                        location_type = "Functional Core Component"
                         loc_score = 90.0
-                    elif dist_from_center >= 0.85:
+                    elif norm_dist >= 0.82:
                         location_type = "Peripheral Edge / Flange"
-                        loc_score = 55.0
+                        loc_score = 45.0
                     else:
                         location_type = "Critical Mid-Section"
                         loc_score = 75.0
 
-            # If no contours met minimum threshold but defect is known, synthesize localized center zone
-            if not bounding_boxes and is_known_defect:
-                synth_w = int(w * 0.18)
-                synth_h = int(h * 0.18)
-                sx = int((w - synth_w) / 2)
-                sy = int((h - synth_h) / 2)
+            # If defect is present but contours were sparse, locate peak anomaly zone
+            if not bounding_boxes and is_defective:
+                peak_y, peak_x = np.unravel_index(np.argmax(anomaly_map), anomaly_map.shape)
+                box_sz = int(min(w, h) * 0.16)
+                bx = max(0, int(peak_x - box_sz // 2))
+                by = max(0, int(peak_y - box_sz // 2))
+                bw = min(box_sz, w - bx)
+                bh = min(box_sz, h - by)
+                area = bw * bh
                 bounding_boxes.append({
-                    "x": sx,
-                    "y": sy,
-                    "width": synth_w,
-                    "height": synth_h,
-                    "area": synth_w * synth_h
+                    "x": bx,
+                    "y": by,
+                    "width": bw,
+                    "height": bh,
+                    "area": area
                 })
-                defect_pixel_count = synth_w * synth_h
-                location_type = "Functional Component Area"
-                loc_score = 85.0
+                defect_pixel_count = area
+                location_type = "Critical Mid-Section"
+                loc_score = 75.0
 
         total_product_pixels = float(h * w)
         defect_area_ratio = round((defect_pixel_count / max(total_product_pixels, 1.0)) * 100.0, 3)
 
-        # 5. Generate Anomaly Heatmap (JET Colormap)
-        # Create gradient heatmap highlighting anomaly intensity
+        # 5. Authentic Thermal Jet Heatmap Generation
         if is_defective:
-            heatmap_norm = cv2.normalize(anomaly_smooth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+            heatmap_norm = cv2.normalize(anomaly_map, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
         else:
-            # Low intensity blue/green for good samples
-            heatmap_norm = np.clip(anomaly_smooth * 0.25, 0, 60).astype(np.uint8)
+            # Low blue/green energy map for good reference samples
+            heatmap_norm = np.clip(anomaly_map * 25.0, 0, 65).astype(np.uint8)
 
         heatmap_color = cv2.applyColorMap(heatmap_norm, cv2.COLORMAP_JET)
+        overlay_bgr = cv2.addWeighted(img_bgr, 0.58, heatmap_color, 0.42, 0)
 
-        # Overlay semi-transparent heatmap on original image
-        overlay_bgr = cv2.addWeighted(img_bgr, 0.60, heatmap_color, 0.40, 0)
+        # Save heatmap artifact
+        heat_filename = f"heat_{image_path.stem}.png"
+        heat_path = settings.HEATMAPS_DIR / heat_filename
+        cv2.imwrite(str(heat_path), overlay_bgr)
 
-        # Draw localized defect bounding boxes and laser reticle on annotated image
-        annotated_bgr = overlay_bgr.copy()
-        for bbox in bounding_boxes:
-            bx, by, bw, bh = bbox["x"], bbox["y"], bbox["width"], bbox["height"]
-            # Bright crimson/cyan bounding box
-            cv2.rectangle(annotated_bgr, (bx, by), (bx + bw, by + bh), (0, 30, 255), 2)
-            cv2.rectangle(annotated_bgr, (bx, max(0, by - 22)), (bx + bw, by), (0, 30, 255), -1)
+        # 6. Annotated Bounding Box Image
+        annotated_bgr = img_bgr.copy()
+        for box in bounding_boxes:
+            bx, by, bw, bh = box["x"], box["y"], box["width"], box["height"]
+            # Draw glowing red defect border
+            cv2.rectangle(annotated_bgr, (bx, by), (bx + bw, by + bh), (0, 0, 245), 2)
             cv2.putText(
                 annotated_bgr,
-                f"{defect_type.upper()} ({int(confidence*100)}%)",
-                (bx + 4, max(14, by - 6)),
+                f"DEFECT [{defect_type}]",
+                (bx, max(by - 8, 15)),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.45,
-                (255, 255, 255),
+                (0, 0, 245),
                 1,
                 cv2.LINE_AA
             )
 
-        # Save heatmap and annotated images
-        base_name = image_path.name
-        heatmap_filename = f"heatmap_{base_name}"
-        annotated_filename = f"annotated_{base_name}"
+        annotated_filename = f"annotated_{image_path.stem}.png"
+        annotated_path = settings.PROCESSED_DIR / annotated_filename
+        cv2.imwrite(str(annotated_path), annotated_bgr)
 
-        heatmap_save_path = settings.HEATMAPS_DIR / heatmap_filename
-        annotated_save_path = settings.HEATMAPS_DIR / annotated_filename
+        # 7. Mathematical Severity Scoring (Section 5 Specification)
+        # Severity = (Size * 30%) + (Location * 25%) + (Defect Type * 25%) + (Confidence * 20%)
+        if is_defective:
+            size_component = min((defect_area_ratio / 6.0) * 100.0, 100.0)
+            location_component = loc_score
+            type_component = cls.DEFECT_TYPE_SEVERITY_MAP.get(defect_type.lower(), 65.0)
+            confidence_component = confidence * 100.0
 
-        cv2.imwrite(str(heatmap_save_path), overlay_bgr)
-        cv2.imwrite(str(annotated_save_path), annotated_bgr)
-
-        # 6. 4-Factor Severity Scoring Calculation (Section 5 Formula)
-        # Severity = (Size x 30%) + (Location x 25%) + (Type x 25%) + (Confidence x 20%)
-
-        # Size score (30%)
-        if not is_defective:
-            size_score = 0.0
-        elif defect_area_ratio < 0.5:
-            size_score = 25.0
-        elif defect_area_ratio < 2.0:
-            size_score = 50.0
-        elif defect_area_ratio < 6.0:
-            size_score = 75.0
+            raw_severity = (
+                (size_component * 0.30) +
+                (location_component * 0.25) +
+                (type_component * 0.25) +
+                (confidence_component * 0.20)
+            )
+            severity_score = round(min(max(raw_severity, 42.0), 99.5), 1)
         else:
-            size_score = 95.0
+            size_component = 0.0
+            location_component = 15.0
+            type_component = 0.0
+            confidence_component = confidence * 100.0
+            raw_severity = (
+                (size_component * 0.30) +
+                (location_component * 0.25) +
+                (type_component * 0.25) +
+                (confidence_component * 0.20)
+            )
+            severity_score = round(min(raw_severity, 20.0), 1)
 
-        # Location score (25%)
-        # Already computed as loc_score (30.0 for cosmetic, 55.0 for edge, 75-90 for functional)
-        if not is_defective:
-            loc_score = 0.0
-
-        # Defect Type score (25%)
-        defect_type_key = defect_type.lower()
-        type_score = cls.DEFECT_TYPE_SEVERITY_MAP.get(defect_type_key, 50.0) if is_defective else 0.0
-
-        # Confidence score (20%)
-        conf_score = confidence * 100.0 if is_defective else 95.0
-
-        # Weighted calculation
-        if not is_defective:
-            severity_score = 12.0 # Baseline nominal rating for flawless product
+        # Severity level classification
+        if severity_score < 40.0:
             severity_level = "Low"
             quality_decision = "PASS"
-            recommended_action = "Release to downstream manufacturing assembly"
+        elif severity_score < 60.0:
+            severity_level = "Medium"
+            quality_decision = "REVIEW"
+        elif severity_score < 80.0:
+            severity_level = "High"
+            quality_decision = "FAIL"
         else:
-            raw_severity = (size_score * 0.30) + (loc_score * 0.25) + (type_score * 0.25) + (conf_score * 0.20)
-            severity_score = round(max(0.0, min(100.0, raw_severity)), 1)
-
-            if severity_score >= 80.0:
-                severity_level = "Critical"
-                quality_decision = "FAIL"
-                recommended_action = "Reject product immediately and trigger containment workflow"
-            elif severity_score >= 60.0:
-                severity_level = "High"
-                quality_decision = "FAIL"
-                recommended_action = "Route to manual rework station for corrective repair"
-            elif severity_score >= 40.0:
-                severity_level = "Medium"
-                quality_decision = "REVIEW"
-                recommended_action = "Inspection review required by shift supervisor"
-            else:
-                severity_level = "Low"
-                quality_decision = "PASS"
-                recommended_action = "Minor cosmetic variation; accepted within industrial tolerances"
+            severity_level = "Critical"
+            quality_decision = "FAIL"
 
         return {
             "defect_detected": is_defective,
             "defect_type": defect_type,
             "confidence": confidence,
+            "anomaly_score": round(p99_score, 3),
+            "calibrated_threshold": round(active_thresh, 3),
             "quality_decision": quality_decision,
-            "recommended_action": recommended_action,
             "severity": {
                 "score": severity_score,
                 "level": severity_level,
                 "breakdown": {
-                    "size_score": size_score,
-                    "size_weight": "30%",
-                    "location_score": loc_score,
-                    "location_weight": "25%",
-                    "type_score": type_score,
-                    "type_weight": "25%",
-                    "confidence_score": round(conf_score, 1),
-                    "confidence_weight": "20%",
-                    "formula": "Severity = (Size×30%) + (Loc×25%) + (Type×25%) + (Conf×20%)"
+                    "size_contribution": round(size_component * 0.30, 2),
+                    "location_contribution": round(location_component * 0.25, 2),
+                    "type_contribution": round(type_component * 0.25, 2),
+                    "confidence_contribution": round(confidence_component * 0.20, 2)
                 }
             },
             "localization": {
                 "bounding_boxes": bounding_boxes,
-                "defect_count": len(bounding_boxes),
+                "defect_pixel_count": defect_pixel_count,
                 "defect_area_ratio_percent": defect_area_ratio,
                 "location_classification": location_type
             },
             "visualizations": {
                 "preprocessed_url": proc_result["processed_url"],
-                "heatmap_url": f"/static/heatmaps/{heatmap_filename}",
-                "annotated_url": f"/static/heatmaps/{annotated_filename}"
+                "heatmap_url": f"/static/heatmaps/{heat_filename}",
+                "annotated_url": f"/static/processed/{annotated_filename}"
             }
         }

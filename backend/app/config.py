@@ -22,12 +22,16 @@ class Settings:
     THUMBNAILS_DIR: Path = BASE_DIR / "data" / "thumbnails"
     PROCESSED_DIR: Path = BASE_DIR / "data" / "processed"
     HEATMAPS_DIR: Path = BASE_DIR / "data" / "heatmaps"
+    MODELS_DIR: Path = BASE_DIR / "data" / "models"
     MVTEC_DIR: Path = BASE_DIR / "data" / "mvtec_ad"
+    MV_DATASET_DIR: Path = BASE_DIR.parent / "mv-dataset"
     WORKSPACE_MAIN_DATA_DIR: Path = BASE_DIR.parent / "main data"
     
-    # Priority dataset path resolution
+    # Priority dataset path resolution: mv-dataset > main data > mvtec_ad
     @property
     def ACTIVE_DATASET_DIR(self) -> Path:
+        if self.MV_DATASET_DIR.exists() and any(self.MV_DATASET_DIR.iterdir()):
+            return self.MV_DATASET_DIR
         if self.WORKSPACE_MAIN_DATA_DIR.exists() and any(self.WORKSPACE_MAIN_DATA_DIR.iterdir()):
             return self.WORKSPACE_MAIN_DATA_DIR
         return self.MVTEC_DIR
@@ -63,4 +67,5 @@ settings.UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 settings.THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
 settings.PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 settings.HEATMAPS_DIR.mkdir(parents=True, exist_ok=True)
+settings.MODELS_DIR.mkdir(parents=True, exist_ok=True)
 settings.MVTEC_DIR.mkdir(parents=True, exist_ok=True)

@@ -13,13 +13,11 @@ from .services.dataset_service import DatasetService
 async def lifespan(app: FastAPI):
     # Startup: create tables
     Base.metadata.create_all(bind=engine)
-    # Check if dataset samples exist, if not generate them on first run
+    # Verify real MVTec AD dataset presence
     categories = DatasetService.get_available_categories()
-    if not any(c["is_loaded"] for c in categories):
-        try:
-            DatasetService.generate_sample_dataset()
-        except Exception:
-            pass
+    loaded_cats = [c for c in categories if c["is_loaded"]]
+    total_imgs = sum(c["total_images"] for c in loaded_cats)
+    print(f"[*] VisionInspect AI Startup: Real MVTec AD Dataset connected with {len(loaded_cats)}/{len(categories)} categories and {total_imgs} total images from {settings.ACTIVE_DATASET_DIR}")
     yield
     # Shutdown logic if any
 

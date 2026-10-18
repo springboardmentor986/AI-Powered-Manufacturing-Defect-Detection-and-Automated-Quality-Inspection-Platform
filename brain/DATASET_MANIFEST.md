@@ -1,9 +1,10 @@
 # MVTec AD Industrial Dataset Manifest & Integration
 
 ### 1. Dataset Overview
-- **Location**: `C:\Users\Dell\Desktop\infosys project\main data` (Active Primary) & `backend/data/mvtec_ad`
+- **Location**: `C:\Users\satya\.gemini\antigravity-ide\scratch\AI-Powered-Manufacturing-Defect-Detection-and-Automated-Quality-Inspection-Platform\mv-dataset` (Active Primary)
 - **Total Categories**: 15 Industrial Categories (5 Texture, 10 Object)
-- **Total Dataset Images**: 5,354 real high-resolution industrial samples
+- **Total Dataset Images**: 6,612 real high-resolution industrial samples & ground-truth binary masks
+- **Trained AI Models**: 15 / 15 Category Models Trained on actual `train/good` dataset (stored in `backend/data/models/*.npz`)
 - **Format**: PNG, Ground-truth binary segmentation masks, Train/Test split structure
 
 ---

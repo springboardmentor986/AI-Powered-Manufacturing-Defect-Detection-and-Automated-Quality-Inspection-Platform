@@ -21,6 +21,7 @@ backend/data/augmented/*
 
 # Large Dataset files (preserve directory reference)
 main data/
+mv-dataset/
 backend/data/mvtec_ad/*
 !backend/data/mvtec_ad/.gitkeep
 

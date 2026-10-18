@@ -5,8 +5,8 @@ echo        Starting VisionInspect AI (Milestone 1)
 echo ========================================================
 echo.
 
-echo [1/2] Starting FastAPI Backend on http://127.0.0.1:8000 ...
-start "VisionInspect Backend" cmd /k "python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload"
+echo [1/2] Starting FastAPI Backend on http://127.0.0.1:8001 ...
+start "VisionInspect Backend" cmd /k "python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8001 --reload"
 
 timeout /t 3 /nobreak > nul
 
@@ -17,8 +17,8 @@ echo.
 echo ========================================================
 echo   VisionInspect AI is running!
 echo   Frontend: http://localhost:5173
-echo   Backend:  http://127.0.0.1:8000
-echo   API Docs: http://127.0.0.1:8000/docs
+echo   Backend:  http://127.0.0.1:8001
+echo   API Docs: http://127.0.0.1:8001/docs
 echo ========================================================
 echo.
 pause

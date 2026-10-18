@@ -73,6 +73,9 @@ export const datasetAPI = {
   getCategories: () => apiClient.get('/dataset/categories'),
   getCategoryDetail: (category) => apiClient.get(`/dataset/category/${category}`),
   generateSamples: () => apiClient.post('/dataset/generate-samples'),
+  trainAllModels: () => apiClient.post('/dataset/train-all'),
+  trainModel: (cat) => apiClient.post(`/dataset/train/${cat}`),
+  getTrainedModels: () => apiClient.get('/dataset/models'),
 };
 
 export const dashboardAPI = {
