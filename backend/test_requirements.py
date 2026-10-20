@@ -2,6 +2,7 @@ import asyncio
 import base64
 import gzip
 import json
+import lzma
 import pickle
 import tempfile
 import unittest
@@ -124,7 +125,7 @@ class RequirementTests(unittest.TestCase):
 
     def test_load_model_decodes_render_secret_file(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
-            model_path = Path(tmp_dir) / "defect_model.pkl.gz.b64"
+            model_path = Path(tmp_dir) / "defect_model.pkl.xz.b64"
             model_payload = {
                 "version": defect_model.MODEL_VERSION,
                 "labels": defect_model.LABELS,
@@ -132,7 +133,7 @@ class RequirementTests(unittest.TestCase):
                 "binary_classifiers": {"bottle": object()},
                 "subtype_classifiers": {"bottle": object()},
             }
-            encoded_model = base64.b64encode(gzip.compress(pickle.dumps(model_payload)))
+            encoded_model = base64.b64encode(lzma.compress(pickle.dumps(model_payload)))
             model_path.write_bytes(encoded_model)
             original_model_path = defect_model.MODEL_PATH
             original_configured = defect_model.MODEL_PATH_IS_CONFIGURED

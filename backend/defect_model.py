@@ -3,6 +3,7 @@
 import base64
 import gzip
 import json
+import lzma
 import os
 import pickle
 import warnings
@@ -153,7 +154,11 @@ def load_model():
             warnings.filterwarnings("error", category=InconsistentVersionWarning)
             if MODEL_PATH.suffix == ".b64":
                 encoded_model = b"".join(MODEL_PATH.read_bytes().split())
-                model_bytes = gzip.decompress(base64.b64decode(encoded_model, validate=True))
+                compressed_model = base64.b64decode(encoded_model, validate=True)
+                if MODEL_PATH.name.endswith(".xz.b64"):
+                    model_bytes = lzma.decompress(compressed_model)
+                else:
+                    model_bytes = gzip.decompress(compressed_model)
                 model = pickle.loads(model_bytes)
             else:
                 with MODEL_PATH.open("rb") as model_file:

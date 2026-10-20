@@ -26,4 +26,4 @@ services:
       - key: VISIONINSPECT_TOKEN_SECRET
         generateValue: true
       - key: VISIONINSPECT_MODEL_PATH
-        value: /etc/secrets/defect_model.pkl.gz.b64
+        value: /etc/secrets/defect_model.pkl.xz.b64

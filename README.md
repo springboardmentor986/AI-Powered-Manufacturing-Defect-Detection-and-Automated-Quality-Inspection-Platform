@@ -73,10 +73,10 @@ The frontend gets `VITE_API_URL` from the Blueprint at build time; local develop
 To use the locally generated model on Render without committing it, from the `backend` directory create a compressed, Base64-encoded copy:
 
 ```powershell
-python -c "import base64,gzip,pathlib; model=pathlib.Path('defect_model.pkl').read_bytes(); pathlib.Path('defect_model.pkl.gz.b64').write_bytes(base64.b64encode(gzip.compress(model, compresslevel=9)))"
+python -c "import base64,lzma,pathlib; model=pathlib.Path('defect_model.pkl').read_bytes(); pathlib.Path('defect_model.pkl.xz.b64').write_bytes(base64.b64encode(lzma.compress(model, preset=9)))"
 ```
 
-The current model encodes to about 593 KB, below Render's 1 MB combined secret-file limit. In the Render backend service, open **Environment > Secret Files**, add a file named `defect_model.pkl.gz.b64`, and paste in the contents of the generated file. The Blueprint configures `VISIONINSPECT_MODEL_PATH` to read that secret file. Keep the generated `.b64` file private and do not commit it or the model; verify the dataset license allows your intended use. Redeploy after adding the secret file. If the file is missing or invalid, the API now reports a clear `503` response instead of attempting inference with an empty classifier.
+The current model encodes to about 466 KiB, below Render's 500 KiB per-file limit. In the Render backend service, remove the old `defect_model.pkl.gz.b64` secret file, then open **Environment > Secret Files**, add a file named `defect_model.pkl.xz.b64`, and paste in the contents of the newly generated file. The Blueprint configures `VISIONINSPECT_MODEL_PATH` to read that secret file. Keep the generated `.b64` file private and do not commit it or the model; verify the dataset license allows your intended use. Redeploy after adding the secret file. If the file is missing or invalid, the API now reports a clear `503` response instead of attempting inference with an empty classifier.
 
 ## API surface
 

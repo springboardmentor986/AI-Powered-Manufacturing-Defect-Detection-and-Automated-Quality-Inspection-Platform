@@ -9,6 +9,7 @@ backend/venv/
 backend/visioninspect.db
 backend/*.pkl
 backend/*.pkl.gz.b64
+backend/*.pkl.xz.b64
 backend/*.pt
 backend/defect_model.json
 backend/full_evaluation.json
