@@ -2,7 +2,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
-from defect_model import PRODUCT_CATEGORY, predict as predict_model
+from defect_model import MODEL_DEFECT_CONFIDENCE_THRESHOLD, PRODUCT_CATEGORY, predict as predict_model
 
 # Import dataset loader from Milestone 1
 try:
@@ -262,15 +262,13 @@ def detect_defects(
     elif known_label is not None:
         is_defective = True
         defect_type = known_label
-    elif model_prediction and model_prediction["confidence"] >= 0.95:
-        if model_prediction["label"] == "good":
-            is_defective = False
-        elif defect_type in {"broken_small", "contamination"} and model_prediction["label"] in {"broken_small", "contamination"}:
-            is_defective = True
+    elif model_prediction:
+        is_defective = (
+            model_prediction["label"] != "good"
+            and model_prediction.get("defect_confidence", 0) >= MODEL_DEFECT_CONFIDENCE_THRESHOLD
+        )
+        if is_defective:
             defect_type = model_prediction["label"]
-        elif defect_type == "broken_large" and model_prediction["label"] == "broken_large":
-            is_defective = True
-            defect_type = "broken_large"
     classification = "bad" if is_defective else "good"
 
     if is_defective:

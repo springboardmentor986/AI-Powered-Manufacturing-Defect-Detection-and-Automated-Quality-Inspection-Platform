@@ -21,6 +21,7 @@ from sklearn.ensemble import RandomForestClassifier
 LABELS = ["good", "contamination", "broken_small", "broken_large"]
 PRODUCT_CATEGORY = "bottle"
 MODEL_VERSION = 4
+MODEL_DEFECT_CONFIDENCE_THRESHOLD = 0.70
 MODEL_PATH = Path(os.getenv("VISIONINSPECT_MODEL_PATH", Path(__file__).resolve().parent / "defect_model.pkl"))
 MODEL_PATH_IS_CONFIGURED = "VISIONINSPECT_MODEL_PATH" in os.environ
 METADATA_PATH = Path(__file__).resolve().parent / "defect_model.json"
@@ -195,9 +196,21 @@ def predict(image, model=None, category=None):
     binary_probabilities = classifier.predict_proba(features)[0]
     bad_index = list(classifier.classes_).index(True)
     bad_confidence = float(binary_probabilities[bad_index])
-    if not bool(classifier.predict(features)[0]):
-        return {"label": "good", "confidence": round(1 - bad_confidence, 4), "nearest_distance": 0, "neighbors": 1}
+    if bad_confidence < MODEL_DEFECT_CONFIDENCE_THRESHOLD:
+        return {
+            "label": "good",
+            "confidence": round(1 - bad_confidence, 4),
+            "defect_confidence": round(bad_confidence, 4),
+            "nearest_distance": 0,
+            "neighbors": 1,
+        }
     subtype_classifier = subtype_classifiers.get(category) or next(iter(subtype_classifiers.values()))
     subtype_probabilities = subtype_classifier.predict_proba(features)[0]
     subtype_index = int(np.argmax(subtype_probabilities))
-    return {"label": str(subtype_classifier.classes_[subtype_index]), "confidence": round(float(subtype_probabilities[subtype_index]) * bad_confidence, 4), "nearest_distance": 0, "neighbors": 1}
+    return {
+        "label": str(subtype_classifier.classes_[subtype_index]),
+        "confidence": round(float(subtype_probabilities[subtype_index]) * bad_confidence, 4),
+        "defect_confidence": round(bad_confidence, 4),
+        "nearest_distance": 0,
+        "neighbors": 1,
+    }

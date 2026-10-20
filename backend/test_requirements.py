@@ -60,6 +60,34 @@ class RequirementTests(unittest.TestCase):
         predict_model.assert_called_once_with(image, category="bottle")
         match_label.assert_called_once_with(image, "bottle")
 
+    @patch("anomaly_detector.get_golden_reference", return_value=None)
+    @patch("anomaly_detector.match_known_dataset_label", return_value=None)
+    @patch(
+        "anomaly_detector.predict_model",
+        return_value={"label": "broken_small", "confidence": 0.34, "defect_confidence": 0.76},
+    )
+    def test_model_detects_defect_when_visual_detector_finds_no_regions(self, predict_model, match_label, golden_reference):
+        image = np.zeros((64, 64, 3), dtype=np.uint8)
+
+        result = anomaly_detector.detect_defects(image)
+
+        self.assertEqual(result["classification"], "bad")
+        self.assertEqual(result["defect_type"], "broken_small")
+        self.assertEqual(result["defect_count"], 0)
+
+    @patch("anomaly_detector.get_golden_reference", return_value=None)
+    @patch("anomaly_detector.match_known_dataset_label", return_value=None)
+    @patch(
+        "anomaly_detector.predict_model",
+        return_value={"label": "broken_small", "confidence": 0.34, "defect_confidence": 0.69},
+    )
+    def test_low_model_defect_confidence_does_not_override_clean_visual_result(self, predict_model, match_label, golden_reference):
+        image = np.zeros((64, 64, 3), dtype=np.uint8)
+
+        result = anomaly_detector.detect_defects(image)
+
+        self.assertEqual(result["classification"], "good")
+
     def test_load_model_rebuilds_stale_pickle(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             temp_dir = Path(tmp_dir)
@@ -153,6 +181,22 @@ class RequirementTests(unittest.TestCase):
                 np.zeros((64, 64, 3), dtype=np.uint8),
                 model={"binary_classifiers": {}, "subtype_classifiers": {}},
             )
+
+    def test_prediction_uses_validated_binary_defect_threshold(self):
+        binary_classifier = unittest.mock.Mock()
+        binary_classifier.classes_ = np.array([False, True])
+        binary_classifier.predict_proba.return_value = np.array([[0.3, 0.7]])
+        subtype_classifier = unittest.mock.Mock()
+        subtype_classifier.classes_ = np.array(["broken_small", "contamination"])
+        subtype_classifier.predict_proba.return_value = np.array([[0.8, 0.2]])
+        model = {
+            "binary_classifiers": {"bottle": binary_classifier},
+            "subtype_classifiers": {"bottle": subtype_classifier},
+        }
+        with patch("defect_model.extract_features", return_value=np.zeros(10020)):
+            prediction = defect_model.predict(np.zeros((64, 64, 3)), model=model, category="bottle")
+        self.assertEqual(prediction["label"], "broken_small")
+        self.assertEqual(prediction["defect_confidence"], 0.7)
 
     def test_inspection_reports_unavailable_model_as_503(self):
         _, encoded_image = cv2.imencode(".png", np.zeros((64, 64, 3), dtype=np.uint8))
