@@ -8,6 +8,7 @@ backend/venv/
 # Runtime and generated model artifacts
 backend/visioninspect.db
 backend/*.pkl
+backend/*.pkl.gz.b64
 backend/*.pt
 backend/defect_model.json
 backend/full_evaluation.json

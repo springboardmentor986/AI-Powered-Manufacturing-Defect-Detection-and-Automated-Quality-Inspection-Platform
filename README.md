@@ -59,6 +59,25 @@ docker compose ps
 The web app is available at `http://127.0.0.1:5173/` and the API documentation at `http://127.0.0.1:8000/docs`.
 Stop the containers with `docker compose down`. Stop any local servers using ports 8000 or 5173 before starting Compose. The SQLite database is stored inside the backend container without a persistent volume, so inspection history can be lost when that container is removed.
 
+## Free cloud demo (Vercel + Render)
+
+The frontend can be hosted as a Render static site, with the FastAPI API hosted as a Render web service. The root `render.yaml` configures both services. Render offers free plans with limits; its backend free service sleeps when idle and has an ephemeral filesystem.
+
+1. In Render, create or sync a Blueprint from this GitHub repository using the root `render.yaml`. It creates a static frontend site and the backend service, pins Python to 3.11 for the available machine-learning dependency wheels, and generates `VISIONINSPECT_TOKEN_SECRET`.
+2. Wait until both `visioninspect-web` and `visioninspect-api` show **Live**. Open the static site's `.onrender.com` URL to use the app.
+
+The frontend gets `VITE_API_URL` from the Blueprint at build time; local development continues to use `http://127.0.0.1:8000`. Vercel configuration is also available in `frontend/vercel.json` if deploying the frontend there instead.
+
+**Model limitation:** `backend/defect_model.pkl` is excluded from Git, and the licensed MVTec training dataset is not in the repository. A fresh Render deployment therefore cannot perform image inspections until a permitted model artifact is made available to the backend. Do not commit licensed dataset images or derived model files unless their license permits redistribution. SQLite records and uploaded files on Render's free service are also temporary and can be lost when the service restarts or spins down. This setup is for a non-production demo.
+
+To use the locally generated model on Render without committing it, from the `backend` directory create a compressed, Base64-encoded copy:
+
+```powershell
+python -c "import base64,gzip,pathlib; model=pathlib.Path('defect_model.pkl').read_bytes(); pathlib.Path('defect_model.pkl.gz.b64').write_bytes(base64.b64encode(gzip.compress(model, compresslevel=9)))"
+```
+
+The current model encodes to about 593 KB, below Render's 1 MB combined secret-file limit. In the Render backend service, open **Environment > Secret Files**, add a file named `defect_model.pkl.gz.b64`, and paste in the contents of the generated file. The Blueprint configures `VISIONINSPECT_MODEL_PATH` to read that secret file. Keep the generated `.b64` file private and do not commit it or the model; verify the dataset license allows your intended use. Redeploy after adding the secret file. If the file is missing or invalid, the API now reports a clear `503` response instead of attempting inference with an empty classifier.
+
 ## API surface
 
 - `POST /api/auth/login` authenticates demo roles.
@@ -66,7 +85,7 @@ Stop the containers with `docker compose down`. Stop any local servers using por
 - `GET /api/inspections` returns the inspection log.
 - `GET /api/analytics` returns pass rate, defect mix, severity, and recent decisions.
 - `GET /api/metrics` returns processing speed and automation metrics.
-- `GET /api/model` returns the active model version, classes, feature count, and training sample counts.
+- `GET /api/model` returns the active model version, classes, feature count, and training sample counts, or `503` if a trained model is unavailable.
 - `GET /api/health` is the service health check.
 
 The current persistence layer is SQLite for the milestone demo. PostgreSQL or MongoDB can replace it behind the same API contract for production deployment.

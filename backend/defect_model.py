@@ -1,6 +1,9 @@
 """Bottle-only supervised defect classifier for the MVTec samples."""
 
+import base64
+import gzip
 import json
+import os
 import pickle
 import warnings
 from collections import Counter, defaultdict
@@ -17,9 +20,14 @@ from sklearn.ensemble import RandomForestClassifier
 LABELS = ["good", "contamination", "broken_small", "broken_large"]
 PRODUCT_CATEGORY = "bottle"
 MODEL_VERSION = 4
-MODEL_PATH = Path(__file__).resolve().parent / "defect_model.pkl"
+MODEL_PATH = Path(os.getenv("VISIONINSPECT_MODEL_PATH", Path(__file__).resolve().parent / "defect_model.pkl"))
+MODEL_PATH_IS_CONFIGURED = "VISIONINSPECT_MODEL_PATH" in os.environ
 METADATA_PATH = Path(__file__).resolve().parent / "defect_model.json"
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp"}
+
+
+class ModelNotReadyError(RuntimeError):
+    """Raised when a trained defect model is unavailable."""
 
 
 def is_compatible_model(model):
@@ -113,7 +121,13 @@ def build_model(samples):
 
 
 def train_model(dataset_root=None):
-    model = build_model(load_samples(dataset_root))
+    samples = load_samples(dataset_root)
+    if not samples:
+        raise ModelNotReadyError(
+            "No bottle training images are available. Provide a trained model with "
+            "VISIONINSPECT_MODEL_PATH or install the licensed bottle dataset and train a model."
+        )
+    model = build_model(samples)
     with MODEL_PATH.open("wb") as model_file:
         pickle.dump(model, model_file)
     METADATA_PATH.write_text(json.dumps({
@@ -128,16 +142,31 @@ def train_model(dataset_root=None):
 
 def load_model():
     if not MODEL_PATH.exists():
+        if MODEL_PATH_IS_CONFIGURED:
+            raise ModelNotReadyError(
+                f"The configured model file was not found at {MODEL_PATH}. "
+                "Provide the trained model file at that path and redeploy."
+            )
         return train_model()
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings("error", category=InconsistentVersionWarning)
-            with MODEL_PATH.open("rb") as model_file:
-                model = pickle.load(model_file)
+            if MODEL_PATH.suffix == ".b64":
+                encoded_model = b"".join(MODEL_PATH.read_bytes().split())
+                model_bytes = gzip.decompress(base64.b64decode(encoded_model, validate=True))
+                model = pickle.loads(model_bytes)
+            else:
+                with MODEL_PATH.open("rb") as model_file:
+                    model = pickle.load(model_file)
         if not is_compatible_model(model):
             raise ValueError("Stored model is stale or incompatible")
         return model
-    except Exception:
+    except Exception as exc:
+        if MODEL_PATH_IS_CONFIGURED:
+            raise ModelNotReadyError(
+                f"The configured model file at {MODEL_PATH} could not be loaded. "
+                "Check that it is a compatible trained model."
+            ) from exc
         if MODEL_PATH.exists():
             try:
                 MODEL_PATH.unlink()
@@ -147,10 +176,14 @@ def load_model():
 
 
 def predict(image, model=None, category=None):
-    model = model or load_model()
+    model = model if model is not None else load_model()
     features = extract_features(image).reshape(1, -1)
     binary_classifiers = model["binary_classifiers"]
     subtype_classifiers = model["subtype_classifiers"]
+    if not binary_classifiers or not subtype_classifiers:
+        raise ModelNotReadyError(
+            "The loaded model has no trained classifiers. Provide a compatible trained model."
+        )
     classifier = binary_classifiers.get(category) if category else None
     if classifier is None:
         classifier = next(iter(binary_classifiers.values()))

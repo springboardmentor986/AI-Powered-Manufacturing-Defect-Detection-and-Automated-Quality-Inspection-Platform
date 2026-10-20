@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: visioninspect-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://visioninspect-api-ejgl.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
+    name: visioninspect-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.15
+      - key: VISIONINSPECT_TOKEN_SECRET
+        generateValue: true
+      - key: VISIONINSPECT_MODEL_PATH
+        value: /etc/secrets/defect_model.pkl.gz.b64

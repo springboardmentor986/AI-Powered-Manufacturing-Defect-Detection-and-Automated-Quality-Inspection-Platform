@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append(str(Path(__file__).resolve().parent))
 from anomaly_detector import detect_defects
-from defect_model import load_model
+from defect_model import ModelNotReadyError, load_model
 
 app = FastAPI(title="VisionInspect AI", version="1.0.0")
 app.add_middleware(
@@ -252,7 +252,10 @@ def get_metrics(authorization: str | None = Header(default=None)):
 @app.get("/api/model")
 def get_model_info(authorization: str | None = Header(default=None)):
     require_permission(current_user(authorization), "view_analytics")
-    model = load_model()
+    try:
+        model = load_model()
+    except ModelNotReadyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     return {
         "name": "VisionInspect bottle-only hierarchical random forest",
         "version": model["version"],
@@ -316,6 +319,8 @@ async def inspect_image(
         return record
     except HTTPException:
         raise
+    except ModelNotReadyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
